@@ -189,15 +189,14 @@ FilterResults <- setRefClass(
       \\eqn{\\gamma} (\\code{slope.t.t}), vector of states including the
       seasonals where applicable (\\code{a.t.t}) and covariance matrix of all
       states including seasonals where applicable (\\code{P.t.t}).}"
-      idx <- index
 
       new.model <- modelKFS(output)
       new.model$y <- rbind(
         gety(new.model),
-        matrix(NA, ncol = ncol(gety(new.model)), nrow = n.ahead) %>% as.ts()
-      )
-      attr(new.model, 'n') <- length(gety(modelKFS(output))) + n.ahead %>%
-        as.integer()
+        matrix(NA, ncol = ncol(gety(new.model)), nrow = n.ahead)) %>% as.ts()
+      
+      attr(new.model, 'n') <- as.integer(length(gety(modelKFS(output))) + n.ahead)
+        
       model_output <- KFS(new.model)
 
       if (sea.on == TRUE) {
@@ -211,7 +210,7 @@ FilterResults <- setRefClass(
       }
 
       n <- attr(output$model, "n")
-      dates <- seq(idx[1], by = 'day', length.out = (n + n.ahead))
+      dates <- seq(index[1], by = 'day', length.out = (n + n.ahead))
 
       # Assumes time invariant Z.t
       y.t.t <- output$att %*% drop(matrixKFS(output,"Z"))
@@ -229,11 +228,11 @@ FilterResults <- setRefClass(
 
       if (!return.all) {
         y.hat <- y.hat %>%
-          subset(index(.) > tail(idx, 1))
+          subset(index(.) > tail(index, 1))
         level.t.t <- level.t.t %>%
-          subset(index(.) > tail(idx, 1))
+          subset(index(.) > tail(index, 1))
         slope.t.t <- slope.t.t %>%
-          subset(index(.) > tail(idx, 1))
+          subset(index(.) > tail(index, 1))
       }
 
       out <- list(
@@ -434,8 +433,7 @@ FilterResults <- setRefClass(
           df2ldl() %>%
           subset(index(.) > tail(est.date.index,1))
       } else {y.eval<-Y %>%
-        subset(zoo::index(.) > tail(est.date.index,1)) %>%
-        tsgc::df2ldl()}
+        df2ldl()%>% subset(zoo::index(.) > tail(est.date.index,1))}
       
       y <- xts::xts(res$output$model$y %>% as.numeric(), order.by = est.date.index)
       p <- attr(res$output$model, 'p')
@@ -481,7 +479,7 @@ FilterResults <- setRefClass(
             axis.title.y = element_text(size = rel(1),margin = margin(r=10)),
             axis.title.x = element_text(size = rel(1),margin = margin(t=10)),
             plot.title = element_text(margin=margin(b=5)),
-            plot.caption = element_text(size = rel(1)),
+            plot.caption = element_text(size = rel(1))
           )
       } else if (p == 2) {
         g_1 <- g_2 <- delta <- Forecast <- RealisedData <- NULL

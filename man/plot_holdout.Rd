@@ -10,11 +10,10 @@ plot_holdout(object, ...)
 \arguments{
 \item{res}{Results object estimated using the \code{estimate()} method.}
 
-\item{Y}{Values of the cumulated variable to be used in the estimation
-window.}
-
-\item{Y.eval}{Values of the cumulated variable to be used in the holdout
+\item{Y}{Values of the cumulated variable, including the holdout sample.
 sample (i.e. to which the forecasts should be compared to).}
+
+\item{n.ahead}{The duration of the holdout sample.}
 
 \item{confidence.level}{Width of prediction interval for \eqn{\ln(g_t)} to
 use in forecasts of \eqn{y_t = \Delta Y_t}. Default is 0.68, which is
@@ -58,6 +57,6 @@ model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
 res <- model$estimate()
 
 # Plot forecasts and outcomes over evaluation period
-plot_holdout(res = res, Y = gauteng[idx.est], Y.eval = gauteng[idx.eval])
+plot_holdout(object = res, Y = gauteng)
 
 }

@@ -13,7 +13,7 @@ level of the incidence variable \eqn{y}, and forecasts of \eqn{y}.
 \section{Methods}{
 
 \describe{
-\item{\code{get_growth_y(smoothed = FALSE, return.components = FALSE)}}{Returns the growth rate of the incidence (\eqn{y}) of the cumulated
+\item{\code{get_gy_ci(smoothed = FALSE, confidence.level = 0.68)}}{Returns the growth rate of the incidence (\eqn{y}) of the cumulated
 variable (\eqn{Y}). Computed as
 \deqn{g_t = \exp\{\delta_t\}+\gamma_t.}
  \subsection{Parameters}{\itemize{
@@ -21,41 +21,22 @@ variable (\eqn{Y}). Computed as
   smoothed estimates of \eqn{\delta} and \eqn{\gamma} to compute the
   growth rate (\code{TRUE}), or the contemporaneous filtered estimates
   (\code{FALSE}). Default is \code{FALSE}.}
-  \item{\code{return.components} Logical value indicating whether to
-  return the estimates of \eqn{\delta} and \eqn{\gamma} as well as
-  the estimates of the growth rate, or just the growth rate. Default is
-  \code{FALSE}.}
-}}
-\subsection{Return Value}{\code{xts} object containing
-smoothed/filtered growth rates and components (\eqn{\delta} and
-\eqn{\gamma}), where applicable.}}
-
-\item{\code{get_gy_ci(smoothed = FALSE, confidence_level = 0.68)}}{Returns the growth rate of the incidence (\eqn{y}) of the cumulated
-variable (\eqn{Y}). Computed as
-\deqn{g_t = \exp\{\delta_t\}+\gamma_t.}
- \subsection{Parameters}{\itemize{
-  \item{\code{smoothed} Logical value indicating whether to use the
-  smoothed estimates of \eqn{\delta} and \eqn{\gamma} to compute the
-  growth rate (\code{TRUE}), or the contemporaneous filtered estimates
-  (\code{FALSE}). Default is \code{FALSE}.}
-  \item{\code{confidence_level} Confidence level for the confidence
+  \item{\code{confidence.level} Confidence level for the confidence
   interval.  Default is \eqn{0.68}, which is one standard deviation for
   a normally distributed random variable.}
 }}
 \subsection{Return Value}{\code{xts} object containing smoothed/filtered
  growth rates and upper and lower bounds for the confidence intervals.}}
 
-\item{\code{predict_level(n.forc = n.lag, confidence.level = 0.68)}}{Forecast the cumulated variable or the incidence of it. This function returns
+\item{\code{predict_level(n.ahead = n.lag, confidence.level = 0.68)}}{Forecast the cumulated variable or the incidence of it. This function returns
 the forecast of the cumulated variable \eqn{Y}, or the forecast of the incidence of the cumulated variable, \eqn{y}. For
 example, in the case of an epidemic, \eqn{y} might be daily new cases of
 the disease and
- \eqn{Y} the cumulative number of recorded infections.
  \subsection{Parameters}{\itemize{
-  \item{\code{n.forc} The number of periods ahead you wish to forecast from
-  the end of the estimation window.}
-  \item{\code{confidence_level} The confidence level for the log growth
-   rate that should be used to compute
-  the forecast intervals of \eqn{y}.}
+  \item{\code{n.ahead} The number of periods ahead you wish to forecast from
+  the end of the estimation window. Default is \code{n.lag}.}
+  \item{\code{confidence.level} The confidence level for the log growth
+   rate that should be used to compute the forecast intervals of \eqn{y}.}
   }
 }
 \subsection{Return Value}{A list object containing n.lag and 2 \code{xts}
@@ -79,14 +60,14 @@ res <- model$estimate()
 res$print_estimation_results()
 # Forecast 7 days ahead from the end of the estimation window
 res$predict_level(y.cum = gauteng[idx.est], n.ahead = 7,
-  confidence_level = 0.68)
+  confidence.level = 0.68)
 # Forecast 7 days ahead from the model and return filtered states
 res$predict_all(n.ahead = 7, return.all = TRUE)
 # Return the filtered growth rate and its components
 res$get_growth_y(return.components = TRUE)
 # Return smoothed growth rate of incidence variable and its confidence
 # interval
-res$get_gy_ci(smoothed = TRUE, confidence_level = 0.68)
+res$get_gy_ci(smoothed = TRUE, confidence.level = 0.68)
 
 }
 \references{

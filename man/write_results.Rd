@@ -4,19 +4,19 @@
 \alias{write_results}
 \title{Write a selection of relevant results to disc}
 \usage{
-write_results(res, res.dir, Y, n.ahead, confidence.level)
+write_results(res, res.dir, n.ahead, confidence.level = 0.68)
 }
 \arguments{
 \item{res}{Results object estimated using the \samp{estimate()} method.}
 
 \item{res.dir}{File path to save the results to.}
 
-\item{Y}{Cumulated variable.}
-
 \item{n.ahead}{Number of periods ahead to forecast.}
 
 \item{confidence.level}{Confidence level to use for the confidence interval
 on the forecasts \eqn{\ln(g_t)}.}
+
+\item{Y}{Cumulated variable.}
 }
 \value{
 A number of csv files saved in the directory specified in

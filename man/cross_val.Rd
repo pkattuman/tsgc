@@ -9,7 +9,7 @@ cross_val(
   y,
   est.end.date,
   n.ahead,
-  lags,
+  all_lags,
   totaldays = 1,
   freq = 1,
   vanilla = TRUE,
@@ -24,7 +24,7 @@ designated using the \code{LeadIndCol} parameter.}
 
 \item{est.end.date}{The initial estimation end date for model fitting.
 Starting from this date, the function re-estimates the model and evaluates
-the performance for each lag in \code{lags} every \code{freq} days, over a
+the performance for each lag in \code{all_lags} every \code{freq} days, over a
 period of \code{totaldays} days.}
 
 \item{n.ahead}{Integer specifying the number of days to forecast ahead for
@@ -37,7 +37,7 @@ walk-forward validation results will be reported.}
 is re-estimated and evaluated during the walk-forward validation.}
 
 \item{vanilla}{Logical. If \code{TRUE}, the function compares the vanilla
-growth curve model to the leading indicator models with different lags. The
+growth curve model to the leading indicator models with different all_lags. The
 results for the vanilla model are presented in the row where Lag=0.
 Note: If using the vanilla model, the date format must be "\%Y-\%m-\%d".}
 
@@ -53,5 +53,5 @@ specified dates.
 This function performs a walk-forward validation to compare
 forecasting performance across different lag values. It returns a table of
 MAPE values for forecasts \code{n.ahead} days ahead, using models estimated
-with varying lags over a series of specified end dates.
+with varying all_lags over a series of specified end dates.
 }

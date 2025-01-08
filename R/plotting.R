@@ -74,9 +74,9 @@ plot_new_cases <- function(object,...) {
 #' log cumulative growth rate out of the estimation sample.
 #'
 #' @param res Results object estimated using the \code{estimate()} method.
-#' @param y.eval The out-of-sample realisation of the log growth rate of the
+#' @param Y Cumulated dataset containing the out-of-sample realisation of the log growth rate of the
 #' cumulated variable (i.e. the actual values to which the forecasts should
-#' be compared).
+#' be compared). Subsetting is done within the function.
 #' @param n.ahead The number of time periods ahead from the end of the sample
 #' to be forecast. The default is 14.
 #' @param plt.start.date Plot start date. Default is \code{NULL} which is the
@@ -214,10 +214,9 @@ plot_gy_ci <- function(object,...){
 #' sample.
 #'
 #' @param res Results object estimated using the \code{estimate()} method.
-#' @param Y Values of the cumulated variable to be used in the estimation
-#' window.
-#' @param Y.eval Values of the cumulated variable to be used in the holdout
+#' @param Y Values of the cumulated variable, including the holdout sample.
 #' sample (i.e. to which the forecasts should be compared to).
+#' @param n.ahead The duration of the holdout sample.
 #' @param confidence.level Width of prediction interval for \eqn{\ln(g_t)} to
 #' use in forecasts of \eqn{y_t = \Delta Y_t}. Default is 0.68, which is
 #' approximately one standard deviation for a Normal distribution.
@@ -255,7 +254,7 @@ plot_gy_ci <- function(object,...){
 #' res <- model$estimate()
 #'
 #' # Plot forecasts and outcomes over evaluation period
-#' plot_holdout(res = res, Y = gauteng[idx.est], Y.eval = gauteng[idx.eval])
+#' plot_holdout(object = res, Y = gauteng)
 #'
 #' @export
 plot_holdout <- function(object,...) {

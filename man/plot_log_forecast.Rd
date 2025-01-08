@@ -9,9 +9,9 @@ plot_log_forecast(object, ...)
 \arguments{
 \item{res}{Results object estimated using the \code{estimate()} method.}
 
-\item{y.eval}{The out-of-sample realisation of the log growth rate of the
+\item{Y}{Cumulated dataset containing the out-of-sample realisation of the log growth rate of the
 cumulated variable (i.e. the actual values to which the forecasts should
-be compared).}
+be compared). Subsetting is done within the function.}
 
 \item{n.ahead}{The number of time periods ahead from the end of the sample
 to be forecast. The default is 14.}

@@ -30,7 +30,7 @@ variable (\eqn{Y}). Computed as
 smoothed/filtered growth rates and components (\eqn{\delta} and
 \eqn{\gamma}), where applicable.}}
 
-\item{\code{get_gy_ci(smoothed = FALSE, confidence_level = 0.68)}}{Returns the growth rate of the incidence (\eqn{y}) of the cumulated
+\item{\code{get_gy_ci(smoothed = FALSE, confidence.level = 0.68)}}{Returns the growth rate of the incidence (\eqn{y}) of the cumulated
 variable (\eqn{Y}). Computed as
 \deqn{g_t = \exp\{\delta_t\}+\gamma_t.}
  \subsection{Parameters}{\itemize{
@@ -38,7 +38,7 @@ variable (\eqn{Y}). Computed as
   smoothed estimates of \eqn{\delta} and \eqn{\gamma} to compute the
   growth rate (\code{TRUE}), or the contemporaneous filtered estimates
   (\code{FALSE}). Default is \code{FALSE}.}
-  \item{\code{confidence_level} Confidence level for the confidence
+  \item{\code{confidence.level} Confidence level for the confidence
   interval.  Default is \eqn{0.68}, which is one standard deviation for
   a normally distributed random variable.}
 }}
@@ -69,7 +69,7 @@ states including seasonals where applicable (\code{P.t.t}).}}
 \item{\code{predict_level(
   y.cum,
   n.ahead,
-  confidence_level,
+  confidence.level,
   sea.on = FALSE,
   return.diff = FALSE
 )}}{Forecast the cumulated variable or the incidence of it. This function returns
@@ -81,7 +81,7 @@ the disease and
   \item{\code{y.cum} The cumulated variable.}
   \item{\code{n.ahead} The number of periods ahead you wish to forecast from
   the end of the estimation window.}
-  \item{\code{confidence_level} The confidence level for the log growth
+  \item{\code{confidence.level} The confidence level for the log growth
    rate that should be used to compute
   the forecast intervals of \eqn{y}.}
   \item{\code{return.diff} Logical value indicating whether to return the cumulated variable,
@@ -110,14 +110,14 @@ res <- model$estimate()
 res$print_estimation_results()
 # Forecast 7 days ahead from the end of the estimation window
 res$predict_level(y.cum = gauteng[idx.est], n.ahead = 7,
-  confidence_level = 0.68)
+  confidence.level = 0.68)
 # Forecast 7 days ahead from the model and return filtered states
 res$predict_all(n.ahead = 7, return.all = TRUE)
 # Return the filtered growth rate and its components
 res$get_growth_y(return.components = TRUE)
 # Return smoothed growth rate of incidence variable and its confidence
 # interval
-res$get_gy_ci(smoothed = TRUE, confidence_level = 0.68)
+res$get_gy_ci(smoothed = TRUE, confidence.level = 0.68)
 
 }
 \references{

@@ -670,7 +670,7 @@ observations.
 
 ```{r model_est_fix_q, eval = F}
 model = SSModelDynamicGompertz$new(Y = y, q = q)
-res = model$estimate()
+res = estimate(model)
 ```
 
 ## Results
@@ -685,18 +685,12 @@ cases series to the log of the growth rate of the cumulative cases.
 
 First, we create the evaluation sample.
 
-```{r eval_sample, eval=F}
-y.eval = Y %>%
-subset(index(.) > tail(res$index,1)) %>%
-tsgc::df2ldl()
-```
-
 `tsgc::plot_forecast` then creates and plots forecasts of $\ln(g_t)$.
 
 ```{r plot_forecast1, eval=F}
 tsgc::plot_log_forecast(
  object=res,
- y.eval = y.eval, n.ahead = n.forecasts,
+ Y = Y, n.ahead = n.forecasts,
  plt.start.date =  tail(res$index, 1) - plt.length
 )
 ```
@@ -733,7 +727,7 @@ y.eval <- Y %>%
 # Plot filtered, forecast and realised log growth rate
 p1 <- tsgc::plot_log_forecast(
   object=res,
-  y.eval = y.eval, n.ahead = n.forecasts,
+  Y=Y, n.ahead = n.forecasts,
   plt.start.date =  tail(res$index, 1) - plt.length
 )
 p1
@@ -744,7 +738,7 @@ April 2021, with their prediction intervals.
 
 ```{r fig-3, fig.cap = "Figure 3: Fourteen-day forecast of new cases from 20 April 2021 for Gauteng province in South Africa"}
 tsgc::plot_new_cases(
-  res,n.ahead=n.forecasts,
+  object=res,n.ahead=n.forecasts,
   confidence.level=confidence.level,
   date_format="%Y-%m-%d",
   plt.start.date = tail(res$index, 1) - plt.length
@@ -758,7 +752,7 @@ first differences of `Y.eval`, the cumulative series for the forecast
 window.
 
 ```{r fig-4, fig.cap = "Figure 4: Accuracy of the fourteen-day forecast of new cases from 20 April 2021 for Gauteng province in South Africa."}
-tsgc::plot_holdout(res, Y.eval = Y[(tail(res$index,1)+0:n.forecasts)],
+tsgc::plot_holdout(object=res, Y = Y, n.ahead=14,
                    confidence.level = 0.68,
                    date_format = "%Y-%m-%d")
 ```
@@ -961,7 +955,7 @@ ggplot(data = d2.df,
 The date for reinitialization is set accordingly.
 
 ```{r set_reinit_date, eval=F}
-reinit.dates = "2021-04-29"
+reinit.dates = "2021-04-21"
 ```
 
 ### Estimating the reinitialized model
@@ -975,7 +969,7 @@ model <- SSModelDynamicGompertz$new(
   reinit.date = as.Date(reinit.dates,
   format = date.format)
 )
-res.reinit <- model$estimate()
+res.reinit <- estimate(model)
 ```
 
 We generate the reinitialized data frame by setting cumulative cases to
@@ -989,7 +983,8 @@ Figure 2 for the non-reinitialized series.
 
 ```{r plot_forecast2, eval=F}
 tsgc::plot_log_forecast(
-    res.reinit,Y,
+    object=res.reinit,
+    Y=Y,
     n.ahead = n.forecasts,
     plt.start.date =  tail(res.reinit$index, 1) - plt.length,
     title='Forecast of $\\ln(g_t)$  after reinitialization.'
@@ -1033,7 +1028,8 @@ with with the reinitialized series.
 
 ```{r fig-8, fig.cap="Figure 8: Forecast of new cases after reinitialization."}
 tsgc::plot_new_cases(
-  res.reinit, n.ahead=n.forecasts,
+  object=res.reinit, 
+  n.ahead=n.forecasts,
   confidence.level=confidence.level,
   date_format="%Y-%m-%d",
   plt.start.date = tail(res.reinit$index, 1) - plt.length
