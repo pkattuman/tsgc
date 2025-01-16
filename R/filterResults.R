@@ -168,7 +168,7 @@ FilterResults <- setRefClass(
 
       return(out)
     },
-    predict_all = function(n.ahead, sea.on = FALSE, return.all = FALSE) {
+    predict_all = function(n.ahead, sea.on = TRUE, return.all = FALSE) {
       "Returns forecasts of the incidence variable \\eqn{y}, the state variables
        and the conditional covariance matrix
       for the states.

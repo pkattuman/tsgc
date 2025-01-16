@@ -323,9 +323,12 @@ forecast.peak <- function(delta, gamma) {
 #' 
 #' #Setup
 #' date_format="%Y-%m-%d"
-#' est.end.date=as.Date("2021-07-24")
+#' estimation.date.start=as.Date("2021-04-30")
+#' estimation.date.end=as.Date("2021-07-24")
 #' n.ahead=7
-#' y=gauteng[index(gauteng) <= est.end.date])
+#' Y=gauteng
+#' idx.est =(zoo::index(Y) >= estimation.date.start) & (zoo::index(Y) <= estimation.date.end)
+#' y = Y[idx.est]
 #' 
 #' #Estimate the model
 #' model_q <- SSModelDynamicGompertz$new(Y = y)

@@ -114,7 +114,7 @@ FilterResultsLI <- setRefClass(
       # Create the forecasts
       # This gives the forecasts of delta
       forcout = predict(modelKFS(output),forcmodel,interval=c('prediction'),
-                        level=confidence.level,states=c('trend'))
+                        level=confidence.level, states=c('trend'))
       
       # Create empty dataframe to put forecasts in
       forecasts <- matrix(NA,ncol=ncol(data_ldl),nrow=max(n.ahead,n.lag)) %>%
@@ -151,7 +151,7 @@ FilterResultsLI <- setRefClass(
       
       #Re-do with seasonal component
       
-      forcout_sea = predict(output$model,forcmodel,interval=c('prediction'),
+      forcout_sea = predict(modelKFS(output),forcmodel,interval=c('prediction'),
                             level=confidence.level,states='all')
       
       # Create empty dataframe to put forecasts in
@@ -217,123 +217,121 @@ FilterResultsLI <- setRefClass(
       
       return(out)
     },
-    # predict_all = function(n.ahead, sea.on = FALSE, return.all = FALSE) {
-    #   "Returns forecasts of the incidence variable \\eqn{y}, the state variables
-    #    and the conditional covariance matrix
-    #   for the states.
-    #    \\subsection{Parameters}{\\itemize{
-    #     \\item{\\code{n.ahead} The number of forecasts you wish to create from
-    #     the end of your sample period.}
-    #     \\item{\\code{sea.on} Logical value indicating whether seasonal
-    #     components should be included in the
-    #     state-space model or not. Default is \\code{FALSE}.}
-    #     \\item{\\code{return.all} Logical value indicating whether to return
-    #     all filtered estimates and forecasts
-    #     (\\code{TRUE}) or only the forecasts (\\code{FALSE}). Default is
-    #     \\code{FALSE}.}
-    #   }}
-    #   \\subsection{Return Value}{\\code{xts} object containing the forecast
-    #   (and filtered, where applicable) level
-    #   of \\eqn{y} (\\code{y.hat}), \\eqn{\\delta} (\\code{level.t.t}),
-    #   \\eqn{\\gamma} (\\code{slope.t.t}), vector of states including the
-    #   seasonals where applicable (\\code{a.t.t}) and covariance matrix of all
-    #   states including seasonals where applicable (\\code{P.t.t}).}"
-    #   
-    #   new.model <- modelKFS(output)
-    #   new.matrix<-matrix(NA, ncol = ncol(gety(new.model)), nrow = n.ahead)
-    #   new.matrix[1:min(n.lag, n.ahead),1]<-tail(data_xts[,5],min(n.lag, n.ahead))
-    #   new.model$y <- rbind(
-    #     gety(new.model),new.matrix) %>% as.ts()
-    #   
-    #   attr(new.model, 'n') <- as.integer(length(gety(modelKFS(output)))/2 + n.ahead)
-    #   
-    #   model_output <- KFS(new.model)
-    #   
-    #   if (sea.on == TRUE) {
-    #     y.hat.kfas <- predict(
-    #       output$model, interval = 'prediction',
-    #       n.ahead = n.ahead, level = 0.68, states = 'all')
-    #   } else {
-    #     y.hat.kfas <- predict(
-    #       output$model, interval = 'prediction',
-    #       n.ahead = n.ahead, level = 0.68, states = 'level')
-    #   }
-    #   
-    #   n <- attr(output$model, "n")
-    #   dates <- seq(index[1]+n.lag, by = 'day', length.out = (n + n.ahead))
-    #   
-    #   # Assumes time invariant Z.t
-    #   y.t.t <- output$att %*% t(drop(matrixKFS(output,"Z")))
-    #   
-    #   y.hat <- xts::xts(
-    #     c(y.t.t[,2], y.hat.kfas$LDLhosp[, 1] %>% as.matrix()),
-    #     order.by = dates)
-    #   
-    #   i.level <- grep("level", colnames(att(model_output)))
-    #   level.t.t <- xts::xts(att(model_output)[, i.level], order.by = dates) %>%
-    #     as.xts()
-    #   i.slope <- grep("slope", colnames(att(model_output)))
-    #   slope.t.t <- xts::xts(att(model_output)[, i.slope], order.by = dates) %>%
-    #     as.xts()
-    #   
-    #   if (!return.all) {
-    #     y.hat <- y.hat %>%
-    #       subset(index(.) > tail(index, 1))
-    #     level.t.t <- level.t.t %>%
-    #       subset(index(.) > tail(index, 1))
-    #     slope.t.t <- slope.t.t %>%
-    #       subset(index(.) > tail(index, 1))
-    #   }
-    #   
-    #   out <- list(
-    #     y.hat = y.hat,
-    #     level.t.t = level.t.t,
-    #     slope.t.t = slope.t.t,
-    #     a.t.t = att(model_output),
-    #     P.t.t = Ptt(model_output)
-    #   )
-    #   return(out)
-    # },
-    # get_growth_y = function(smoothed = FALSE, return.components = FALSE) {
-    #   "Returns the growth rate of the incidence (\\eqn{y}) of the cumulated
-    #   variable (\\eqn{Y}). Computed as
-    #   \\deqn{g_t = \\exp\\{\\delta_t\\}+\\gamma_t.}
-    #    \\subsection{Parameters}{\\itemize{
-    #     \\item{\\code{smoothed} Logical value indicating whether to use the
-    #     smoothed estimates of \\eqn{\\delta} and \\eqn{\\gamma} to compute the
-    #     growth rate (\\code{TRUE}), or the contemporaneous filtered estimates
-    #     (\\code{FALSE}). Default is \\code{FALSE}.}
-    #     \\item{\\code{return.components} Logical value indicating whether to
-    #     return the estimates of \\eqn{\\delta} and \\eqn{\\gamma} as well as
-    #     the estimates of the growth rate, or just the growth rate. Default is
-    #     \\code{FALSE}.}
-    #   }}
-    #   \\subsection{Return Value}{\\code{xts} object containing
-    #   smoothed/filtered growth rates and components (\\eqn{\\delta} and
-    #   \\eqn{\\gamma}), where applicable.}"
-    #   kfs_out <- output
-    #   idx <- index(data_xts)
-    #   
-    #   if (smoothed) {
-    #     att <- kfs_out$alphahat
-    #   } else {
-    #     att <- kfs_out$att
-    #   }
-    #   
-    #   filtered_slope <- xts(att[, "slope"], order.by = idx[(n.lag+2):length(idx)])
-    #   filtered.level <- xts(att[, "level"], order.by = idx[(n.lag+2):length(idx)])
-    #   g.t <- exp(filtered.level)
-    #   gy.t <- g.t + filtered_slope
-    #   names(gy.t) <- if (smoothed) { "smoothed gy.t" } else { "filtered gy.t" }
-    #   names(g.t) <- if (smoothed) { "smoothed g.t" } else { "filtered g.t" }
-    #   names(filtered_slope) <- if (smoothed) { "smoothed gamma.t" } else {
-    #     "filtered gamma.t" }
-    #   if (return.components) {
-    #     return(list(gy.t, g.t, filtered_slope))
-    #   } else {
-    #     return(gy.t)
-    #   }
-    # },
+    predict_all = function(n.ahead, confidence.level=0.68, sea.on = FALSE, return.all = FALSE) {
+      "Returns forecasts of the incidence variable \\eqn{y}, the state variables
+       and the conditional covariance matrix
+      for the states.
+       \\subsection{Parameters}{\\itemize{
+        \\item{\\code{n.ahead} The number of forecasts you wish to create from
+        the end of your sample period.}
+        \\item{\\code{sea.on} Logical value indicating whether seasonal
+        components should be included in the
+        state-space model or not. Default is \\code{FALSE}.}
+        \\item{\\code{return.all} Logical value indicating whether to return
+        all filtered estimates and forecasts
+        (\\code{TRUE}) or only the forecasts (\\code{FALSE}). Default is
+        \\code{FALSE}.}
+      }}
+      \\subsection{Return Value}{\\code{xts} object containing the forecast
+      (and filtered, where applicable) level
+      of \\eqn{y} (\\code{y.hat}), \\eqn{\\delta} (\\code{level.t.t}),
+      \\eqn{\\gamma} (\\code{slope.t.t}), vector of states including the
+      seasonals where applicable (\\code{a.t.t}) and covariance matrix of all
+      states including seasonals where applicable (\\code{P.t.t}).}"
+
+      new.model <- modelKFS(output)
+      new.matrix<-matrix(NA, ncol = ncol(gety(new.model)), nrow = n.ahead)
+      new.matrix[1:min(n.lag, n.ahead),1]<-tail(data_xts[,5],min(n.lag, n.ahead))
+      new.model$y <- rbind(
+        gety(new.model),new.matrix) %>% as.ts()
+
+      attr(new.model, 'n') <- as.integer(length(gety(modelKFS(output)))/2 + n.ahead)
+
+      model_output <- KFS(new.model)
+
+      if (sea.on == TRUE) {
+        y.hat.kfas <- predict(
+          modelKFS(output), forcmodel, interval = 'prediction', level = confidence.level, states = 'all')
+      } else {
+        y.hat.kfas <- predict(
+          modelKFS(output), forcmodel, interval = 'prediction', level = confidence.level, states = 'level')
+      }
+
+      n <- attr(output$model, "n")
+      dates <- seq(index[1]+n.lag, by = 'day', length.out = (n + n.ahead))
+
+      # Assumes time invariant Z.t
+      y.t.t <- output$att %*% t(drop(matrixKFS(output,"Z")))
+
+      y.hat <- xts::xts(
+        c(y.t.t[,2], y.hat.kfas$LDLhosp[, 1] %>% as.matrix()),
+        order.by = dates)
+
+      i.level <- grep("level", colnames(att(model_output)))[1]
+      level.t.t <- xts::xts(att(model_output)[, i.level], order.by = dates) %>%
+        as.xts()
+      i.slope <- grep("slope", colnames(att(model_output)))
+      slope.t.t <- xts::xts(att(model_output)[, i.slope], order.by = dates) %>%
+        as.xts()
+
+      if (!return.all) {
+        y.hat <- y.hat %>%
+          subset(index(.) > tail(index, 1))
+        level.t.t <- level.t.t %>%
+          subset(index(.) > tail(index, 1))
+        slope.t.t <- slope.t.t %>%
+          subset(index(.) > tail(index, 1))
+      }
+
+      out <- list(
+        y.hat = y.hat,
+        level.t.t = level.t.t,
+        slope.t.t = slope.t.t,
+        a.t.t = att(model_output),
+        P.t.t = Ptt(model_output)
+      )
+      return(out)
+    },
+    get_growth_y = function(smoothed = FALSE, return.components = FALSE) {
+      "Returns the growth rate of the incidence (\\eqn{y}) of the cumulated
+      variable (\\eqn{Y}). Computed as
+      \\deqn{g_t = \\exp\\{\\delta_t\\}+\\gamma_t.}
+       \\subsection{Parameters}{\\itemize{
+        \\item{\\code{smoothed} Logical value indicating whether to use the
+        smoothed estimates of \\eqn{\\delta} and \\eqn{\\gamma} to compute the
+        growth rate (\\code{TRUE}), or the contemporaneous filtered estimates
+        (\\code{FALSE}). Default is \\code{FALSE}.}
+        \\item{\\code{return.components} Logical value indicating whether to
+        return the estimates of \\eqn{\\delta} and \\eqn{\\gamma} as well as
+        the estimates of the growth rate, or just the growth rate. Default is
+        \\code{FALSE}.}
+      }}
+      \\subsection{Return Value}{\\code{xts} object containing
+      smoothed/filtered growth rates and components (\\eqn{\\delta} and
+      \\eqn{\\gamma}), where applicable.}"
+      kfs_out <- output
+      idx <- index(data_xts)
+
+      if (smoothed) {
+        att <- kfs_out$alphahat
+      } else {
+        att <- kfs_out$att
+      }
+
+      filtered_slope <- xts(att[, "slope"], order.by = idx[(n.lag+2):length(idx)])
+      filtered.level <- xts(att[, "level"], order.by = idx[(n.lag+2):length(idx)])
+      g.t <- exp(filtered.level)
+      gy.t <- g.t + filtered_slope
+      names(gy.t) <- if (smoothed) { "smoothed gy.t" } else { "filtered gy.t" }
+      names(g.t) <- if (smoothed) { "smoothed g.t" } else { "filtered g.t" }
+      names(filtered_slope) <- if (smoothed) { "smoothed gamma.t" } else {
+        "filtered gamma.t" }
+      if (return.components) {
+        return(list(gy.t, g.t, filtered_slope))
+      } else {
+        return(gy.t)
+      }
+    },
     get_gy_ci = function(smoothed = FALSE, confidence.level = 0.68) {
       "Returns the growth rate of the incidence (\\eqn{y}) of the cumulated
       variable (\\eqn{Y}). Computed as
@@ -383,7 +381,6 @@ FilterResultsLI <- setRefClass(
       H <- matrixKFS(output, "H")[, , 1]
       Q_gamma <- matrixKFS(output, "Q")[2, 2, 1]
       Q_seasonal <- matrixKFS(output, "Q")[3, 3, 1]
-      index <- index(data_xts)
       start_date <- index[1]
       end_date <- index[length(index)]
       cat("Summary of FilterResults Object\n")
@@ -470,7 +467,6 @@ FilterResultsLI <- setRefClass(
       the forecast and realised log cumulative growth rate of the target variable
       out of the estimation sample. For more details, see \\link{plot_log_forecast}."
     res<-.self
-    out<-output
     
     old=data_xts[,"LDLhosp"]
     old=old[index(old)>head(index(old),1)+n.lag]
@@ -480,7 +476,7 @@ FilterResultsLI <- setRefClass(
     actual=eng_full[1:n.ahead]
     
     lcadmit = lag(as.vector(data_xts$cAdmit)) %>% na.omit()
-    smldlh = predict(out$model,states='trend')$LDLhosp
+    smldlh = predict(output$model,states='trend')$LDLhosp
     filtered=xts(smldlh,(head(index(data_xts),1)+n.lag)+(1:length(smldlh)))
     
     start_date<-index(data_xts)[1]
@@ -498,14 +494,14 @@ FilterResultsLI <- setRefClass(
     forcdata[1:n.lag,1] = as.vector(tail(data_xts,n.lag)$LDLcases)
     
     # Extract estimate of Q from earlier model
-    Qf = out$model$Q[,,1]
+    Qf = output$model$Q[,,1]
     if (is.na(res$sea.period)) {
       forcmodel = SSModel(forcdata ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,Qf[2,2]),2,2),type = 'common')+SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1),
-                          H = out$model$H)
+                          H = output$model$H)
     } else {
-      forcmodel = SSModel(forcdata ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,Qf[2,2]),2,2),type = 'common')+SSMseasonal(res$sea.period,Q = matrix(c(Qf[4,4],0,0,Qf[5,5]),2,2), sea.type='dummy', type='distinct')+SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1),H = out$model$H)
+      forcmodel = SSModel(forcdata ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,Qf[2,2]),2,2),type = 'common')+SSMseasonal(res$sea.period,Q = matrix(c(Qf[4,4],0,0,Qf[5,5]),2,2), sea.type='dummy', type='distinct')+SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1),H = output$model$H)
     }
-    forcout = predict(out$model,forcmodel,interval=c('prediction'),
+    forcout = predict(output$model,forcmodel,interval=c('prediction'),
                       level=0.68,states=c('trend'))
     
     if (n.lag>=n.ahead){

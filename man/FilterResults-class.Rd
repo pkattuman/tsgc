@@ -67,7 +67,7 @@ showing actual values, forecasts including seasonal components,
 and prediction intervals around the forecasts. 
 For more details, see \link{plot_new_cases}.}
 
-\item{\code{predict_all(n.ahead, sea.on = FALSE, return.all = FALSE)}}{Returns forecasts of the incidence variable \eqn{y}, the state variables
+\item{\code{predict_all(n.ahead, sea.on = TRUE, return.all = FALSE)}}{Returns forecasts of the incidence variable \eqn{y}, the state variables
  and the conditional covariance matrix
 for the states.
  \subsection{Parameters}{\itemize{

@@ -28,13 +28,23 @@ providing a measure of forecast accuracy. If the vanilla growth curve model
 is used, ensure that the date format is "\%Y-\%m-\%d".
 }
 \examples{
-date_format="\%Y-\%m-\%d"
-est.end.date=as.Date("2021-07-24")
+library(tsgc)
 
-model_q <- SSModelDynamicGompertz$new(Y = gauteng[index(gauteng) <= est.end.date])
+#Setup
+date_format="\%Y-\%m-\%d"
+estimation.date.start=as.Date("2021-04-30")
+estimation.date.end=as.Date("2021-07-24")
+n.ahead=7
+Y=gauteng
+idx.est =(zoo::index(Y) >= estimation.date.start) & (zoo::index(Y) <= estimation.date.end)
+y = Y[idx.est]
+
+#Estimate the model
+model_q <- SSModelDynamicGompertz$new(Y = y)
 res <- estimate(model_q)
 
-mapes(res,n.ahead,model_q)
+#Return MAPE of forecast
+mapes(res,n.ahead=n.ahead,y)
 
 
 }

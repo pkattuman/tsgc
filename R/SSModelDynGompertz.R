@@ -401,14 +401,14 @@ SSModelDynamicGompertz <- setRefClass(
             # NB. Restrict sample to t<=r - date of reinitialisation.
             idx.est <- zoo::index(Y) <= reinit.date
             model <- SSModelDynamicGompertz$new(Y = Y[idx.est], q = q)
-            res.original <- model$estimate()
+            res.original <- estimate(model)
             model_output <- output(res.original)
           } else {
             model_output <- output(original.results)
             model_seasonal <- seasonalComp(original.results)
-            sea.type <<- if (is.null(model_seasonal)) {'none'} else {
+            season.type <- if (is.null(model_seasonal)) {'none'} else {
               'trigonometric'}
-            sea.period <<- if (!is.null(model_seasonal)) {
+            season.period <- if (!is.null(model_seasonal)) {
               ncol(att(model_output)) - 1}
           }
           
@@ -436,7 +436,7 @@ SSModelDynamicGompertz <- setRefClass(
           a1 <- NULL; P1 <- NULL; Qt <- NULL; Ht <- NULL
         }
         out <- .self$get_dynamic_gompertz_model(
-          y = y.reinit, q = q, sea.type = sea.type, sea.period = sea.period,
+          y = y.reinit, q = q, sea.type = season.type, sea.period = season.period,
           a1 = a1, P1 = P1, Q = Qt, H = Ht
         )
         out[['index']] <- index(y.reinit)
@@ -445,7 +445,6 @@ SSModelDynamicGompertz <- setRefClass(
     },
     summary = function() {
       out <- suppressWarnings(output(.self$estimate()))
-      q <<-.self$q
       if(is.null(q)){
         qest <- matrixKFS(out,"Q")[2, 2, 1]/matrixKFS(out,"H")[, , 1]
       }
@@ -486,7 +485,7 @@ SSModelDynamicGompertz <- setRefClass(
     },
     print = function() {
       reinit<-!is.null(reinit.date)
-      out <- output(.self$estimate()) #KFS object
+      out <- output(estimate(.self)) #KFS object
       if(is.null(q)){
         qest <- matrixKFS(out,"Q")[2, 2, 1]/matrixKFS(out,"H")[, , 1]
       }

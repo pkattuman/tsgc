@@ -13,6 +13,23 @@ level of the incidence variable \eqn{y}, and forecasts of \eqn{y}.
 \section{Methods}{
 
 \describe{
+\item{\code{get_growth_y(smoothed = FALSE, return.components = FALSE)}}{Returns the growth rate of the incidence (\eqn{y}) of the cumulated
+variable (\eqn{Y}). Computed as
+\deqn{g_t = \exp\{\delta_t\}+\gamma_t.}
+ \subsection{Parameters}{\itemize{
+  \item{\code{smoothed} Logical value indicating whether to use the
+  smoothed estimates of \eqn{\delta} and \eqn{\gamma} to compute the
+  growth rate (\code{TRUE}), or the contemporaneous filtered estimates
+  (\code{FALSE}). Default is \code{FALSE}.}
+  \item{\code{return.components} Logical value indicating whether to
+  return the estimates of \eqn{\delta} and \eqn{\gamma} as well as
+  the estimates of the growth rate, or just the growth rate. Default is
+  \code{FALSE}.}
+}}
+\subsection{Return Value}{\code{xts} object containing
+smoothed/filtered growth rates and components (\eqn{\delta} and
+\eqn{\gamma}), where applicable.}}
+
 \item{\code{get_gy_ci(smoothed = FALSE, confidence.level = 0.68)}}{Returns the growth rate of the incidence (\eqn{y}) of the cumulated
 variable (\eqn{Y}). Computed as
 \deqn{g_t = \exp\{\delta_t\}+\gamma_t.}
@@ -50,6 +67,32 @@ out of the estimation sample. For more details, see \link{plot_log_forecast}.}
 variable, showing actual values, forecasts including seasonal components,
 and prediction intervals around the forecasts. For more details, see 
 \link{plot_new_cases}}
+
+\item{\code{predict_all(
+  n.ahead,
+  confidence.level = 0.68,
+  sea.on = FALSE,
+  return.all = FALSE
+)}}{Returns forecasts of the incidence variable \eqn{y}, the state variables
+ and the conditional covariance matrix
+for the states.
+ \subsection{Parameters}{\itemize{
+  \item{\code{n.ahead} The number of forecasts you wish to create from
+  the end of your sample period.}
+  \item{\code{sea.on} Logical value indicating whether seasonal
+  components should be included in the
+  state-space model or not. Default is \code{FALSE}.}
+  \item{\code{return.all} Logical value indicating whether to return
+  all filtered estimates and forecasts
+  (\code{TRUE}) or only the forecasts (\code{FALSE}). Default is
+  \code{FALSE}.}
+}}
+\subsection{Return Value}{\code{xts} object containing the forecast
+(and filtered, where applicable) level
+of \eqn{y} (\code{y.hat}), \eqn{\delta} (\code{level.t.t}),
+\eqn{\gamma} (\code{slope.t.t}), vector of states including the
+seasonals where applicable (\code{a.t.t}) and covariance matrix of all
+states including seasonals where applicable (\code{P.t.t}).}}
 
 \item{\code{predict_level(n.ahead = n.lag, confidence.level = 0.68)}}{Forecast the cumulated variable or the incidence of it. This function returns
 the forecast of the cumulated variable \eqn{Y}, or the forecast of the incidence of the cumulated variable, \eqn{y}. For
