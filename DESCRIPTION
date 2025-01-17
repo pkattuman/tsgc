@@ -1,6 +1,6 @@
 Package: tsgc
 Title: Time Series Methods Based on Growth Curves
-Version: 1.0.0
+Version: 2.0.0
 Authors@R: c(person(given = "Craig", family = "Thamotheram", role = c("aut", "cre"), email = "cpt@tacindex.com"),
     person(given = "Michael", family = "Ashby", role = c("ctb"), email = "mwa22@cam.ac.uk"),
     person(given = "Paul", family = "Kattuman", role = c("ctb"), email = "p.kattuman@jbs.cam.ac.uk"),
@@ -36,7 +36,6 @@ Suggests:
     here,
     timetk,
     testthat,
-    purrr,
     kableExtra
 Config/testthat/edition: 3
 Imports:
@@ -46,11 +45,12 @@ Imports:
     ggthemes,
     zoo,
     magrittr,
-    scales,
     dplyr,
     tidyr,
-    methods
+    methods,
+    ForecastComb,
+    purrr
 BugReports: https://github.com/Craig-PT/tsgc/issues
 Depends:
-    R (>= 2.10)
+    R (>= 3.5.0)
 LazyData: true
