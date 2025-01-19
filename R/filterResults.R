@@ -732,7 +732,7 @@ FilterResults <- setRefClass(
     mapes=function(n.ahead,Y){
         date_format="%Y-%m-%d"
         
-        y.level.est <- Y[est.date.index]
+        y.level.est <- data_xts
         
         p <- attr(output$model, 'p')
         if(p!=1) { stop('NotImplementedError') }
