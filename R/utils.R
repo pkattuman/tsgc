@@ -130,8 +130,7 @@ argmax <- function(x, decreasing=TRUE) {
 #' confidence intervals for these estimates.
 #'
 #' @param res Results object estimated using the \samp{estimate()} method.
-#' @param  res.dir File path to save the results to.
-#' @param Y Cumulated variable.
+#' @param res.dir File path to save the results to.
 #' @param n.ahead Number of periods ahead to forecast.
 #' @param confidence.level Confidence level to use for the confidence interval
 #' on the forecasts \eqn{\ln(g_t)}.
@@ -162,13 +161,22 @@ write_results <- function(res, res.dir, n.ahead, confidence.level=0.68) {
   y.level.est <- res$data_xts
 
   # 1. New Cases - Delta Y
-  y.hat.diff <- res$predict_level(
-    y.cum = y.level.est,
-    n.ahead = n.ahead,
-    confidence.level= confidence.level,
-    sea.on = TRUE,
-    return.diff = TRUE
-  )
+  if (class(res)=="FilterResults"){
+    y.hat.diff <- res$predict_level(
+      y.cum = y.level.est,
+      n.ahead = n.ahead,
+      confidence.level= confidence.level,
+      sea.on = TRUE,
+      return.diff = TRUE
+    )
+  } else {
+    preds <- res$predict_level(
+      n.ahead = n.ahead,
+      confidence.level= confidence.level
+    )
+    y.hat.diff<-preds$seasonal
+  }
+  
   write.csv(
     y.hat.diff,
     row.names = index(y.hat.diff),
@@ -182,7 +190,7 @@ write_results <- function(res, res.dir, n.ahead, confidence.level=0.68) {
   a.t.t <- y.hat.all$a.t.t
   P.t.t <- y.hat.all$P.t.t
   idx.slope <- grep("slope", colnames(a.t.t))
-  idx.level <- grep("level", colnames(a.t.t))
+  idx.level <- grep("level", colnames(a.t.t))[1]
   gamma.std.err <- sqrt(P.t.t[idx.slope, idx.slope,])
   delta.std.err <- sqrt(P.t.t[idx.level, idx.level,])
   gamma <- cbind(filtered.slope, gamma.std.err)
@@ -565,7 +573,5 @@ combine_forecasts=function(Y,est.start.date,est.end.date,
     return(method(data))
   }
 }
-
-
 
 

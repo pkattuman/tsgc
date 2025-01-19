@@ -15,8 +15,6 @@ write_results(res, res.dir, n.ahead, confidence.level = 0.68)
 
 \item{confidence.level}{Confidence level to use for the confidence interval
 on the forecasts \eqn{\ln(g_t)}.}
-
-\item{Y}{Cumulated variable.}
 }
 \value{
 A number of csv files saved in the directory specified in
