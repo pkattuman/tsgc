@@ -158,12 +158,9 @@ argmax <- function(x, decreasing=TRUE) {
 #'
 #' @export
 write_results <- function(res, res.dir, n.ahead, confidence.level=0.68) {
-  y.level.est <- res$data_xts
-
   # 1. New Cases - Delta Y
   if (class(res)=="FilterResults"){
     y.hat.diff <- res$predict_level(
-      y.cum = y.level.est,
       n.ahead = n.ahead,
       confidence.level= confidence.level,
       sea.on = TRUE,

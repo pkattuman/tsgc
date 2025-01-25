@@ -65,11 +65,10 @@ FilterResults <- setRefClass(
       output <<- output
     },
     predict_level = function(
-      y.cum,
       n.ahead,
-      confidence.level,
-      sea.on = FALSE,
-      return.diff = FALSE)
+      confidence.level=0.68,
+      sea.on = FALSE, 
+      return.diff=TRUE)
     {
       "Forecast the cumulated variable or the incidence of it. This function returns
       the forecast of the cumulated variable \\eqn{Y}, or the forecast of the incidence of the cumulated variable, \\eqn{y}. For
@@ -77,7 +76,6 @@ FilterResults <- setRefClass(
       the disease and
        \\eqn{Y} the cumulative number of recorded infections.
        \\subsection{Parameters}{\\itemize{
-        \\item{\\code{y.cum} The cumulated variable.}
         \\item{\\code{n.ahead} The number of periods ahead you wish to forecast from
         the end of the estimation window.}
         \\item{\\code{confidence.level} The confidence level for the log growth
@@ -86,11 +84,12 @@ FilterResults <- setRefClass(
         \\item{\\code{return.diff} Logical value indicating whether to return the cumulated variable,
         \\eqn{Y}, or the incidence of it,
         \\eqn{y} (i.e., the first difference of the cumulated variable). Default is
-        \\code{FALSE}.}
+        \\code{TRUE}.}
       }}
       \\subsection{Return Value}{\\code{xts} object containing the point
       forecasts and upper and lower bounds of
       the forecast interval.}"
+      y.cum<-data_xts
       model <- modelKFS(output)
       n <- attr(model, "n")
       p <- attr(model, "p")
@@ -387,12 +386,11 @@ FilterResults <- setRefClass(
     if (is.null(plt.start.date)) {plt.start.date <- head(est.date.index, 1)}
     
     y.hat.diff.final.ci <- .self$predict_level(
-      y.cum = y.level.est, n.ahead = n.ahead, confidence.level = confidence.level,
-      return.diff = TRUE
+      n.ahead = n.ahead, confidence.level = confidence.level
     )
     y.hat.diff.final <- .self$predict_level(
-      y.cum = y.level.est, n.ahead = n.ahead, confidence.level = confidence.level,
-      sea.on = TRUE, return.diff = TRUE
+      n.ahead = n.ahead, confidence.level = confidence.level,
+      sea.on = TRUE
     )
     
     tmp.date <- min(estimation.date.end - 4, as.Date(plt.start.date, format=date_format))
@@ -664,13 +662,11 @@ FilterResults <- setRefClass(
       estimation.date.end <- tail(est.date.index, 1)
       
       y.hat.diff.final.ci <- res$predict_level(
-        y.cum = y.level.est, n.ahead = n.ahead, confidence.level = confidence.level,
-        return.diff = TRUE
+        n.ahead = n.ahead, confidence.level = confidence.level
       )
       y.hat.diff.final <- res$predict_level(
-        y.cum = y.level.est, n.ahead = n.ahead, confidence.level = confidence.level,
-        sea.on = TRUE,
-        return.diff = TRUE
+        n.ahead = n.ahead, confidence.level = confidence.level,
+        sea.on = TRUE
       )
       
       ids=(index(y.eval.diff)>estimation.date.end) & (index(y.eval.diff)<estimation.date.end+n.ahead+1)
@@ -745,13 +741,11 @@ FilterResults <- setRefClass(
         estimation.date.end <- tail(est.date.index, 1)
         
         y.hat.diff.final.ci <- .self$predict_level(
-          y.cum = y.level.est, n.ahead = n.ahead, confidence.level = 0.68,
-          return.diff = TRUE
+          n.ahead = n.ahead, confidence.level = 0.68
         )
         y.hat.diff.final <- .self$predict_level(
-          y.cum = y.level.est, n.ahead = n.ahead, confidence.level =0.68,
-          sea.on = TRUE,
-          return.diff = TRUE
+          n.ahead = n.ahead, confidence.level =0.68,
+          sea.on = TRUE
         )
         
         # Extract the relevant columns
