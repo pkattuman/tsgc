@@ -4,10 +4,18 @@
 \alias{plot_gy_ci}
 \title{Plots the growth rates and slope of the log cumulative growth rate}
 \usage{
-plot_gy_ci(object, ...)
+plot_gy_ci(
+  res,
+  plt.start.date = NULL,
+  smoothed = FALSE,
+  title = NULL,
+  series.name = NULL,
+  pad.right = NULL
+)
 }
 \arguments{
-\item{res}{Results object estimated using the \code{estimate()} method.}
+\item{res}{A \code{filterResults} or \code{filterResultsLI} object, obtained from
+\code{estimate()} method.}
 
 \item{plt.start.date}{Plot start date. Default is \code{NULL} which is the
 start of the estimation sample.}

@@ -30,6 +30,9 @@ period of \code{totaldays} days.}
 \item{n.ahead}{Integer specifying the number of days to forecast ahead for
 MAPE evaluation.}
 
+\item{all_lags}{Positive integer-valued array specifying which lags we are using
+in leading indicator models for comparison.}
+
 \item{totaldays}{Integer indicating the total number of days for which
 walk-forward validation results will be reported.}
 

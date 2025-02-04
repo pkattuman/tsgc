@@ -45,6 +45,35 @@ variable (\eqn{Y}). Computed as
 \subsection{Return Value}{\code{xts} object containing smoothed/filtered
  growth rates and upper and lower bounds for the confidence intervals.}}
 
+\item{\code{mapes(n.ahead, Y)}}{Compute Mean Absolute Percentage Error (MAPE) for trend and seasonal 
+forecasts against a holdout sample. For more details, please refer to 
+\link{mapes}.}
+
+\item{\code{plot_gy_ci(
+  plt.start.date = NULL,
+  smoothed = FALSE,
+  title = NULL,
+  series.name = NULL,
+  pad.right = NULL
+)}}{Plots the growth rates and the slope of the log cumulative growth rate of 
+the target variable against the dates in estimation sample. 
+  For more details, please see \link{plot_gy_ci}.}
+
+\item{\code{plot_gy_components(plt.start.date = NULL, smoothed = FALSE, title = NULL)}}{Plots the growth rates and slope of the log cumulative growth rate 
+against the dates in estimation sample. 
+For more details, please see \link{plot_gy_components}.}
+
+\item{\code{plot_holdout(
+  Y,
+  n.ahead = 14,
+  confidence.level = 0.68,
+  date_format = "\%Y-\%m-\%d",
+  series.name = "target variable",
+  title = NULL,
+  caption = NULL
+)}}{Plots the forecast of the target variable over a holdout sample. 
+For more details, please refer to \link{plot_holdout}.}
+
 \item{\code{plot_log_forecast(
   Y,
   n.ahead = 14,
@@ -66,7 +95,7 @@ out of the estimation sample. For more details, see \link{plot_log_forecast}.}
 )}}{Generates a forecast plot for the difference in the cumulative target 
 variable, showing actual values, forecasts including seasonal components,
 and prediction intervals around the forecasts. For more details, see 
-\link{plot_new_cases}}
+\link{plot_new_cases}.}
 
 \item{\code{predict_all(n.ahead, sea.on = FALSE, return.all = FALSE)}}{Returns forecasts of the incidence variable \eqn{y}, the state variables
  and the conditional covariance matrix
@@ -106,8 +135,13 @@ the disease and
 objects: the point forecasts and upper and lower bounds of the forecast interval
 for trend and forecast with seasonal component.}}
 
+\item{\code{print()}}{Provides a quick glimpse of model states and standard errors.}
+
 \item{\code{print_estimation_results()}}{Prints a table of estimated parameters in a format ready to paste into
 LaTeX.}
+
+\item{\code{summary()}}{Supplies details of the filterResults object, such as estimated 
+parameter values, start and end dates of estimation.}
 }}
 
 \examples{

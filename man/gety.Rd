@@ -10,5 +10,5 @@ gety(object)
 \item{object}{SSModel object}
 }
 \description{
-Accessor method to access time series y in SSModel object
+Accessor method to access time series y in \code{SSModel} object
 }

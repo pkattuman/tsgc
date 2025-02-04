@@ -7,8 +7,8 @@
 estimate(model)
 }
 \arguments{
-\item{model}{SSModelDynamicGompertz object}
+\item{model}{A \code{SSModelDynamicGompertz} or \code{SSModelLeadingIndicator} object}
 }
 \description{
-Accessor method to obtain estimated model for SSModelDynamicGompertz class
+Accessor method to obtain estimated model for \code{SSModelDynamicGompertz} class
 }

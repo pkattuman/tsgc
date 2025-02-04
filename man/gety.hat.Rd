@@ -7,8 +7,8 @@
 gety.hat(object)
 }
 \arguments{
-\item{object}{SSModel object}
+\item{object}{A \code{SSModel} object}
 }
 \description{
-Accessor method to access time series y in SSModel object
+Accessor method to access time series y in \code{SSModel} object
 }

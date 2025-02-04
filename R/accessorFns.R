@@ -26,11 +26,11 @@ output<-function(object){
   return(object$output)
 }
 
-#' @title Extract SSModel of KFS
+#' @title Extract SSModel object within KFS object
 #
 #' @description Accessor method to access the fitted SSModel
 #'
-#' @param object FilterResults object
+#' @param object KFS object
 #'
 #'
 #' @export
@@ -104,7 +104,7 @@ matrixKFS<-function(object,matrix){
 
 #' @title Extract time series y in SSModel
 #
-#' @description Accessor method to access time series y in SSModel object
+#' @description Accessor method to access time series y in `SSModel` object
 #'
 #' @param object SSModel object
 #'
@@ -115,9 +115,9 @@ gety<-function(object){
 
 #' @title Extract prediction y.hat in SSModel
 #
-#' @description Accessor method to access time series y in SSModel object
+#' @description Accessor method to access time series y in `SSModel` object
 #'
-#' @param object SSModel object
+#' @param object A `SSModel` object
 #'
 #' @export
 gety.hat<-function(object){
@@ -127,9 +127,9 @@ gety.hat<-function(object){
 
 #' @title Extract alphahat in SSModel
 #
-#' @description Accessor method to access alphahat in SSModel object
+#' @description Accessor method to access alphahat in `SSModel` object
 #'
-#' @param object SSModel object
+#' @param object A `SSModel` object
 #'
 #' @export
 alphahat<-function(object){
@@ -138,9 +138,9 @@ alphahat<-function(object){
 
 #' @title Calling estimate method for SSModelDynamicGompertz class
 #'
-#' @description Accessor method to obtain estimated model for SSModelDynamicGompertz class
+#' @description Accessor method to obtain estimated model for `SSModelDynamicGompertz` class
 #'
-#' @param model SSModelDynamicGompertz object
+#' @param model A `SSModelDynamicGompertz` or `SSModelLeadingIndicator` object
 #' 
 #' @export
 estimate<-function(model){

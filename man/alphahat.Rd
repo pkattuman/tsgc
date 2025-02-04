@@ -7,8 +7,8 @@
 alphahat(object)
 }
 \arguments{
-\item{object}{SSModel object}
+\item{object}{A \code{SSModel} object}
 }
 \description{
-Accessor method to access alphahat in SSModel object
+Accessor method to access alphahat in \code{SSModel} object
 }

@@ -57,6 +57,36 @@ variable (\eqn{Y}). Computed as
 \subsection{Usage}{\code{SSModelDynGompertzReinit$new(y, q = 0.005,
 reinit.date = as.Date("2021-05-12",format = date.format))}}}
 
+\item{\code{mapes(n.ahead, Y)}}{Compute Mean Absolute Percentage Error (MAPE) for trend and seasonal 
+forecasts against a holdout sample. For more details, please refer to 
+\link{mapes}.}
+
+\item{\code{plot_gy_ci(
+  plt.start.date = NULL,
+  smoothed = FALSE,
+  title = NULL,
+  series.name = NULL,
+  pad.right = NULL
+)}}{Plots the growth rates and the slope of the log cumulative growth rate 
+against the dates in estimation sample. 
+For more details, please see \link{plot_gy_ci}.}
+
+\item{\code{plot_gy_components(plt.start.date = NULL, smoothed = FALSE, title = NULL)}}{Plots the growth rates and slope of the log cumulative growth rate 
+against the dates in estimation sample. 
+For more details, please see \link{plot_gy_components}.}
+
+\item{\code{plot_holdout(
+  Y,
+  n.ahead = 14,
+  confidence.level = 0.68,
+  date_format = "\%Y-\%m-\%d",
+  series.name = "target variable",
+  title = NULL,
+  caption = NULL
+)}}{Plots the forecast of new cases (the difference of the cumulated
+variable) over a holdout sample. For more details, please refer to 
+\link{plot_holdout}.}
+
 \item{\code{plot_log_forecast(
   Y,
   n.ahead = 14,
@@ -73,7 +103,8 @@ see \link{plot_log_forecast}.}
   confidence.level = 0.68,
   date_format = "\%Y-\%m-\%d",
   title = NULL,
-  plt.start.date = NULL
+  plt.start.date = NULL,
+  series.name = "target variable"
 )}}{Generates a forecast plot for the difference in the cumulative variable,
 showing actual values, forecasts including seasonal components,
 and prediction intervals around the forecasts. 

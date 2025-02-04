@@ -91,7 +91,11 @@ FilterResults <- setRefClass(
       \\subsection{Return Value}{\\code{xts} object containing the point
       forecasts and upper and lower bounds of
       the forecast interval.}"
-      y.cum<-data_xts
+      if (!is.null(reinit.date)){
+        y.cum<-reinitialise_dataframe(data_xts, reinit.date)
+      } else {
+        y.cum<-data_xts
+      }
       model <- modelKFS(output)
       n <- attr(model, "n")
       p <- attr(model, "p")
@@ -367,8 +371,10 @@ FilterResults <- setRefClass(
       cat("\n")
       cat("Seasonality noise:",format(Q_seasonal, digits = 4))
     }, 
-    plot_new_cases=function(n.ahead=14, confidence.level = 0.68, date_format = "%Y-%m-%d",
-    title=NULL, plt.start.date=NULL) {
+    plot_new_cases=function(n.ahead=14, confidence.level = 0.68, 
+                            date_format = "%Y-%m-%d",
+                            title=NULL, plt.start.date=NULL, 
+                            series.name="target variable") {
       "Generates a forecast plot for the difference in the cumulative variable,
       showing actual values, forecasts including seasonal components,
       and prediction intervals around the forecasts. 
@@ -424,7 +430,7 @@ FilterResults <- setRefClass(
       ggplot2::scale_color_manual(values = c("black", "grey", "#AA2045")) +
       ggplot2::geom_ribbon(data = ci, aes(x = date, ymin = lower, ymax = upper),
                            linetype = 0, linewidth = 0, fill = "#AA2045", alpha = 0.1) +
-      labs(x = "Date", y = "New Cases", title = title) +
+      labs(x = "Date", y = paste("New", series.name), title = title) +
       theme_economist_white(gray_bg = FALSE, base_size = 12) +
       theme(legend.title = element_blank()) +
       theme(
@@ -544,13 +550,15 @@ FilterResults <- setRefClass(
     }, 
     plot_gy_components = function(plt.start.date = NULL,
                                    smoothed = FALSE, title = NULL){
-      res<-.self
+      "Plots the growth rates and slope of the log cumulative growth rate 
+      against the dates in estimation sample. 
+      For more details, please see \\link{plot_gy_components}."
       Value <- Variable <- NULL
       # Determine plot start date
-      if(is.null(plt.start.date)) plt.start.date <- res$index[1]
+      if(is.null(plt.start.date)) plt.start.date <-.self$index[1]
       
       # Get gy.t, g.t and gamma
-      gy.components <- res$get_growth_y(return.components = TRUE, smoothed =
+      gy.components <-.self$get_growth_y(return.components = TRUE, smoothed =
                                           smoothed)
       gy.t <- gy.components[[1]]
       g.t <- gy.components[[2]]
@@ -584,14 +592,16 @@ FilterResults <- setRefClass(
     },
     plot_gy_ci = function(plt.start.date = NULL, smoothed = FALSE,
                            title = NULL, series.name = NULL, pad.right = NULL){
-      res<-.self
+      "Plots the growth rates and the slope of the log cumulative growth rate 
+      against the dates in estimation sample. 
+      For more details, please see \\link{plot_gy_ci}."
       Date <- fit <- upper <- lower <- NULL
       
       # Determine plot start date
-      if(is.null(plt.start.date)) plt.start.date <- res$index[1]
+      if(is.null(plt.start.date)) plt.start.date <-.self$index[1]
       
       # Get confidence intervals to plot
-      gy.ci<- res$get_gy_ci(smoothed = smoothed)
+      gy.ci<-.self$get_gy_ci(smoothed = smoothed)
       
       y.lab <- if(is.null(series.name)) { c("Growth rate") } else {
         paste("Growth rate of"," ",series.name,sep="")
@@ -639,34 +649,38 @@ FilterResults <- setRefClass(
       return(p1)
     }, 
     plot_holdout = function(Y, n.ahead=14,confidence.level = 0.68,
-                             date_format = "%Y-%m-%d", series.name = NULL,
+                             date_format = "%Y-%m-%d", 
+                            series.name = "target variable",
                              title= NULL, caption = NULL) {
-      res<-.self
+      "Plots the forecast of new cases (the difference of the cumulated
+      variable) over a holdout sample. For more details, please refer to 
+      \\link{plot_holdout}."
+      
       if (!is.null(reinit.date)){
         Y.est<-reinitialise_dataframe(data_xts, reinit.date)
       } else {
         Y.est<-data_xts
       }
       
-      model <- res$output$model
-      est.date.index <- res$index
+      model <- modelKFS(output)
+      est.date.index <-.self$index
       
       y.level.est <- Y.est[est.date.index]
       
-      p <- attr(res$output$model, 'p')
+      p <- attr(model, 'p')
       if(p!=1) { stop('NotImplementedError') }
       
       #Evaluation values
       
       y.eval.diff <- diff(Y) %>% na.omit
       
-      est.date.index <- res$index %>% as.Date()
+      est.date.index <- .self$index %>% as.Date()
       estimation.date.end <- tail(est.date.index, 1)
       
-      y.hat.diff.final.ci <- res$predict_level(
+      y.hat.diff.final.ci <-.self$predict_level(
         n.ahead = n.ahead, confidence.level = confidence.level
       )
-      y.hat.diff.final <- res$predict_level(
+      y.hat.diff.final <-.self$predict_level(
         n.ahead = n.ahead, confidence.level = confidence.level,
         sea.on = TRUE
       )
@@ -728,11 +742,12 @@ FilterResults <- setRefClass(
       return(p1)
     },
     mapes=function(n.ahead,Y){
-        date_format="%Y-%m-%d"
-        
+      "Compute Mean Absolute Percentage Error (MAPE) for trend and seasonal 
+    forecasts against a holdout sample. For more details, please refer to 
+    \\link{mapes}."
         y.level.est <- data_xts
         
-        p <- attr(output$model, 'p')
+        p <- attr(modelKFS(output), 'p')
         if(p!=1) { stop('NotImplementedError') }
         
         Y.eval<-Y[(tail(index,1)+0:n.ahead)]

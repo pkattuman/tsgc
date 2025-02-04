@@ -24,7 +24,8 @@
 #' around the forecasts. The forecast intervals are based on the prediction
 #' intervals for \eqn{\ln(g_t)}.
 #'
-#' @param res Results object estimated using the \code{estimate()} method.
+#' @param res A `filterResults` or `filterResultsLI` object, obtained from
+#' \code{estimate()} method.
 #' @param n.ahead Number of forecasts (i.e. number of periods ahead to forecast
 #' from end of estimation window). Default is 14.
 #' @param confidence.level Width of prediction interval for \eqn{\ln g_t} to
@@ -36,6 +37,8 @@
 #' @param plt.start.date First date of actual data (from estimation sample) to
 #' plot on graph.\code{NULL} (i.e. plots all data in estimation window) by
 #' default.
+#' @param series.name The name of the series the growth rate is being computed
+#' for. E.g. \code{'cases'}. Default is "target variable".
 #'
 #' @importFrom ggplot2 scale_color_manual scale_linetype_manual aes labs theme
 #' @importFrom ggplot2 element_blank element_text rel scale_x_date
@@ -58,11 +61,17 @@
 #'
 #' # Plot forecast of new cases 7 days ahead
 #' plot_new_cases(res, n.ahead=7, confidence.level = 0.68, date_format = "%Y-%m-%d",
-#' title = "Forecast new cases", plt.start.date = as.Date("2020-07-13"))
+#' title = "Forecast new cases", plt.start.date = as.Date("2020-07-13"),series.name="cases")
 #'
 #' @export
-plot_new_cases <- function(object,...) {
-  object$plot_new_cases(...)
+plot_new_cases <- function(res,n.ahead=7, confidence.level = 0.68, 
+                           date_format = "%Y-%m-%d",
+                           title=NULL, plt.start.date=NULL, 
+                           series.name="target variable") {
+  res$plot_new_cases(n.ahead, confidence.level, 
+                        date_format,
+                        title, plt.start.date, 
+                        series.name)
 }
 
 #' @title Plots forecast and realised values of the log cumulative growth rate
@@ -71,7 +80,8 @@ plot_new_cases <- function(object,...) {
 #' rate (\eqn{\ln(g_t)}) in the estimation sample and the forecast and realised
 #' log cumulative growth rate out of the estimation sample.
 #'
-#' @param res Results object estimated using the \code{estimate()} method.
+#' @param res A `filterResults` or `filterResultsLI` object, obtained from
+#' \code{estimate()} method.
 #' @param Y Cumulated dataset containing future values.
 #' @param n.ahead The number of time periods ahead from the end of the sample
 #' to be forecast. The default is 14.
@@ -104,11 +114,14 @@ plot_new_cases <- function(object,...) {
 #'   title = "Forecast ln(g)", plt.start.date = as.Date("2020-07-13"))
 #'
 #' @export
-plot_log_forecast <- function(object,...) {
-  object$plot_log_forecast(...)
+plot_log_forecast <- function(res,Y, n.ahead = 14,
+                              plt.start.date=NULL, title="", caption = "") {
+  res$plot_log_forecast(Y, n.ahead,
+                           plt.start.date, title, caption)
 }
 
-#' @title Plots the growth rates and slope of the log cumulative growth rate
+#' @title Plots the growth rates and slope of the log cumulative growth rate 
+#' against the dates in estimation sample
 #'
 #' @description Plots the smoothed/filtered growth rate of the difference in
 #' the cumulated variable (\eqn{g_y}), the smoothed/filtered growth rate of the
@@ -117,7 +130,8 @@ plot_log_forecast <- function(object,...) {
 #' Following Harvey and Kattuman (2021), we compute \eqn{g_{y,t}} as
 #' \deqn{g_{y,t} = \exp(\delta_t) + \gamma_t.}
 #'
-#' @param res Results object estimated using the \code{estimate()} method.
+#' @param res A `filterResults` or `filterResultsLI` object, obtained from
+#' \code{estimate()} method.
 #' @param plt.start.date Plot start date. Default is \code{NULL} which is the
 #' start of the estimation sample.
 #' @param smoothed Logical value indicating whether to used the smoothed
@@ -150,8 +164,9 @@ plot_log_forecast <- function(object,...) {
 #'@importFrom magrittr %>%
 #'
 #' @export
-plot_gy_components <- function(object,...){
-  object$plot_gy_components(...)
+plot_gy_components <- function(res,plt.start.date = NULL,
+                               smoothed = FALSE, title = NULL){
+  res$plot_gy_components(plt.start.date,smoothed, title)
 }
 
 #' @title Plots the growth rates and slope of the log cumulative growth rate
@@ -159,7 +174,8 @@ plot_gy_components <- function(object,...){
 #' @description Plots the smoothed/filtered growth rate of the difference in the
 #' cumulated variable (\eqn{g_y}) and the associated confidence intervals.
 #'
-#' @param res Results object estimated using the \code{estimate()} method.
+#' @param res A `filterResults` or `filterResultsLI` object, obtained from
+#' \code{estimate()} method.
 #' @param plt.start.date Plot start date. Default is \code{NULL} which is the
 #' start of the estimation sample.
 #' @param smoothed Logical value indicating whether to used the smoothed
@@ -194,8 +210,10 @@ plot_gy_components <- function(object,...){
 #' @importFrom utils tail
 #'
 #' @export
-plot_gy_ci <- function(object,...){
-  object$plot_gy_ci(...)
+plot_gy_ci <- function(res,plt.start.date = NULL, smoothed = FALSE,
+                       title = NULL, series.name = NULL, pad.right = NULL){
+  res$plot_gy_ci(plt.start.date, smoothed,
+                    title, series.name, pad.right)
 }
 
 #' @title Plots the forecast of new cases (the difference of the cumulated
@@ -209,10 +227,11 @@ plot_gy_ci <- function(object,...){
 #' Also reports the mean absolute percentage prediction error over the holdout
 #' sample.
 #'
-#' @param res Results object estimated using the \code{estimate()} method.
+#' @param res A `filterResults` or `filterResultsLI` object, obtained from
+#' \code{estimate()} method. 
 #' @param Y Values of the cumulated variable, including the holdout sample.
 #' sample (i.e. to which the forecasts should be compared to).
-#' @param n.ahead The duration of the holdout sample.
+#' @param n.ahead The duration of the holdout sample. Default is 14.
 #' @param confidence.level Width of prediction interval for \eqn{\ln(g_t)} to
 #' use in forecasts of \eqn{y_t = \Delta Y_t}. Default is 0.68, which is
 #' approximately one standard deviation for a Normal distribution.
@@ -243,15 +262,18 @@ plot_gy_ci <- function(object,...){
 #' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
 #' n.ahead=7
 #'
-#' # Specify a model
+#' # Exapmle 1: Specify a Dynamic Gompertz model
 #' model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
 #' # Estimate a specified model
 #' res <- model$estimate()
 #'
 #' # Plot forecasts and outcomes over evaluation period
-#' plot_holdout(object = res, Y = gauteng, n.ahead=n.ahead)
+#' plot_holdout(res, Y = gauteng, n.ahead=n.ahead,series.name="cases")
 #'
 #' @export
-plot_holdout <- function(object,...) {
-  object$plot_holdout(...)
+plot_holdout <- function(res,Y, n.ahead=14,confidence.level = 0.68,
+                         date_format = "%Y-%m-%d", series.name = "target variable",
+                         title= NULL, caption = NULL) {
+  res$plot_holdout(Y, n.ahead, confidence.level, date_format, series.name, 
+                      title, caption)
 }

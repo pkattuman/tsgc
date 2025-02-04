@@ -4,10 +4,18 @@
 \alias{plot_log_forecast}
 \title{Plots forecast and realised values of the log cumulative growth rate}
 \usage{
-plot_log_forecast(object, ...)
+plot_log_forecast(
+  res,
+  Y,
+  n.ahead = 14,
+  plt.start.date = NULL,
+  title = "",
+  caption = ""
+)
 }
 \arguments{
-\item{res}{Results object estimated using the \code{estimate()} method.}
+\item{res}{A \code{filterResults} or \code{filterResultsLI} object, obtained from
+\code{estimate()} method.}
 
 \item{Y}{Cumulated dataset containing future values.}
 

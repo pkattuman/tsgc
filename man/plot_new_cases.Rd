@@ -5,10 +5,19 @@
 \title{Plots the forecast of new cases (the difference of the cumulated
 variable)}
 \usage{
-plot_new_cases(object, ...)
+plot_new_cases(
+  res,
+  n.ahead = 7,
+  confidence.level = 0.68,
+  date_format = "\%Y-\%m-\%d",
+  title = NULL,
+  plt.start.date = NULL,
+  series.name = "target variable"
+)
 }
 \arguments{
-\item{res}{Results object estimated using the \code{estimate()} method.}
+\item{res}{A \code{filterResults} or \code{filterResultsLI} object, obtained from
+\code{estimate()} method.}
 
 \item{n.ahead}{Number of forecasts (i.e. number of periods ahead to forecast
 from end of estimation window). Default is 14.}
@@ -25,6 +34,9 @@ approximately one standard deviation for a Normal distribution.}
 \item{plt.start.date}{First date of actual data (from estimation sample) to
 plot on graph.\code{NULL} (i.e. plots all data in estimation window) by
 default.}
+
+\item{series.name}{The name of the series the growth rate is being computed
+for. E.g. \code{'cases'}. Default is "target variable".}
 }
 \value{
 A \code{ggplot2} plot.
@@ -48,6 +60,6 @@ res <- estimate(model)
 
 # Plot forecast of new cases 7 days ahead
 plot_new_cases(res, n.ahead=7, confidence.level = 0.68, date_format = "\%Y-\%m-\%d",
-title = "Forecast new cases", plt.start.date = as.Date("2020-07-13"))
+title = "Forecast new cases", plt.start.date = as.Date("2020-07-13"),series.name="cases")
 
 }

@@ -424,11 +424,14 @@ FilterResultsLI <- setRefClass(
       return(pred)
     },
     print=function(){
+      "Provides a quick glimpse of model states and standard errors."
       cat("Object of FilterResultsLI Class\n")
       cat("  - Model States and Standard Errors\n")
       base::print(output)
     },
     summary=function(){
+      "Supplies details of the filterResults object, such as estimated 
+      parameter values, start and end dates of estimation."
       H <- matrixKFS(output, "H")[, , 1]
       Q_gamma <- matrixKFS(output, "Q")[2, 2, 1]
       Q_seasonal <- matrixKFS(output, "Q")[3, 3, 1]
@@ -457,7 +460,7 @@ FilterResultsLI <- setRefClass(
       "Generates a forecast plot for the difference in the cumulative target 
       variable, showing actual values, forecasts including seasonal components,
       and prediction intervals around the forecasts. For more details, see 
-      \\link{plot_new_cases}"
+      \\link{plot_new_cases}."
       res<-.self
         
         if (is.null(plt.start.date)){plt.start.date <- head(index(data_xts), 1)}
@@ -604,6 +607,9 @@ FilterResultsLI <- setRefClass(
   }, 
   plot_gy_components = function(plt.start.date = NULL,
                                  smoothed = FALSE, title = NULL){
+    "Plots the growth rates and slope of the log cumulative growth rate 
+      against the dates in estimation sample. 
+      For more details, please see \\link{plot_gy_components}."
     res<-.self
     Date <- Value <- Variable <- NULL
     # Determine plot start date
@@ -646,12 +652,15 @@ FilterResultsLI <- setRefClass(
   },
   plot_gy_ci =function(plt.start.date = NULL, smoothed = FALSE,
                            title = NULL, series.name = NULL, pad.right = NULL){
+    "Plots the growth rates and the slope of the log cumulative growth rate of 
+    the target variable against the dates in estimation sample. 
+      For more details, please see \\link{plot_gy_ci}."
     res<-.self
     Date <- fit <- upper <- lower <- NULL
     
     # Determine plot start date
     if(is.null(plt.start.date)) {
-        plt.start.date <- index(res$data_xts)[1]
+        plt.start.date <- .self$index[1]
     }
     
     # Get confidence intervals to plot
@@ -703,9 +712,11 @@ FilterResultsLI <- setRefClass(
     return(p1)
   },
   plot_holdout=function(Y,n.ahead=14, confidence.level = 0.68,
-                        date_format = "%Y-%m-%d", series.name = "target variable",
+                        date_format = "%Y-%m-%d", 
+                        series.name = "target variable",
                         title= NULL, caption = NULL){
-    res<-.self
+    "Plots the forecast of the target variable over a holdout sample. 
+    For more details, please refer to \\link{plot_holdout}."
     fadmits<-.self$predict_level(n.ahead=n.ahead, 
                                  confidence.level=confidence.level, 
                                  sea.on=FALSE)
@@ -716,7 +727,7 @@ FilterResultsLI <- setRefClass(
     end_date<-tail(index(data_xts),1)
     sea<-sea[,1] #get the forecast column
     
-    future_data<-add_daily_ldl(Y,LeadIndCol = res$LeadIndCol) %>% subset(index(.) > end_date)
+    future_data<-add_daily_ldl(Y,LeadIndCol = .self$LeadIndCol) %>% subset(index(.) > end_date)
     data_validation<-future_data[1:n.ahead, c("cAdmit", "newAdmit")]
     
     newAdmit_validation<-data_validation[,c("newAdmit")]
@@ -732,10 +743,10 @@ FilterResultsLI <- setRefClass(
     colnames(ci) <- c('lower', 'upper')
     
     df_plot <- as.data.frame(compare)
-    df_plot$Date <- as.Date(rownames(df_plot), format="%Y-%m-%d")
+    df_plot$Date <- as.Date(rownames(df_plot), format=date_format)
     
     ci_plot <- as.data.frame(ci)
-    ci_plot$Date <- as.Date(rownames(ci_plot), format = "%Y-%m-%d")
+    ci_plot$Date <- as.Date(rownames(ci_plot), format =date_format)
     
     p1<-ggplot2::ggplot(data = df_plot, aes(x = Date)) +
       ggplot2::geom_line(aes(y = Actual, color = "Actual"),lwd = 0.85) +
@@ -767,13 +778,15 @@ FilterResultsLI <- setRefClass(
     return(p1)
   },
   mapes=function(n.ahead,Y){
-    res<-.self
+    "Compute Mean Absolute Percentage Error (MAPE) for trend and seasonal 
+    forecasts against a holdout sample. For more details, please refer to 
+    \\link{mapes}."
     fadmits<-.self$predict_level(n.ahead=n.ahead, 
                                  sea.on=FALSE)
     sea<-.self$predict_level(n.ahead=n.ahead, 
                              sea.on=TRUE)
       
-      end.date<-tail(index(res$data_xts),1)
+      end.date<-tail(index(data_xts),1)
       idx.dates <- (index(Y) >=end.date)
       data_validation<-na.omit(add_daily_ldl(Y[idx.dates], LeadIndCol = LeadIndCol))[1:n.ahead]
       

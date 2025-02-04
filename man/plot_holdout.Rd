@@ -5,26 +5,36 @@
 \title{Plots the forecast of new cases (the difference of the cumulated
 variable) over a holdout sample.}
 \usage{
-plot_holdout(object, ...)
+plot_holdout(
+  res,
+  Y,
+  n.ahead = 14,
+  confidence.level = 0.68,
+  date_format = "\%Y-\%m-\%d",
+  series.name = "target variable",
+  title = NULL,
+  caption = NULL
+)
 }
 \arguments{
-\item{res}{Results object estimated using the \code{estimate()} method.}
+\item{res}{A \code{filterResults} or \code{filterResultsLI} object, obtained from
+\code{estimate()} method.}
 
 \item{Y}{Values of the cumulated variable, including the holdout sample.
 sample (i.e. to which the forecasts should be compared to).}
 
-\item{n.ahead}{The duration of the holdout sample.}
+\item{n.ahead}{The duration of the holdout sample. Default is 14.}
 
 \item{confidence.level}{Width of prediction interval for \eqn{\ln(g_t)} to
 use in forecasts of \eqn{y_t = \Delta Y_t}. Default is 0.68, which is
 approximately one standard deviation for a Normal distribution.}
 
+\item{date_format}{Date format, e.g. \code{'\%Y-\%m-\%d'}, which is the
+default.}
+
 \item{series.name}{Name of the variable you are forecasting for the purposes
 of a $y$-axis label. E.g. if \code{series.name = "Cases"} the \eqn{y}-axis
 will show "New Cases".}
-
-\item{date_format}{Date format, e.g. \code{'\%Y-\%m-\%d'}, which is the
-default.}
 
 \item{title}{Title for forecast plot. Enter as text string. \code{NULL}
 (i.e. no title) by default.}
@@ -50,12 +60,12 @@ data(gauteng,package="tsgc")
 idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
 n.ahead=7
 
-# Specify a model
+# Exapmle 1: Specify a Dynamic Gompertz model
 model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
 # Estimate a specified model
 res <- model$estimate()
 
 # Plot forecasts and outcomes over evaluation period
-plot_holdout(object = res, Y = gauteng, n.ahead=n.ahead)
+plot_holdout(res, Y = gauteng, n.ahead=n.ahead,series.name="cases")
 
 }

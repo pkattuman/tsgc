@@ -2,12 +2,12 @@
 % Please edit documentation in R/accessorFns.R
 \name{modelKFS}
 \alias{modelKFS}
-\title{Extract SSModel of KFS}
+\title{Extract SSModel object within KFS object}
 \usage{
 modelKFS(object)
 }
 \arguments{
-\item{object}{FilterResults object}
+\item{object}{KFS object}
 }
 \description{
 Accessor method to access the fitted SSModel
