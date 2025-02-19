@@ -25,8 +25,8 @@ setOldClass("KFS")
 #' # Print estimation results
 #' res$print_estimation_results()
 #' # Forecast 7 days ahead from the end of the estimation window
-#' res$predict_level(y.cum = gauteng[idx.est], n.ahead = 7,
-#'   confidence.level = 0.68)
+#' res$predict_level(n.ahead = 7,
+#'   confidence.level = 0.68, sea.on=TRUE)
 #' # Forecast 7 days ahead from the model and return filtered states
 #' res$predict_all(n.ahead = 7, return.all = TRUE)
 #' # Return the filtered growth rate and its components
@@ -225,7 +225,7 @@ FilterResults <- setRefClass(
           n.ahead = n.ahead, level = 0.68, states = 'level')
       }
 
-      n <- attr(output$model, "n")
+      n <- attr(modelKFS(output), "n")
       dates <- seq(index[1], by = 'day', length.out = (n + n.ahead))
 
       # Assumes time invariant Z.t
@@ -281,7 +281,7 @@ FilterResults <- setRefClass(
       idx <- index
 
       if (smoothed) {
-        att <- kfs_out$alphahat
+        att <- alphahat(kfs_out)
       } else {
         att <- att(kfs_out)
       }

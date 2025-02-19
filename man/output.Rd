@@ -9,6 +9,9 @@ output(object)
 \arguments{
 \item{object}{FilterResults object}
 }
+\value{
+The fitted KFS model
+}
 \description{
-Accessor method to access the fitted KFS model
+Accessor method to access the fitted KFS model from \code{FilterResults}
 }

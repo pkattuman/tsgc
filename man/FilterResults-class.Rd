@@ -179,8 +179,8 @@ res <- estimate(model)
 # Print estimation results
 res$print_estimation_results()
 # Forecast 7 days ahead from the end of the estimation window
-res$predict_level(y.cum = gauteng[idx.est], n.ahead = 7,
-  confidence.level = 0.68)
+res$predict_level(n.ahead = 7,
+  confidence.level = 0.68, sea.on=TRUE)
 # Forecast 7 days ahead from the model and return filtered states
 res$predict_all(n.ahead = 7, return.all = TRUE)
 # Return the filtered growth rate and its components

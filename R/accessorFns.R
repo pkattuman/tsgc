@@ -16,10 +16,11 @@
 
 #' @title Extract output of FilterResults
 #
-#' @description Accessor method to access the fitted KFS model
+#' @description Accessor method to access the fitted KFS model from `FilterResults`
 #'
 #' @param object FilterResults object
-#'
+#' 
+#' @returns The fitted KFS model
 #'
 #' @export
 output<-function(object){
@@ -55,8 +56,21 @@ seasonalComp<-function(object){
 #' @description Accessor method to access filtered state estimate in KFS object
 #'
 #' @param object KFS object
+#' 
+#' @examples
+#' library(tsgc)
+#' data(gauteng,package="tsgc")
+#' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
+#' # Specify a model
+#' model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+#' # Estimate a specified model
+#' res <- estimate(model)
+#' 
+#' #Return filtered state estimates
+#' att(output(res))
 #'
-#'
+#' @returns Filtered state estimate in KFS object
+#' 
 #' @export
 att<-function(object){
   object$att
