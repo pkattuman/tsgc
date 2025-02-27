@@ -146,10 +146,39 @@ parameter values, start and end dates of estimation.}
 
 \examples{
 library(tsgc)
-data(gauteng,package="tsgc")
-idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
+
+#Define estimation environment
+Y = england[,1:2] #select only cumulative cases and cumulative hospitalizations
+estimation.date.start = as.Date("2021-04-30")
+estimation.date.end = as.Date("2021-07-24")
+plt.length=30
+q = NA
+confidence.level = 0.68
+plt.length = 14
+n.lag = 4
+n.forecasts = 7
+
+#Select data in the desired timeframe
+idx.est =(zoo::index(Y) >= estimation.date.start) & (zoo::index(Y) <= estimation.date.end)
+y = Y[idx.est]
+
+#Define and Estimate the model
+out<-SSModelLeadingIndicator(Y=y,n.lag = n.lag,q=q,LeadIndCol=1, sea.period=7) 
+res<-estimate(out) 
+
+#Plots
+res$plot_log_forecast(Y=Y,n.ahead=n.forecasts,
+plt.start.date=estimation.date.end-plt.length)
+
+res$plot_new_cases(n.ahead=n.forecasts,
+plt.start.date = estimation.date.end-plt.length,
+series.name="hospitalizations")
+
+res$plot_holdout(Y=Y,n.ahead=n.forecasts, series.name="hospitalizations")
 
 # Specify a model
+
+
 model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
 # Estimate a specified model
 res <- model$estimate()

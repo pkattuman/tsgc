@@ -73,49 +73,11 @@ cumulative_cases <- gauteng[, 1]
 
 # -----------------------------
 # Preliminary Examination of Data
-# -----------------------------
-# Calculate a centred 7-day moving average of daily differences.
-ma.cent.new.cases <- zoo::rollmean(diff(cumulative_cases), 7, align = "center")
-str(cumulative_cases)
-
-# Identify the date with maximum new cases.
-ma.cent.wave.3.idx.max <- tsgc::argmax(ma.cent.new.cases) %>% zoo::index()
-ma.cent.wave.3.idx.max
-
-# Prepare data for plotting by combining actual new cases and the moving average.
-d <- cbind(diff(cumulative_cases), ma.cent.new.cases)
-colnames(d) <- c('New Cases', 'Centered 7-day MA')
-d.df <- data.frame(
-  Date = index(d),
-  New.Cases = coredata(d[, 1]),
-  Centered.7.day.MA = coredata(d[, 2])
-)
-
-# -----------------------------
 # Plotting: Daily Cases and Moving Average
 # -----------------------------
-# SUGGESTION: Consider creating a dedicated plotting function.
-data_plot <- ggplot(data = d.df, aes(x = Date)) +
-  geom_line(aes(y = New.Cases, color = "New Cases"), linewidth = 0.1) +
-  geom_line(aes(y = Centered.7.day.MA, color = "Centered 7 day MA"), linewidth = 1) +
-  scale_y_continuous(n.breaks = 10) +
-  xlab("Day") +
-  ylab("New cases") +
-  scale_x_date(date_breaks = "60 days") +
-  scale_color_manual(
-    name = '',
-    values = c('New Cases' = 'blue', 'Centered 7 day MA' = 'red')
-  ) +
-  theme_light(base_size = 12) +
-  theme(
-    legend.position = "inside",
-    legend.position.inside = c(0.2, 0.85),
-    legend.title = element_text(size = 2),
-    legend.text = element_text(size = 10),
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
-    plot.title = element_text(face = "bold")
-  )
-data_plot
+# Get a glimpse of data by plotting its moving average series
+mod1<-SSModelDynamicGompertz$new(Y=cumulative_cases)
+mod1$plot(title="Gauteng daily cases", series.name="cases")
 
 # -----------------------------
 # Model Estimation Options for the Third Wave
@@ -162,6 +124,7 @@ tsgc::plot_new_cases(
   confidence.level = confidence.level,
   date_format = date.format,
   plt.start.date = tail(res$index, 1) - plt.length,
+  title="14-day forecast for new cases Gauteng",
   series.name = "Cases"
 )
 
@@ -171,6 +134,7 @@ tsgc::plot_holdout(
   n.ahead = 14,
   confidence.level = confidence.level,
   date_format = date.format,
+  title="14-day forecast for new cases Gauteng",
   series.name = "cases"
 )
 
@@ -311,6 +275,7 @@ tsgc::plot_new_cases(
   confidence.level = confidence.level,
   date_format = date.format,
   plt.start.date = tail(res.reinit$index, 1) - plt.length,
+  title="With reinitialization",
   series.name = "cases"
 )
 
@@ -320,6 +285,7 @@ tsgc::plot_holdout(
   n.ahead = n.forecasts,
   confidence.level = confidence.level,
   date_format = date.format,
+  title="With reinitialization",
   series.name = "cases"
 )
 
@@ -332,6 +298,7 @@ tsgc::plot_holdout(
   Y = cumulative_cases,
   n.ahead = n.forecasts,
   confidence.level = confidence.level,
+  title="Without reinitialization",
   date_format = date.format
 )
 
@@ -342,34 +309,12 @@ tsgc::plot_holdout(
 # Load England data and select the first two columns.
 eng <- tsgc::england[, 1:2]
 
-# Transform the data to calculate daily cases and log growth rates.
-eng_full <- tsgc::add_daily_ldl(eng)
-eng_daily <- eng_full[, 3:4]
-
-# Plot daily new cases and admissions.
-ggplot(log(eng_daily), aes(x = index(eng_daily))) +
-  geom_line(aes(y = newCases, color = "Cases"), lwd = 0.85) +
-  geom_line(aes(y = newAdmit, color = "Hospitalizations"), lwd = 0.85) +
-  scale_color_manual(values = c("red", "blue"))+
-  labs(
-    title = "COVID Daily Cases and Hospitalizations in England",
-    x = "Date",
-    y = "log(Number)",
-    color = "Legend"
-  ) +
-  theme_economist_white(gray_bg = FALSE, base_size = 12) +
-  theme(
-    legend.title = element_blank(),
-    legend.position = "top",
-    text = element_text(size = rel(1.1)),
-    axis.text = element_text(size = rel(1)),
-    axis.title.y = element_text(size = rel(1), margin = margin(r = 10)),
-    axis.title.x = element_text(size = rel(1), margin = margin(t = 10)),
-    plot.title = element_text(margin = margin(b = 5), face = "bold"),
-    plot.caption = element_text(size = rel(1))
-  ) +
-  scale_x_date(labels = scales::date_format("%d %b %y"))
-
+# Plot log daily new cases and admissions by calling the plot function.
+mod2<-SSModelLeadingIndicator$new(eng, n.lag=5) #Choose any n.lag if only plotting is needed
+mod2$plot(title="COVID Daily Cases and Hospitalizations in England",
+          series.name.lead="Cases", 
+          series.name.target="Hospitalizations",
+          take.log=TRUE)
 
 # Define estimation parameters for the leading indicator analysis.
 estimation.date.start <- as.Date("2021-04-30")
@@ -383,36 +328,15 @@ idx.est <- (zoo::index(eng) >= estimation.date.start) &
   (zoo::index(eng) <= estimation.date.end)
 y <- eng[idx.est, ]
 
-# Recalculate daily data for the estimation sample.
-eng_full <- tsgc::add_daily_ldl(y)
-eng_daily <- eng_full[, 3:4]
+# Define the leading indicator model and plot the logged time series
+out <- SSModelLeadingIndicator(Y = y, n.lag = n.lag, 
+                               q = NA, LeadIndCol = 1, sea.period = 7)
+out$plot(title="COVID Daily Cases and Hospitalizations in England",
+         series.name.lead="Cases", 
+         series.name.target="Hospitalizations",
+         take.log=TRUE)
 
-# Plot daily new cases and admissions again.
-ggplot(log(eng_daily), aes(x = index(eng_daily))) +
-  geom_line(aes(y = newCases, color = "Cases"), lwd = 0.85) +
-  geom_line(aes(y = newAdmit, color = "Hospitalizations"), lwd = 0.85) +
-  scale_color_manual(values = c("red", "blue"))+
-  labs(
-    title = "COVID Daily Cases and Hospitalizations in England",
-    x = "Date",
-    y = "log(Number)",
-    color = "Legend"
-  ) +
-  theme_economist_white(gray_bg = FALSE, base_size = 12) +
-  theme(
-    legend.title = element_blank(),
-    legend.position = "top",
-    text = element_text(size = rel(1.1)),
-    axis.text = element_text(size = rel(1)),
-    axis.title.y = element_text(size = rel(1), margin = margin(r = 10)),
-    axis.title.x = element_text(size = rel(1), margin = margin(t = 10)),
-    plot.title = element_text(margin = margin(b = 5), face = "bold"),
-    plot.caption = element_text(size = rel(1))
-  ) +
-  scale_x_date(labels = scales::date_format("%d %b %y"))
-
-# Define and estimate the leading indicator model.
-out <- SSModelLeadingIndicator(Y = y, n.lag = n.lag, q = NA, LeadIndCol = 1, sea.period = 7)
+# Estimate the leading indicator model.
 res <- estimate(out)
 
 # Plot forecasts.
@@ -420,21 +344,24 @@ plot_log_forecast(
   res,
   Y = eng,
   n.ahead = n.forecasts,
-  plt.start.date = estimation.date.end - plt.length
+  plt.start.date = estimation.date.end - plt.length,
+  title="Forecasts of Log Growth rate of England hospitalizations"
 )
 
 plot_new_cases(
   res,
   n.ahead = n.forecasts,
   plt.start.date = estimation.date.end - plt.length,
-  series.name = "hospitalizations"
+  series.name = "hospitalizations",
+  title="Forecasts of England hospitalizations"
 )
 
 plot_holdout(
   res,
   Y = eng,
   n.ahead = n.forecasts,
-  series.name = "hospitalizations"
+  series.name = "hospitalizations",
+  title="Forecasts of England hospitalizations"
 )
 
 # Save results for the leading indicator analysis.
@@ -448,29 +375,10 @@ write_results(
 # 4. Leading Indicator vs Gompertz Growth curves: UK and Italy Examples
 # -----------------------------
 # Example: UK-Italy Data analysis.
-UKIT_full <- tsgc::add_daily_ldl(ukitaly)
-ggplot(UKIT_full[, c(3, 4)], aes(x = index(UKIT_full))) +
-  geom_line(aes(y = newCases, color = "Italy"), lwd = 0.85) +
-  geom_line(aes(y = newAdmit, color = "UK"), lwd = 0.85) +
-  scale_color_manual(values = c("red", "blue"))+
-  labs(
-    title = "COVID Daily Cases in UK and Italy",
-    x = "Date",
-    y = "Daily cases"
-  ) +
-  theme_economist_white(gray_bg = FALSE, base_size = 12) +
-  theme(
-    legend.title = element_blank(),
-    legend.position = "top",
-    text = element_text(size = rel(1.1)),
-    axis.text = element_text(size = rel(1)),
-    axis.title.y = element_text(size = rel(1), margin = margin(r = 10)),
-    axis.title.x = element_text(size = rel(1), margin = margin(t = 10)),
-    plot.title = element_text(margin = margin(b = 5), face = "bold"),
-    plot.caption = element_text(size = rel(1))
-  ) +
-  scale_x_date(labels = scales::date_format("%d %b %y"))
-
+ukit<-SSModelLeadingIndicator$new(ukitaly, n.lag=4)
+ukit$plot(title="COVID Daily Cases in UK and Italy",
+          series.name.lead="Italy", 
+          series.name.target="UK", take.log=FALSE)
 
 # Case 1: First peak.
 Y <- ukitaly[, "UK"]
@@ -593,18 +501,18 @@ est.start.date <- as.Date("2020-09-01")
 est.end.date <- as.Date("2020-10-30")
 Y.reinit <- reinitialise_dataframe(Y, est.start.date)
 
-#Split into 2 functions, rolling_forecasts and optimal_combine
-comb_all<-combine_forecasts(
+#Plot optimal weights of rolling forecasts
+comb_all<-plot_rolling_weights(
   Y.reinit,
   est.start.date,
   est.end.date,
   all_lags = c(2, 5, 7, 9),
   train_days = 20,
   test_days = 60,
-  method = comb_BG,
-  rolling = TRUE
+  method = comb_BG
 )
 
+#Predict future observations with forecast combinations
 est.start.date <- as.Date("2020-09-01")
 est.end.date <- as.Date("2020-10-30")+80
 idx.est <- (zoo::index(Y.reinit) >= est.start.date) &

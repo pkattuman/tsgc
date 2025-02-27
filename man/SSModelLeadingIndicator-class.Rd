@@ -4,7 +4,7 @@
 \name{SSModelLeadingIndicator-class}
 \alias{SSModelLeadingIndicator-class}
 \alias{SSModelLeadingIndicator}
-\title{Class for leading indicator state space model object.}
+\title{Class for leading indicator state space model object}
 \description{
 Class for leading indicator state space model object.
 

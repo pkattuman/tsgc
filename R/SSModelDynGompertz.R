@@ -17,29 +17,37 @@
 setOldClass("xts")
 setOldClass("KFS")
 #'
-#' @title  Class for dynamic Gompertz curve state space model object.
+#' @title Class for Dynamic Gompertz Curve State-Space Model
 #'
-#' @description Class for dynamic Gompertz curve state space model object.
+#' @description Class for Dynamic Gompertz Curve State-Space Model Object, whose 
+#' fields contain the model settings. Contains methods to obtain FilterResults
+#' object and plot the time series.
 #'
-#' \subsection{Methods}{
-#' \code{get_model(y, q = NULL, sea.type = 'trigonometric', sea.period = 7)}
-#' Retrieves the model object.
-#' \subsection{Parameters}{\itemize{
-#'  \item{\code{y} The cumulated variable.}
-#'  \item{\code{q} The signal-to-noise ratio (ratio of slope to irregular
-#' variance). Defaults to \code{'NULL'}, in which case no signal-to-noise ratio
-#' will be imposed. Instead, it will be estimated.}
-#'  \item{\code{sea.type} Seasonal type. Options are \code{'trigonometric'} and
-#' \code{'none'}. \code{'trigonometric'} will yield a model with a trigonometric
-#' seasonal component and \code{'none'} will yield a model with no seasonal
-#' component.}
-#'  \item{\code{sea.period}  The period of seasonality. For a day-of-the-week
-#' effect with daily data, this would be 7. Not required if
-#' \code{sea.type = 'none'}.}
-#' }}
-#' \subsection{Return Value}{\code{KFS} model object.}
-#' }
+#' @field Y The cumulated variable.
+#' @field q The signal-to-noise ratio (ratio of slope to irregular
+#'   variance). Defaults to \code{'NULL'}, in which case no
+#'   signal-to-noise ratio will be imposed. Instead, it will be estimated.
+#' @field sea.type Seasonal type. Options are \code{'trigonometric'}
+#'   and \code{'none'}. \code{'trigonometric'} will yield a model with a
+#'   trigonometric seasonal component and \code{'none'} will yield a model
+#'   with no seasonal component.
+#'@field sea.period The period of seasonality. For a day-of-the-week
+#'   effect with daily data, this would be 7. Not required if
+#'   \code{sea.type = 'none'}.
+#'@field reinit.date (Only needed for reinitialization.) The reinitialisation date \eqn{r}. Should be
+#' specified as an object of class \code{"Date"}. Defaults to NA, which 
+#' represents the non-reinitialized version.
+#' @field original.results (Only needed for reinitialization.) Rather than re-estimating the model up
+#' to the \code{reinit.date}, a \code{FilterResults} class object can be
+#' specified here and the parameters for the reinitialisation will be taken
+#' from this object. Default is \code{NULL}. This parameter is optional.
+#' @field use.presample.info (Only needed for reinitialization.) Logical value denoting whether or
+#' not to use information from before the reinitialisation date in the
+#' reinitialisation procedure. Default is \code{TRUE}. If \code{FALSE}, the
+#' model is estimated from scratch from the reinitialisation date and no
+#' attempt to use information from before the reinitialisation date is made.
 #'
+#' 
 #' @importFrom xts periodicity last
 #' @importFrom methods new
 #' @importFrom xts xts
@@ -64,9 +72,7 @@ SSModelDynamicGompertz <- setRefClass(
   "SSModelDynamicGompertz",
   fields = list(
     Y = "xts",
-    q = "ANY",  # No native option for numeric | NULL - see
-    # https://stackoverflow.com/questions/24363069/multiple-acceptable-classes-
-    # in-reference-class-field-list
+    q = "ANY",
     sea.type="ANY", 
     sea.period="ANY",
     reinit.date = "ANY",
@@ -77,34 +83,8 @@ SSModelDynamicGompertz <- setRefClass(
                                        sea.period = 7,reinit.date=NULL, original.results=NULL,
                                        use.presample.info=TRUE)
   {
-    "Create an instance of the \\code{SSModelDynamicGompertz} class.
-       \\subsection{Parameters}{\\itemize{
-        \\item{\\code{Y} The cumulated variable.}
-        \\item{\\code{q} The signal-to-noise ratio (ratio of slope to irregular
-         variance). Defaults to \\code{'NULL'}, in which case no
-         signal-to-noise ratio will be imposed. Instead, it will be estimated.}
-         \\item{\\code{sea.type} Seasonal type. Options are \\code{'trigonometric'}
-       and \\code{'none'}. \\code{'trigonometric'} will yield a model with a
-       trigonometric seasonal component and \\code{'none'} will yield a model
-       with no seasonal component.}
-      \\item{\\code{sea.period} The period of seasonality. For a day-of-the-week
-       effect with daily data, this would be 7. Not required if
-       \\code{sea.type = 'none'}.}
-        \\item{\\code{reinit.date} The reinitialisation date \\eqn{r}. Should
-        be specified as an object of class \\code{\"Date\"}. Must be specified
-        if \\code{original.results = NULL} and
-        \\code{use.pre.sample.info = TRUE}.}
-        \\item{\\code{original.results} In place of a reinitialisation date, a
-        \\code{KFS} results object can be specified here and the parameters for
-         the reinitialisation will be taken from this object. Must be specified
-          if \\code{reinit.date = NULL} and \\code{use.pre.sample.info = TRUE}.}
-        \\item{\\code{use.presample.info}  Logical value denoting whether or not
-         to use information from before the reinitialisation date in the
-         reinitialisation procedure. Default is \\code{TRUE}. If \\code{FALSE},
-         the model is estimated from scratch from the reinitialisation date and
-         no attempt to use information from before the reinitialisation date is
-          made.}
-      }}
+    "Create an instance of the \\code{SSModelDynamicGompertz} class. Parameters 
+    are defined in `fields` section. 
       \\subsection{Usage}{\\code{SSModelDynGompertzReinit$new(y, q = 0.005,
       reinit.date = as.Date(\"2021-05-12\",format = date.format))}}"
     Y <<- Y
@@ -114,151 +94,7 @@ SSModelDynamicGompertz <- setRefClass(
     reinit.date <<- reinit.date
     original.results <<- original.results
     use.presample.info <<- use.presample.info
-  },get_dynamic_gompertz_model = function(
-    y,
-    q = NULL,
-    sea.type = 'trigonometric',
-    sea.period = 7,
-    a1 = NULL,
-    P1 = NULL,
-    Q = NULL,
-    H = NULL
-  )
-  {
-    "Returns dynamic Gompertz curve model.
-    \\subsection{Parameters}{\\itemize{
-      \\item{\\code{y} The cumulated variable}
-      \\item{\\code{q} The signal-to-noise ratio (ratio of slope to irregular
-      variance). Defaults to \\code{'NULL'}, in which case no signal-to-noise
-      ratio will be imposed. Instead, it will be estimated.}
-      \\item{\\code{sea.type} Seasonal type. Options are \\code{'trigonometric'}
-       and \\code{'none'}. \\code{'trigonometric'} will yield a model with a
-       trigonometric seasonal component and \\code{'none'} will yield a model
-       with no seasonal component.}
-      \\item{\\code{sea.period} The period of seasonality. For a day-of-the-week
-       effect with daily data, this would be 7. Not required if
-       \\code{sea.type = 'none'}.}
-      \\item{\\code{a1} Optional parameter specifying the prior mean of the
-      states. Defaults to \\code{'NULL'}. Leave as \\code{'NULL'} for a diffuse
-      prior (no prior information). If a proper prior is to be specified, both
-      \\code{a1} and \\code{P1} must be given.}
-      \\item{\\code{P1} Optional parameter specifying the prior mean of the
-      states. Defaults to \\code{'NULL'}. Leave as \\code{'NULL'} for a diffuse
-       prior (no prior information). If a proper prior is to be specified,
-       both \\code{a1} and \\code{P1} must be given.}
-      \\item{\\code{Q} Optional parameter specifying the state error variances
-      where these are to be imposed rather than estimated. Defaults to
-      \\code{'NULL'} which will see the variances estimated.}
-      \\item{\\code{H} Optional parameter specifying the irregular variance
-      where this is to be imposed rather than estimated. Defaults to
-      \\code{'NULL'} which will see the variance estimated.}
-    }}
-    \\subsection{Description}{
-    The dynamic Gompertz with an integrated random walk (IRW) trend is
-    \\deqn{\\ln g_{t}=\\delta_{t}+\\varepsilon_{t},  \\;\\;\\;\\;
-    \\varepsilon_{t}\\sim NID(0,\\sigma_{\\varepsilon }^{2}), \\;\\;\\;\\;
-    t=2,...,T, }
-    where \\eqn{Y_t} is the cumulated variable, \\eqn{y_t = \\Delta Y_t},
-    \\eqn{\\ln g_{t}=\\ln y_{t}-\\ln Y_{t-1}} and
-    \\deqn{\\delta_{t} =\\delta_{t-1}+\\gamma_{t-1},}
-    \\deqn{\\gamma_{t} =\\gamma_{t-1}+\\zeta_{t}, \\;\\;\\;\\;
-    \\zeta_{t}\\sim NID(0,\\sigma_{\\zeta }^{2}),}
-    where the observation disturbances \\eqn{\\varepsilon_{t}}  and slope
-    disturbances \\eqn{\\zeta_{t}}, are iid Normal and mutually independent.
-    Note that, the larger the signal-to-noise ratio,
-    \\eqn{q_{\\zeta }=\\sigma_{\\zeta }^{2}/\\sigma_{\\varepsilon }^{2}},
-    the faster the slope changes in response to new observations. Conversely,
-    a lower signal-to-noise ratio induces smoothness.
-
-    For the model without seasonal terms (\\code{sea.type = 'none'}) the are
-    priors are
-    \\deqn{\\begin{pmatrix} \\delta_1 \\ \\gamma_1 \\end{pmatrix}
-    \\sim N(a_1,P_1)}.
-    The diffuse prior has \\eqn{P_1 = \\kappa I_{2\\times 2}} with
-    \\eqn{\\kappa \\to \\infty}. Implementation of the diffuse prior is handled
-     by the package \\code{KFAS} (Helske, 2017). Where the model has a seasonal
-      component (\\code{sea.type = 'trigonometric'}), the vector of prior means
-       \\eqn{a_1} and the prior covariance matrix \\eqn{P_1} are extended
-       accordingly.
-
-    See the vignette for details of the variance matrix \\eqn{Q}.
-    \\eqn{H = \\sigma^2_{\\varepsilon}}.
-    }
-    "
-    Qt.slope <- if (is.null(Q)) { NA } else { Q[2, 2] }
-    Qt.seas <- if (is.null(Q)) { NA } else { Q[3, 3] }
-    Ht <- if (is.null(H)) { NA } else { H }
-    
-    # 1. Set prior on state as ~ N(a1, P1) if a1 supplied.
-    use.prior <- if (!is.null(a1)) { TRUE } else { FALSE }
-    
-    if (use.prior) {
-      if (sea.type == 'trigonometric') {
-        ss_model <- SSModel(
-          y ~
-            SSMtrend(
-              degree = 2,
-              Q = list(matrix(0), matrix(Qt.slope)),
-              a1 = a1[1:2],
-              P1 = P1[1:2, 1:2]
-            ) +
-            SSMseasonal(
-              period = sea.period,
-              Q = Qt.seas,
-              sea.type = sea.type,
-              a1 = a1[3:dim(a1)[1]],
-              P1 = P1[3:dim(a1)[1], 3:dim(a1)[1]]
-            ),
-          H = Ht
-        )
-        n.pars <- 0
-      } else if (sea.type == 'none') {
-        ss_model <- SSModel(
-          y ~
-            SSMtrend(
-              degree = 2,
-              Q = list(matrix(0), matrix(Qt.slope)),
-              a1 = a1[1:2],
-              P1 = P1[1:2, 1:2]
-            ),
-          H = Ht
-        )
-        n.pars <- 0
-      } else {
-        stop(sprintf("sea.type= '%s' not implemented", sea.type))
-      }
-    } else {
-      if (sea.type == 'trigonometric') {
-        ss_model <- SSModel(
-          y ~
-            SSMtrend(
-              degree = 2,
-              Q = list(matrix(0), matrix(Qt.slope))
-            ) +
-            SSMseasonal(
-              period = sea.period,
-              Q = Qt.seas,
-              sea.type = sea.type),
-          H = matrix(Ht)
-        )
-        n.pars <- if (is.null(q)) { 3 } else { 2 }
-      } else if (sea.type == 'none') {
-        ss_model <- SSModel(
-          y ~
-            SSMtrend(
-              degree = 2,
-              Q = list(matrix(0), matrix(Qt.slope))
-            ),
-          H = matrix(Ht)
-        )
-        n.pars <- if (is.null(q)) { 2 } else { 1 }
-      } else {
-        stop(sprintf("sea.type= '%s' not implemented", sea.type))
-      }
-    }
-    out <- list(model = ss_model, inits = rep(0, n.pars))
-    return(out)
-  },
+  }, 
   update = function(pars, model, q, sea.type) {
     "Update method for Kalman filter to implement the dynamic Gompertz curve
        model.
@@ -353,6 +189,120 @@ SSModelDynamicGompertz <- setRefClass(
     )
     return(results)
   },
+  get_dynamic_gompertz_model = function(
+    y,
+    q = NULL,
+    sea.type = 'trigonometric',
+    sea.period = 7,
+    a1 = NULL,
+    P1 = NULL,
+    Q = NULL,
+    H = NULL)
+  {
+    "Returns the Dynamic Gompertz Model object, assuming no reinitialization. 
+    Used in the \\code{get_model} function.
+    \\subsection{Parameters}{\\itemize{
+      \\item{\\code{y} The cumulated variable}
+      \\item{\\code{q} The signal-to-noise ratio (ratio of slope to irregular
+      variance). Defaults to \\code{'NULL'}, in which case no signal-to-noise
+      ratio will be imposed. Instead, it will be estimated.}
+      \\item{\\code{sea.type} Seasonal type. Options are \\code{'trigonometric'}
+       and \\code{'none'}. \\code{'trigonometric'} will yield a model with a
+       trigonometric seasonal component and \\code{'none'} will yield a model
+       with no seasonal component.}
+      \\item{\\code{sea.period} The period of seasonality. For a day-of-the-week
+       effect with daily data, this would be 7. Not required if
+       \\code{sea.type = 'none'}.}
+      \\item{\\code{a1} Optional parameter specifying the prior mean of the
+      states. Defaults to \\code{'NULL'}. Leave as \\code{'NULL'} for a diffuse
+      prior (no prior information). If a proper prior is to be specified, both
+      \\code{a1} and \\code{P1} must be given.}
+      \\item{\\code{P1} Optional parameter specifying the prior mean of the
+      states. Defaults to \\code{'NULL'}. Leave as \\code{'NULL'} for a diffuse
+       prior (no prior information). If a proper prior is to be specified,
+       both \\code{a1} and \\code{P1} must be given.}
+      \\item{\\code{Q} Optional parameter specifying the state error variances
+      where these are to be imposed rather than estimated. Defaults to
+      \\code{'NULL'} which will see the variances estimated.}
+      \\item{\\code{H} Optional parameter specifying the irregular variance
+      where this is to be imposed rather than estimated. Defaults to
+      \\code{'NULL'} which will see the variance estimated.}
+    }}
+    "
+    Qt.slope <- if (is.null(Q)) { NA } else { Q[2, 2] }
+    Qt.seas <- if (is.null(Q)) { NA } else { Q[3, 3] }
+    Ht <- if (is.null(H)) { NA } else { H }
+    
+    # 1. Set prior on state as ~ N(a1, P1) if a1 supplied.
+    use.prior <- if (!is.null(a1)) { TRUE } else { FALSE }
+    
+    if (use.prior) {
+      if (sea.type == 'trigonometric') {
+        ss_model <- SSModel(
+          y ~
+            SSMtrend(
+              degree = 2,
+              Q = list(matrix(0), matrix(Qt.slope)),
+              a1 = a1[1:2],
+              P1 = P1[1:2, 1:2]
+            ) +
+            SSMseasonal(
+              period = sea.period,
+              Q = Qt.seas,
+              sea.type = sea.type,
+              a1 = a1[3:dim(a1)[1]],
+              P1 = P1[3:dim(a1)[1], 3:dim(a1)[1]]
+            ),
+          H = Ht
+        )
+        n.pars <- 0
+      } else if (sea.type == 'none') {
+        ss_model <- SSModel(
+          y ~
+            SSMtrend(
+              degree = 2,
+              Q = list(matrix(0), matrix(Qt.slope)),
+              a1 = a1[1:2],
+              P1 = P1[1:2, 1:2]
+            ),
+          H = Ht
+        )
+        n.pars <- 0
+      } else {
+        stop(sprintf("sea.type= '%s' not implemented", sea.type))
+      }
+    } else {
+      if (sea.type == 'trigonometric') {
+        ss_model <- SSModel(
+          y ~
+            SSMtrend(
+              degree = 2,
+              Q = list(matrix(0), matrix(Qt.slope))
+            ) +
+            SSMseasonal(
+              period = sea.period,
+              Q = Qt.seas,
+              sea.type = sea.type),
+          H = matrix(Ht)
+        )
+        n.pars <- if (is.null(q)) { 3 } else { 2 }
+      } else if (sea.type == 'none') {
+        ss_model <- SSModel(
+          y ~
+            SSMtrend(
+              degree = 2,
+              Q = list(matrix(0), matrix(Qt.slope))
+            ),
+          H = matrix(Ht)
+        )
+        n.pars <- if (is.null(q)) { 2 } else { 1 }
+      } else {
+        stop(sprintf("sea.type= '%s' not implemented", sea.type))
+      }
+    }
+    out <- list(model = ss_model, inits = rep(0, n.pars))
+    return(out)
+  },
     get_model = function(
     y,
     q = NULL,
@@ -360,20 +310,51 @@ SSModelDynamicGompertz <- setRefClass(
     sea.period = 7
     )
     {
-      "Retrieves the model object.
-       \\subsection{Parameters}{\\itemize{
-        \\item{\\code{y} The cumulated variable.}
-        \\item{\\code{q} The signal-to-noise ratio (ratio of slope to irregular
-        variance). Defaults to \\code{'NULL'}, in which case no signal-to-noise
-        ratio will be imposed. Instead, it will be estimated.}
-        \\item{\\code{sea.type} Seasonal type. Options are
-        \\code{'trigonometric'} and \\code{'none'}. \\code{'trigonometric'} will
-         yield a model with a trigonometric seasonal component and
-         \\code{'none'} will yield a model with no seasonal component.}
-        \\item{\\code{sea.period}  The period of seasonality. For a
-        day-of-the-week effect with daily data, this would be 7. Not required
-        if \\code{sea.type = 'none'}.}
-      }}
+        "Returns dynamic Gompertz curve model. 
+    \\subsection{Parameters}{\\itemize{
+      \\item{\\code{y} The log-growth rate time series.}
+      \\item{\\code{q} The signal-to-noise ratio (ratio of slope to irregular
+      variance). Defaults to \\code{'NULL'}, in which case no signal-to-noise
+      ratio will be imposed. Instead, it will be estimated.}
+      \\item{\\code{sea.type} Seasonal type. Options are \\code{'trigonometric'}
+       and \\code{'none'}. \\code{'trigonometric'} will yield a model with a
+       trigonometric seasonal component and \\code{'none'} will yield a model
+       with no seasonal component.}
+      \\item{\\code{sea.period} The period of seasonality. For a day-of-the-week
+       effect with daily data, this would be 7. Not required if
+       \\code{sea.type = 'none'}.}
+    }}
+    \\subsection{Description}{
+    The dynamic Gompertz with an integrated random walk (IRW) trend is
+    \\deqn{\\ln g_{t}=\\delta_{t}+\\varepsilon_{t},  \\;\\;\\;\\;
+    \\varepsilon_{t}\\sim NID(0,\\sigma_{\\varepsilon }^{2}), \\;\\;\\;\\;
+    t=2,...,T, }
+    where \\eqn{Y_t} is the cumulated variable, \\eqn{y_t = \\Delta Y_t},
+    \\eqn{\\ln g_{t}=\\ln y_{t}-\\ln Y_{t-1}} and
+    \\deqn{\\delta_{t} =\\delta_{t-1}+\\gamma_{t-1},}
+    \\deqn{\\gamma_{t} =\\gamma_{t-1}+\\zeta_{t}, \\;\\;\\;\\;
+    \\zeta_{t}\\sim NID(0,\\sigma_{\\zeta }^{2}),}
+    where the observation disturbances \\eqn{\\varepsilon_{t}}  and slope
+    disturbances \\eqn{\\zeta_{t}}, are iid Normal and mutually independent.
+    Note that, the larger the signal-to-noise ratio,
+    \\eqn{q_{\\zeta }=\\sigma_{\\zeta }^{2}/\\sigma_{\\varepsilon }^{2}},
+    the faster the slope changes in response to new observations. Conversely,
+    a lower signal-to-noise ratio induces smoothness.
+
+    For the model without seasonal terms (\\code{sea.type = 'none'}) the are
+    priors are
+    \\deqn{\\begin{pmatrix} \\delta_1 \\ \\gamma_1 \\end{pmatrix}
+    \\sim N(a_1,P_1)}.
+    The diffuse prior has \\eqn{P_1 = \\kappa I_{2\\times 2}} with
+    \\eqn{\\kappa \\to \\infty}. Implementation of the diffuse prior is handled
+     by the package \\code{KFAS} (Helske, 2017). Where the model has a seasonal
+      component (\\code{sea.type = 'trigonometric'}), the vector of prior means
+       \\eqn{a_1} and the prior covariance matrix \\eqn{P_1} are extended
+       accordingly.
+
+    See the vignette for details of the variance matrix \\eqn{Q}.
+    \\eqn{H = \\sigma^2_{\\varepsilon}}.
+    }
       \\subsection{Return Value}{\\code{KFS} model object.}"
       if (is.null(.self$reinit.date)){
         model <- .self$get_dynamic_gompertz_model(
@@ -513,17 +494,66 @@ SSModelDynamicGompertz <- setRefClass(
         cat("Use presample info:", use.presample.info)
       }
     },
-    plot_diff =function(...){
+    plot =function(title=NULL, series.name="target variable", MA=TRUE){
       "Plots the lagged differences of the cumulated dataset \\code{Y} in this 
       \\code{SSModelDynamicGompertz} object against time, which could represent 
       daily cases.
       \\subsection{Parameters}{\\itemize{
-        \\item{\\code{...} arguments passed to the \\code{xts::plot.xts} method}
-      }}
+        \\item{\\code{MA} A logical value indicating whether 7-day centered moving 
+        average should be plotted. Defaults to \\code{TRUE}.
+        }
+        \\item{\\code{title} Title for forecast plot. Enter as text string. 
+        \\code{NULL} (i.e. no title) by default.}
+        \\item{\\code{series.name} The name of the series the growth rate is being computed
+        for. E.g. \\code{'cases'}. Default is `target variable`.}
+}
+      }
       \\subsection{Return Value}{A plot of the lagged differences of the 
       cumulated dataset \\code{Y} against time.}
       "
-      plot(diff(Y), ...)
+      cumulative_cases <- Y  
+
+      # Calculate a centred 7-day moving average of daily differences.
+      ma.cent.new.cases <- zoo::rollmean(diff(cumulative_cases), 7, align = "center")
+      
+      # Identify the date with maximum new cases.
+      ma.cent.wave.3.idx.max <- tsgc::argmax(ma.cent.new.cases) %>% zoo::index()
+      
+      # Prepare data for plotting by combining actual new cases and the moving average.
+      d <- cbind(diff(cumulative_cases), ma.cent.new.cases)
+      colnames(d) <- c('New Cases', 'Centered 7-day MA')
+      d.df <- data.frame(
+        Date = index(d),
+        New.Cases = coredata(d[, 1]),
+        Centered.7.day.MA = coredata(d[, 2])
+      )
+      
+      # Create base plot
+      data_plot <- ggplot(data = d.df, aes(x = Date)) +
+        geom_line(aes(y = New.Cases, color = "New Cases"), linewidth = 0.1) +
+        scale_y_continuous(n.breaks = 10) +
+        labs(x = "Date", y = paste("New", series.name), title = title)+
+        scale_x_date(date_breaks = "60 days") +
+        theme_light(base_size = 12) +
+        theme(
+          legend.position = "inside",
+          legend.position.inside = c(0.2, 0.85),
+          legend.title = element_text(size = 2),
+          legend.text = element_text(size = 10),
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+          plot.title = element_text(face = "bold")
+        )
+      
+      # Conditionally add Centered 7-day MA line
+      if (MA) {
+        data_plot <- data_plot + 
+          geom_line(aes(y = Centered.7.day.MA, color = "Centered 7 day MA"), linewidth = 1)+ 
+          scale_color_manual(
+            name = '',
+            values = c('Centered 7 day MA' = 'red')
+          )
+      } 
+      data_plot
     }
   )
 )

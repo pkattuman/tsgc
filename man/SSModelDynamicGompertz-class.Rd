@@ -4,29 +4,46 @@
 \name{SSModelDynamicGompertz-class}
 \alias{SSModelDynamicGompertz-class}
 \alias{SSModelDynamicGompertz}
-\title{Class for dynamic Gompertz curve state space model object.}
+\title{Class for Dynamic Gompertz Curve State-Space Model}
 \description{
-Class for dynamic Gompertz curve state space model object.
+Class for Dynamic Gompertz Curve State-Space Model Object, whose
+fields contain the model settings. Contains methods to obtain FilterResults
+object and plot the time series.
+}
+\section{Fields}{
 
-\subsection{Methods}{
-\code{get_model(y, q = NULL, sea.type = 'trigonometric', sea.period = 7)}
-Retrieves the model object.
-\subsection{Parameters}{\itemize{
-\item{\code{y} The cumulated variable.}
-\item{\code{q} The signal-to-noise ratio (ratio of slope to irregular
-variance). Defaults to \code{'NULL'}, in which case no signal-to-noise ratio
-will be imposed. Instead, it will be estimated.}
-\item{\code{sea.type} Seasonal type. Options are \code{'trigonometric'} and
-\code{'none'}. \code{'trigonometric'} will yield a model with a trigonometric
-seasonal component and \code{'none'} will yield a model with no seasonal
-component.}
-\item{\code{sea.period}  The period of seasonality. For a day-of-the-week
+\describe{
+\item{\code{Y}}{The cumulated variable.}
+
+\item{\code{q}}{The signal-to-noise ratio (ratio of slope to irregular
+variance). Defaults to \code{'NULL'}, in which case no
+signal-to-noise ratio will be imposed. Instead, it will be estimated.}
+
+\item{\code{sea.type}}{Seasonal type. Options are \code{'trigonometric'}
+and \code{'none'}. \code{'trigonometric'} will yield a model with a
+trigonometric seasonal component and \code{'none'} will yield a model
+with no seasonal component.}
+
+\item{\code{sea.period}}{The period of seasonality. For a day-of-the-week
 effect with daily data, this would be 7. Not required if
 \code{sea.type = 'none'}.}
+
+\item{\code{reinit.date}}{(Only needed for reinitialization.) The reinitialisation date \eqn{r}. Should be
+specified as an object of class \code{"Date"}. Defaults to NA, which
+represents the non-reinitialized version.}
+
+\item{\code{original.results}}{(Only needed for reinitialization.) Rather than re-estimating the model up
+to the \code{reinit.date}, a \code{FilterResults} class object can be
+specified here and the parameters for the reinitialisation will be taken
+from this object. Default is \code{NULL}. This parameter is optional.}
+
+\item{\code{use.presample.info}}{(Only needed for reinitialization.) Logical value denoting whether or
+not to use information from before the reinitialisation date in the
+reinitialisation procedure. Default is \code{TRUE}. If \code{FALSE}, the
+model is estimated from scratch from the reinitialisation date and no
+attempt to use information from before the reinitialisation date is made.}
 }}
-\subsection{Return Value}{\code{KFS} model object.}
-}
-}
+
 \section{Methods}{
 
 \describe{
@@ -45,9 +62,12 @@ model.}}
   P1 = NULL,
   Q = NULL,
   H = NULL
-)}}{Returns dynamic Gompertz curve model.
+)}}{Returns the Dynamic Gompertz Model object, assuming no reinitialization. 
+Used in the \code{get_model} function.}
+
+\item{\code{get_model(y, q = NULL, sea.type = "trigonometric", sea.period = 7)}}{Returns dynamic Gompertz curve model. 
     \subsection{Parameters}{\itemize{
-      \item{\code{y} The cumulated variable}
+      \item{\code{y} The log-growth rate time series.}
       \item{\code{q} The signal-to-noise ratio (ratio of slope to irregular
       variance). Defaults to \code{'NULL'}, in which case no signal-to-noise
       ratio will be imposed. Instead, it will be estimated.}
@@ -104,23 +124,7 @@ model.}}
     See the vignette for details of the variance matrix \eqn{Q}.
     \eqn{H = \sigma^2_{\varepsilon}}.
     }
-    }
-
-\item{\code{get_model(y, q = NULL, sea.type = "trigonometric", sea.period = 7)}}{Retrieves the model object.
- \subsection{Parameters}{\itemize{
-  \item{\code{y} The cumulated variable.}
-  \item{\code{q} The signal-to-noise ratio (ratio of slope to irregular
-  variance). Defaults to \code{'NULL'}, in which case no signal-to-noise
-  ratio will be imposed. Instead, it will be estimated.}
-  \item{\code{sea.type} Seasonal type. Options are
-  \code{'trigonometric'} and \code{'none'}. \code{'trigonometric'} will
-   yield a model with a trigonometric seasonal component and
-   \code{'none'} will yield a model with no seasonal component.}
-  \item{\code{sea.period}  The period of seasonality. For a
-  day-of-the-week effect with daily data, this would be 7. Not required
-  if \code{sea.type = 'none'}.}
-}}
-\subsection{Return Value}{\code{KFS} model object.}}
+      \subsection{Return Value}{\code{KFS} model object.}}
 
 \item{\code{initialize(
   Y,
@@ -130,45 +134,27 @@ model.}}
   reinit.date = NULL,
   original.results = NULL,
   use.presample.info = TRUE
-)}}{Create an instance of the \code{SSModelDynamicGompertz} class.
- \subsection{Parameters}{\itemize{
-  \item{\code{Y} The cumulated variable.}
-  \item{\code{q} The signal-to-noise ratio (ratio of slope to irregular
-   variance). Defaults to \code{'NULL'}, in which case no
-   signal-to-noise ratio will be imposed. Instead, it will be estimated.}
-   \item{\code{sea.type} Seasonal type. Options are \code{'trigonometric'}
- and \code{'none'}. \code{'trigonometric'} will yield a model with a
- trigonometric seasonal component and \code{'none'} will yield a model
- with no seasonal component.}
-\item{\code{sea.period} The period of seasonality. For a day-of-the-week
- effect with daily data, this would be 7. Not required if
- \code{sea.type = 'none'}.}
-  \item{\code{reinit.date} The reinitialisation date \eqn{r}. Should
-  be specified as an object of class \code{"Date"}. Must be specified
-  if \code{original.results = NULL} and
-  \code{use.pre.sample.info = TRUE}.}
-  \item{\code{original.results} In place of a reinitialisation date, a
-  \code{KFS} results object can be specified here and the parameters for
-   the reinitialisation will be taken from this object. Must be specified
-    if \code{reinit.date = NULL} and \code{use.pre.sample.info = TRUE}.}
-  \item{\code{use.presample.info}  Logical value denoting whether or not
-   to use information from before the reinitialisation date in the
-   reinitialisation procedure. Default is \code{TRUE}. If \code{FALSE},
-   the model is estimated from scratch from the reinitialisation date and
-   no attempt to use information from before the reinitialisation date is
-    made.}
-}}
-\subsection{Usage}{\code{SSModelDynGompertzReinit$new(y, q = 0.005,
-reinit.date = as.Date("2021-05-12",format = date.format))}}}
+)}}{Create an instance of the \code{SSModelDynamicGompertz} class. Parameters 
+are the defined in `fields` section. 
+  \subsection{Usage}{\code{SSModelDynGompertzReinit$new(y, q = 0.005,
+  reinit.date = as.Date("2021-05-12",format = date.format))}}}
 
-\item{\code{plot_diff(...)}}{Plots the lagged differences of the cumulated dataset \code{Y} in this 
-\code{SSModelDynamicGompertz} object against time, which could represent 
-daily cases.
-\subsection{Parameters}{\itemize{
-  \item{\code{...} arguments passed to the \code{xts::plot.xts} method}
-}}
-\subsection{Return Value}{A plot of the lagged differences of the 
-cumulated dataset \code{Y} against time.}}
+\item{\code{plot(title = NULL, series.name = "target variable", MA = TRUE)}}{Plots the lagged differences of the cumulated dataset \code{Y} in this 
+      \code{SSModelDynamicGompertz} object against time, which could represent 
+      daily cases.
+      \subsection{Parameters}{\itemize{
+        \item{\code{MA} A logical value indicating whether 7-day centered moving 
+        average should be plotted. Defaults to \code{TRUE}.
+        }
+        \item{\code{title} Title for forecast plot. Enter as text string. 
+        \code{NULL} (i.e. no title) by default.}
+        \item{\code{series.name} The name of the series the growth rate is being computed
+        for. E.g. \code{'cases'}. Default is `target variable`.}
+}
+      }
+      \subsection{Return Value}{A plot of the lagged differences of the 
+      cumulated dataset \code{Y} against time.}
+      }
 
 \item{\code{print()}}{Provides a quick description of SSModelDynamicGompertz object, providing 
 model states and standard errors.}
