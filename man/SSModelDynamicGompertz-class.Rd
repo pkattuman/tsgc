@@ -123,22 +123,6 @@ model states and standard errors.}
 
 \item{\code{summary()}}{Supplies details of the SSModelDynamicGompertz object, such as estimated 
 parameter values, start and end dates of estimation.}
-
-\item{\code{update(pars, model, q, sea.type)}}{Update method for Kalman filter to implement the dynamic Gompertz curve
- model.
- A maximum of 3 parameters are used to set the observation noise
- (1 parameter), the transition equation slope and seasonal noise. If q (signal
-  to noise ratio) is not null then the slope noise is set using this
-  ratio.
- \subsection{Parameters}{\itemize{
-  \item{\code{pars} Vector of parameters.}
-  \item{\code{model} \code{KFS} model object.}
-  \item{\code{q} The signal-to-noise ratio (ratio of slope to irregular
-   variance).}
-  \item{\code{sea.type} Seasonal type. Options are
-  \code{'trigonometric'} and \code{'none'}.}
-}}
-\subsection{Return Value}{\code{KFS} model object.}}
 }}
 
 \examples{
@@ -160,5 +144,6 @@ plot(model,title="Daily COVID cases in Gauteng", series.name="cases", MA=TRUE)
 
 # Estimate a specified model
 res <- estimate(model)
+res
 
 }

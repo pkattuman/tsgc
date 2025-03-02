@@ -150,7 +150,7 @@ SSModelDynamicGompertz <- setRefClass(
       model.}
       "
     update = function(pars, model, q, sea.type) {
-      "Update method for Kalman filter to implement the dynamic Gompertz curve
+    "Update method for Kalman filter to implement the dynamic Gompertz curve
        model.
        A maximum of 3 parameters are used to set the observation noise
        (1 parameter), the transition equation slope and seasonal noise. If q (signal
@@ -165,50 +165,50 @@ SSModelDynamicGompertz <- setRefClass(
         \\code{'trigonometric'} and \\code{'none'}.}
       }}
       \\subsection{Return Value}{\\code{KFS} model object.}"
-      estH <- any(is.na(model$H))
-      estQ <- any(is.na(model$Q))
-      if ((!estH) & (!estQ)) {
-        # If nothing to update then return model
-        return(model)
-      } else {
-        nparQ <- if (sea.type == 'trigonometric') { 1 } else { 0 }
-        # 1. Set seasonal noise
-        if (estQ) {
-          Q <- as.matrix(model$Q[, , 1])
-          # Update diagonal elements
-          naQd <- which(is.na(diag(Q)))
-          Q[naQd, naQd][lower.tri(Q[naQd, naQd])] <- 0
-          diag(Q)[naQd] <- exp(0.5 * pars[1])
-          # Check for off-diagonal elements and raise error if found.
-          naQnd <- which(upper.tri(Q[naQd, naQd]) & is.na(Q[naQd, naQd]))
-          if (length(naQnd) > 0) {
-            stop("NotImplmentedError: Unexpected off-diaganol element updating")
-          }
-        }
-        
-        # 2. Set observation noise
-        H <- as.matrix(model$H[, , 1])
-        if (estH) {
-          naHd <- which(is.na(diag(H)))
-          H[naHd, naHd][lower.tri(H[naHd, naHd])] <- 0
-          diag(H)[naHd] <- exp(0.5 * pars[(nparQ + 1)])
-          model$H[naHd, naHd, 1] <- crossprod(H[naHd, naHd])
-        }
-        
-        # 3. Set slope noise
-        # Get index of slope, 1 before the seasonal component.
-        model$Q[naQd, naQd, 1] <- crossprod(Q[naQd, naQd])
-        i.slope <- 2
-        # Estimate slope if no signal to noise ratio specified.
-        if (is.null(q)) {
-          Q.slope <- exp(0.5 * pars[(nparQ + 2)])
-        } else {
-          Q.slope <- crossprod(H[naHd, naHd]) * q
-        }
-        model$Q[i.slope, i.slope, 1] <- Q.slope
-      }
+    estH <- any(is.na(model$H))
+    estQ <- any(is.na(model$Q))
+    if ((!estH) & (!estQ)) {
+      # If nothing to update then return model
       return(model)
+    } else {
+      nparQ <- if (sea.type == 'trigonometric') { 1 } else { 0 }
+      # 1. Set seasonal noise
+      if (estQ) {
+        Q <- as.matrix(model$Q[, , 1])
+        # Update diagonal elements
+        naQd <- which(is.na(diag(Q)))
+        Q[naQd, naQd][lower.tri(Q[naQd, naQd])] <- 0
+        diag(Q)[naQd] <- exp(0.5 * pars[1])
+        # Check for off-diagonal elements and raise error if found.
+        naQnd <- which(upper.tri(Q[naQd, naQd]) & is.na(Q[naQd, naQd]))
+        if (length(naQnd) > 0) {
+          stop("NotImplmentedError: Unexpected off-diaganol element updating")
+        }
+      }
+      
+      # 2. Set observation noise
+      H <- as.matrix(model$H[, , 1])
+      if (estH) {
+        naHd <- which(is.na(diag(H)))
+        H[naHd, naHd][lower.tri(H[naHd, naHd])] <- 0
+        diag(H)[naHd] <- exp(0.5 * pars[(nparQ + 1)])
+        model$H[naHd, naHd, 1] <- crossprod(H[naHd, naHd])
+      }
+      
+      # 3. Set slope noise
+      # Get index of slope, 1 before the seasonal component.
+      model$Q[naQd, naQd, 1] <- crossprod(Q[naQd, naQd])
+      i.slope <- 2
+      # Estimate slope if no signal to noise ratio specified.
+      if (is.null(q)) {
+        Q.slope <- exp(0.5 * pars[(nparQ + 2)])
+      } else {
+        Q.slope <- crossprod(H[naHd, naHd]) * q
+      }
+      model$Q[i.slope, i.slope, 1] <- Q.slope
     }
+    return(model)
+  }
     get_model = function(
     y,
     q = NULL,
@@ -373,7 +373,7 @@ SSModelDynamicGompertz <- setRefClass(
     
     # 2. Add update / model methods
     updatefn <- purrr::partial(
-      .self$update, ... =, q = q, sea.type = sea.type
+      update, ... =, q = q, sea.type = sea.type
     )
     model <- get_model(y, q = q, sea.type, sea.period)
     # 2. Estimate via MLE unknown params

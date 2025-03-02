@@ -102,7 +102,7 @@ res_q
 # Estimate model
 model <- SSModelDynamicGompertz$new(Y = y, q = q)
 res <- estimate(model)
-res
+summary(res)
 
 # -----------------------------
 # Forecasting: Log Growth Rate

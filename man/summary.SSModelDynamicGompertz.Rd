@@ -13,3 +13,15 @@
 Accessor method to show a summary for the objects of
 \code{SSModelDynamicGompertz} class
 }
+\examples{
+library(tsgc)
+data(gauteng,package="tsgc")
+idx.est <- zoo::index(gauteng) <= as.Date("2020-07-06")
+
+# Specify a model
+model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+
+# Show summary of the model object
+summary(model)
+
+}

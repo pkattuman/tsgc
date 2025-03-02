@@ -2,8 +2,12 @@
 
 S3method(plot,SSModelDynamicGompertz)
 S3method(plot,SSModelLeadingIndicator)
+S3method(print,FilterResults)
+S3method(print,FilterResultsLI)
 S3method(print,SSModelDynamicGompertz)
 S3method(print,SSModelLeadingIndicator)
+S3method(summary,FilterResults)
+S3method(summary,FilterResultsLI)
 S3method(summary,SSModelDynamicGompertz)
 S3method(summary,SSModelLeadingIndicator)
 export(Ptt)

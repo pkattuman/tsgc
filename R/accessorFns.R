@@ -222,6 +222,17 @@ summary.SSModelLeadingIndicator <- function(model) {
 #'
 #' @param model A `SSModelDynamicGompertz` object
 #' 
+#' @examples
+#' library(tsgc)
+#' data(gauteng,package="tsgc")
+#' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-06")
+#'
+#' # Specify a model
+#' model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+#' 
+#' # Print a short description of the model object
+#' print(model)
+#' 
 #' @export
 print.SSModelDynamicGompertz <- function(model) {
   # Call the object's print() method if it exists
@@ -238,6 +249,17 @@ print.SSModelDynamicGompertz <- function(model) {
 #' `SSModelDynamicGompertz` class
 #'
 #' @param model A `SSModelDynamicGompertz` object
+#' 
+#' @examples
+#' library(tsgc)
+#' data(gauteng,package="tsgc")
+#' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-06")
+#'
+#' # Specify a model
+#' model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+#' 
+#' # Show summary of the model object
+#' summary(model)
 #' 
 #' @export
 summary.SSModelDynamicGompertz <- function(model) {
@@ -266,6 +288,74 @@ plot.SSModelDynamicGompertz <- function(model,title=NULL,
     model$plot(title, series.name, MA)
   } else {
     stop("The object does not have a valid 'plot' method.")
+  }
+}
+
+#' @title Calling summary method for FilterResults
+#'
+#' @description Accessor method to show a summary for the objects of
+#' `FilterResults` class
+#'
+#' @param model A `FilterResults` object
+#' 
+#' @export
+summary.FilterResults <- function(model) {
+  # Call the object's summary() method if it exists
+  if (!is.null(model$summary) && is.function(model$summary)) {
+    model$summary()
+  } else {
+    stop("The object does not have a valid 'summary' method.")
+  }
+}
+
+#' @title Calling print method for FilterResults class
+#'
+#' @description Accessor method to print a short description for the objects of
+#' `FilterResults` class
+#'
+#' @param model A `FilterResults` object
+#' 
+#' @export
+print.FilterResults <- function(model) {
+  # Call the object's print() method if it exists
+  if (!is.null(model$print) && is.function(model$print)) {
+    model$print()
+  } else {
+    stop("The object does not have a valid 'print' method.")
+  }
+}
+
+#' @title Calling summary method for FilterResultsLI
+#'
+#' @description Accessor method to show a summary for the objects of
+#' `FilterResultsLI` class
+#'
+#' @param model A `FilterResultsLI` object
+#' 
+#' @export
+summary.FilterResultsLI <- function(model) {
+  # Call the object's summary() method if it exists
+  if (!is.null(model$summary) && is.function(model$summary)) {
+    model$summary()
+  } else {
+    stop("The object does not have a valid 'summary' method.")
+  }
+}
+
+#' @title Calling print method for FilterResultsLI class
+#'
+#' @description Accessor method to print a short description for the objects of
+#' `FilterResultsLI` class
+#'
+#' @param model A `FilterResultsLI` object
+#' 
+#' @export
+print.FilterResultsLI <- function(model) {
+  # Call the object's print() method if it exists
+  if (!is.null(model$print) && is.function(model$print)) {
+    model$print()
+  } else {
+    stop("The object does not have a valid 'print' method.")
   }
 }
 
