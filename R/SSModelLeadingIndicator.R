@@ -33,7 +33,7 @@ setOldClass("KFS")
 #' @field n.lag Number of days to lag the leading indicator.
 #' @field LeadIndCol The column in \code{Y} that contains the leading indicator.
 #'
-#' @importFrom xts periodicity last
+#' @importFrom xts periodicity last lag
 #' @importFrom methods new
 #' @importFrom magrittr %>%
 #' @importFrom KFAS SSMtrend SSMseasonal SSModel
@@ -99,7 +99,7 @@ SSModelLeadingIndicator <- setRefClass(
 
       data_ldl = y[,c("LDLcases","LDLhosp")]
 
-      data_ldl$LDLcases = lag(as.vector(data_ldl$LDLcases),n.lag)
+      data_ldl$LDLcases = lag(data_ldl$LDLcases,n.lag)
 
       data_ldl <- na.omit(data_ldl)
 

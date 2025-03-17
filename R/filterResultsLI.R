@@ -24,7 +24,7 @@ setOldClass("KFS")
 #'National Institute Economic Review, 257, 83–100. 
 #'doi:10.1017/nie.2021.21
 #'
-#' @importFrom xts periodicity last
+#' @importFrom xts periodicity last lag
 #' @importFrom magrittr %>%
 #' @importFrom methods new
 #' 
@@ -139,7 +139,7 @@ FilterResultsLI <- setRefClass(
       end_date<-tail(index(data_xts),1)
       data_ldl = data_xts[,c("LDLcases","LDLhosp")] %>% na.omit
       
-      data_ldl$LDLcases = lag(as.vector(data_ldl$LDLcases),n.lag)
+      data_ldl$LDLcases = lag(data_ldl$LDLcases,n.lag)
       
       data_ldl <- na.omit(data_ldl)
       
@@ -315,7 +315,7 @@ FilterResultsLI <- setRefClass(
       end_date<-tail(index(data_xts),1)
       data_ldl = data_xts[,c("LDLcases","LDLhosp")] %>% na.omit
       
-      data_ldl$LDLcases = lag(as.vector(data_ldl$LDLcases),n.lag)
+      data_ldl$LDLcases = lag(data_ldl$LDLcases,n.lag)
       
       data_ldl <- na.omit(data_ldl)
       
@@ -530,7 +530,7 @@ FilterResultsLI <- setRefClass(
         fadmits$zero=NA
         
         # Create smoothed admissions
-        lcadmit = lag(as.vector(data_xts$cAdmit)) %>% na.omit()
+        lcadmit = lag(data_xts$cAdmit) %>% na.omit()
         smldlh = predict(output$model,states='trend')$LDLhosp %>% exp %>% as.vector
         smadmit = smldlh*lcadmit[(n.lag+1):length(lcadmit)]
         smAdmit = smadmit %>% xts(index(data_xts[(n.lag+1):(length(lcadmit)),])+1)
@@ -586,7 +586,7 @@ FilterResultsLI <- setRefClass(
     eng_full<-eng_full[index(eng_full)>tail(index(old),1),"LDLhosp"]
     actual=eng_full[1:n.ahead]
     
-    lcadmit = lag(as.vector(data_xts$cAdmit)) %>% na.omit()
+    lcadmit = lag(data_xts$cAdmit) %>% na.omit()
     smldlh = predict(output$model,states='trend')$LDLhosp
     filtered=xts(smldlh,(head(index(data_xts),1)+n.lag)+(1:length(smldlh)))
     
@@ -594,7 +594,7 @@ FilterResultsLI <- setRefClass(
     end_date<-tail(index(data_xts),1)
     data_ldl = data_xts[,c("LDLcases","LDLhosp")] %>% na.omit
     
-    data_ldl$LDLcases = lag(as.vector(data_ldl$LDLcases),n.lag)
+    data_ldl$LDLcases = lag(data_ldl$LDLcases,n.lag)
     
     data_ldl <- na.omit(data_ldl)
     
