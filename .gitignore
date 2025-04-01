@@ -71,3 +71,5 @@ po/*~
 inst/doc
 /doc/
 /Meta/
+
+R/forecastcombination.R

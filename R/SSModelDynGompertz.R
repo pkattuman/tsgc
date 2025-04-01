@@ -81,7 +81,8 @@ setOldClass("KFS")
 #' reinitialisation procedure. Default is \code{TRUE}. If \code{FALSE}, the
 #' model is estimated from scratch from the reinitialisation date and no
 #' attempt to use information from before the reinitialisation date is made.
-#'
+#' @field xpred An \code{xts} object containing the dataset of exogenous variables 
+#' to include in the model. Defaults to \code{NULL}.
 #' 
 #' @importFrom xts periodicity last
 #' @importFrom methods new
@@ -124,11 +125,12 @@ SSModelDynamicGompertz <- setRefClass(
     sea.period="ANY",
     reinit.date = "ANY",
     original.results = "ANY",
-    use.presample.info = "ANY"
+    use.presample.info = "ANY",
+    xpred="ANY"
   ),
   methods = list(initialize = function(Y, q = NULL, sea.type = 'trigonometric',
                                        sea.period = 7,reinit.date=NULL, original.results=NULL,
-                                       use.presample.info=TRUE)
+                                       use.presample.info=TRUE, xpred=NULL)
   {
     "Create an instance of the \\code{SSModelDynamicGompertz} class. Parameters 
     are defined in `fields` section. 
@@ -141,6 +143,7 @@ SSModelDynamicGompertz <- setRefClass(
     reinit.date <<- reinit.date
     original.results <<- original.results
     use.presample.info <<- use.presample.info
+    xpred<<-xpred
   },
   estimate = function() {
     "Estimates the dynamic Gompertz curve model when applied to an object of
@@ -269,32 +272,62 @@ SSModelDynamicGompertz <- setRefClass(
             stop(sprintf("sea.type= '%s' not implemented", sea.type))
           }
         } else {
-          if (sea.type == 'trigonometric') {
-            ss_model <- SSModel(
-              y ~
-                SSMtrend(
-                  degree = 2,
-                  Q = list(matrix(0), matrix(Qt.slope))
-                ) +
-                SSMseasonal(
-                  period = sea.period,
-                  Q = Qt.seas,
-                  sea.type = sea.type),
-              H = matrix(Ht)
-            )
-            n.pars <- if (is.null(q)) { 3 } else { 2 }
-          } else if (sea.type == 'none') {
-            ss_model <- SSModel(
-              y ~
-                SSMtrend(
-                  degree = 2,
-                  Q = list(matrix(0), matrix(Qt.slope))
-                ),
-              H = matrix(Ht)
-            )
-            n.pars <- if (is.null(q)) { 2 } else { 1 }
+          if (!is.null(xpred)){
+            if (sea.type == 'trigonometric') {
+              ss_model <- SSModel(
+                y ~
+                  SSMtrend(
+                    degree = 2,
+                    Q = list(matrix(0), matrix(Qt.slope))
+                  ) +
+                  SSMseasonal(
+                    period = sea.period,
+                    Q = Qt.seas,
+                    sea.type = sea.type)+xpred,
+                H = matrix(Ht)
+              )
+              n.pars <- if (is.null(q)) { 3 } else { 2 }
+            } else if (sea.type == 'none') {
+              ss_model <- SSModel(
+                y ~
+                  SSMtrend(
+                    degree = 2,
+                    Q = list(matrix(0), matrix(Qt.slope))
+                  )+xpred,
+                H = matrix(Ht)
+              )
+              n.pars <- if (is.null(q)) { 2 } else { 1 }
+            } else {
+              stop(sprintf("sea.type= '%s' not implemented", sea.type))
+            }
           } else {
-            stop(sprintf("sea.type= '%s' not implemented", sea.type))
+            if (sea.type == 'trigonometric') {
+              ss_model <- SSModel(
+                y ~
+                  SSMtrend(
+                    degree = 2,
+                    Q = list(matrix(0), matrix(Qt.slope))
+                  ) +
+                  SSMseasonal(
+                    period = sea.period,
+                    Q = Qt.seas,
+                    sea.type = sea.type),
+                H = matrix(Ht)
+              )
+              n.pars <- if (is.null(q)) { 3 } else { 2 }
+            } else if (sea.type == 'none') {
+              ss_model <- SSModel(
+                y ~
+                  SSMtrend(
+                    degree = 2,
+                    Q = list(matrix(0), matrix(Qt.slope))
+                  ),
+                H = matrix(Ht)
+              )
+              n.pars <- if (is.null(q)) { 2 } else { 1 }
+            } else {
+              stop(sprintf("sea.type= '%s' not implemented", sea.type))
+            }
           }
         }
         out <- list(model = ss_model, inits = rep(0, n.pars))
@@ -388,6 +421,7 @@ SSModelDynamicGompertz <- setRefClass(
     
     results <- FilterResults$new(
       data_xts = Y,
+      xpred=xpred,
       index = date.index,
       reinit.date=reinit.date,
       output = model_output

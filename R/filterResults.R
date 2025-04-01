@@ -21,6 +21,7 @@ setOldClass("KFS")
 #' @importFrom xts periodicity last
 #' @importFrom magrittr %>%
 #' @importFrom methods new
+#' @importFrom abind abind
 #' @examples
 #' library(tsgc)
 #' data(gauteng,package="tsgc")
@@ -82,22 +83,25 @@ FilterResults <- setRefClass(
   "FilterResults",
   fields = list(
     data_xts = "xts",
+    xpred = "ANY",
     index = "Date",
     reinit.date= "ANY",
     output = "KFS"
   ),
   methods = list(
-    initialize = function(data_xts,index,reinit.date, output)
+    initialize = function(data_xts,xpred,index,reinit.date, output)
     {
       "Create an instance of the \\code{FilterResults} class with fields defined
       earlier in the fields section."
       data_xts<<-data_xts
+      xpred<<-xpred
       index <<- index
       reinit.date<<-reinit.date
       output <<- output
     },
     predict_level = function(
       n.ahead,
+      xpred.new=NULL,
       confidence.level=0.68,
       sea.on = FALSE, 
       return.diff=TRUE)
@@ -134,7 +138,7 @@ FilterResults <- setRefClass(
 
       freq <- unclass(periodicity(y.cum))$label
       endtime <- end(gety(model)) + c(0, n.ahead)
-      filtered.out <- .self$predict_all(n.ahead, sea.on = sea.on,
+      filtered.out <- .self$predict_all(n.ahead, xpred.new=xpred.new, sea.on = sea.on,
                                         return.all = FALSE)
 
       # # 1. Extract parameters.
@@ -216,7 +220,8 @@ FilterResults <- setRefClass(
 
       return(out)
     },
-    predict_all = function(n.ahead, sea.on = TRUE, return.all = FALSE) {
+    predict_all = function(n.ahead, xpred.new=NULL, sea.on = TRUE, 
+                           return.all = FALSE) {
       "Returns forecasts of the incidence variable \\eqn{y}, the state variables
        and the conditional covariance matrix
       for the states.
@@ -239,32 +244,70 @@ FilterResults <- setRefClass(
       states including seasonals where applicable (\\code{P.t.t}).}"
 
       new.model <- modelKFS(output)
+      oldn<-attr(new.model, 'n')
       new.model$y <- rbind(
         gety(new.model),
         matrix(NA, ncol = ncol(gety(new.model)), nrow = n.ahead)) %>% as.ts()
       
-      attr(new.model, 'n') <- as.integer(length(gety(modelKFS(output))) + n.ahead)
-        
-      model_output <- KFS(new.model)
-
-      if (sea.on == TRUE) {
-        y.hat.kfas <- predict(
-          output$model, interval = 'prediction',
-          n.ahead = n.ahead, level = 0.68, states = 'all')
+      attr(new.model, 'n') <- as.integer(oldn + n.ahead)
+      
+      if (!is.null(xpred)){
+        if (is.null(xpred.new)){
+          stop("xpred.new cannot be NULL.")
+        } else {
+          xpred.subsetted<-xpred.new[1:n.ahead]
+          
+          newZ<-array(new.model$Z[,,dim(new.model$Z)[3]], 
+                      dim = c(dim(new.model$Z)[1], dim(new.model$Z)[2], n.ahead))
+          newZ[,1:dim(xpred.subsetted)[2],]<-t(xpred.subsetted)
+          
+          new.model$Z <- abind::abind(
+            new.model$Z,
+            newZ,
+            along = 3
+          )
+          
+          model_output <- KFS(new.model)
+          
+          newdata<-SSModel(rep(NA,dim(xpred.subsetted)[1])~-1+
+                             SSMcustom(Z=newZ, T=new.model$T, R=new.model$R, 
+                                       Q=new.model$Q))
+          if (sea.on == TRUE) {
+            y.hat.kfas <- predict(
+              output$model, interval = 'prediction',
+              newdata = newdata, level = 0.68, states = 'all')
+          } else {
+            y.hat.kfas <- predict(
+              output$model, interval = 'prediction',
+              newdata = newdata, level = 0.68, states = 'level')
+          }
+          
+          y.t.t<-numeric(oldn)
+          for (i in 1:oldn){
+            y.t.t[i] <- output$att[i,] %*% drop(matrixKFS(output,"Z"))[,i]
+          }
+        }
       } else {
-        y.hat.kfas <- predict(
-          output$model, interval = 'prediction',
-          n.ahead = n.ahead, level = 0.68, states = 'level')
-      }
-
-      n <- attr(modelKFS(output), "n")
-      dates <- seq(index[1], by = 'day', length.out = (n + n.ahead))
-
-      # Assumes time invariant Z.t
-      y.t.t <- output$att %*% drop(matrixKFS(output,"Z"))
+        model_output <- KFS(new.model)
+        
+        if (sea.on == TRUE) {
+          y.hat.kfas <- predict(
+            output$model, interval = 'prediction',
+            n.ahead = n.ahead, level = 0.68, states = 'all')
+        } else {
+          y.hat.kfas <- predict(
+            output$model, interval = 'prediction',
+            n.ahead = n.ahead, level = 0.68, states = 'level')
+        }
+        
+        # Assumes time invariant Z.t
+        y.t.t <- output$att %*% drop(matrixKFS(output,"Z"))
+      } 
+      
+      dates <- seq(index[1], by = 'day', length.out = (oldn + n.ahead))
 
       y.hat <- xts::xts(
-        rbind(y.t.t, y.hat.kfas[, 1] %>% as.matrix()),
+        c(y.t.t, y.hat.kfas[, 1] %>% as.matrix()),
         order.by = dates)
       names(y.hat)<-c("y.hat")
       
@@ -407,7 +450,8 @@ FilterResults <- setRefClass(
       cat("\n")
       cat("Seasonality noise:",format(Q_seasonal, digits = 4))
     }, 
-    plot_new_cases=function(n.ahead=14, confidence.level = 0.68, 
+    plot_new_cases=function(n.ahead=14, xpred.new=NULL,
+                            confidence.level = 0.68, 
                             date_format = "%Y-%m-%d",
                             title=NULL, plt.start.date=NULL, 
                             series.name="target variable") {
@@ -415,6 +459,12 @@ FilterResults <- setRefClass(
       showing actual values, forecasts including seasonal components,
       and prediction intervals around the forecasts. 
       For more details, see \\link{plot_new_cases}."
+      
+      if (!is.null(xpred)){
+        if (is.null(xpred.new)){
+          stop("xpred.new cannot be NULL.")
+        } 
+      }
       
       Date <- Data <- Forecast <- ForecastTrend <- lower <- upper <- NULL
       if (is.null(title)) {title <- ""}
@@ -430,10 +480,10 @@ FilterResults <- setRefClass(
     if (is.null(plt.start.date)) {plt.start.date <- head(est.date.index, 1)}
     
     y.hat.diff.final.ci <- .self$predict_level(
-      n.ahead = n.ahead, confidence.level = confidence.level
+      n.ahead = n.ahead, xpred.new=xpred.new, confidence.level = confidence.level
     )
     y.hat.diff.final <- .self$predict_level(
-      n.ahead = n.ahead, confidence.level = confidence.level,
+      n.ahead = n.ahead, xpred.new=xpred.new, confidence.level = confidence.level,
       sea.on = TRUE
     )
     
@@ -482,7 +532,7 @@ FilterResults <- setRefClass(
       ggplot2::scale_x_date(labels = scales::date_format("%d %b %y")) +
       ggplot2::scale_size_manual(values = c(1, 1, 1))
     },
-    plot_log_forecast=function(Y,n.ahead = 14,
+    plot_log_forecast=function(Y,n.ahead = 14, xpred.new=NULL,
                                plt.start.date=NULL, title="", caption = "") {
       "Plots actual and filtered values of the log cumulative growth rate 
       (\\eqn{\\ln(g_t)}) in the estimation sample and the forecast and realised 
@@ -501,7 +551,7 @@ FilterResults <- setRefClass(
       y <- xts::xts(model$y %>% as.numeric(), order.by = est.date.index)
       p <- attr(model, 'p')
       
-      y.hat.all <- .self$predict_all(n.ahead, return.all = TRUE)
+      y.hat.all <- .self$predict_all(n.ahead, xpred.new=xpred.new, return.all = TRUE)
       y.pred <-  subset(y.hat.all$y.hat,index(y.hat.all$y.hat) > tail(index,1))
       filtered.level <- y.hat.all$level
       
@@ -684,13 +734,20 @@ FilterResults <- setRefClass(
       
       return(p1)
     }, 
-    plot_holdout = function(Y, n.ahead=14,confidence.level = 0.68,
+    plot_holdout = function(Y, n.ahead=14,xpred.new=NULL, 
+                            confidence.level = 0.68,
                              date_format = "%Y-%m-%d", 
                             series.name = "target variable",
                              title= NULL, caption = NULL) {
       "Plots the forecast of new cases (the difference of the cumulated
       variable) over a holdout sample. For more details, please refer to 
       \\link{plot_holdout}."
+      
+      if (!is.null(xpred)){
+        if (is.null(xpred.new)){
+          stop("xpred.new cannot be NULL.")
+        } 
+      }
       
       if (!is.null(reinit.date)){
         Y.est<-reinitialise_dataframe(data_xts, reinit.date)
@@ -714,10 +771,12 @@ FilterResults <- setRefClass(
       estimation.date.end <- tail(est.date.index, 1)
       
       y.hat.diff.final.ci <-.self$predict_level(
-        n.ahead = n.ahead, confidence.level = confidence.level
+        n.ahead = n.ahead, xpred.new=xpred.new, 
+        confidence.level = confidence.level
       )
       y.hat.diff.final <-.self$predict_level(
-        n.ahead = n.ahead, confidence.level = confidence.level,
+        n.ahead = n.ahead, xpred.new=xpred.new, 
+        confidence.level = confidence.level,
         sea.on = TRUE
       )
       
@@ -777,10 +836,16 @@ FilterResults <- setRefClass(
       
       return(p1)
     },
-    mapes=function(n.ahead,Y){
+    mapes=function(n.ahead,Y,xpred.new=NULL){
       "Compute Mean Absolute Percentage Error (MAPE) for trend and seasonal 
     forecasts against a holdout sample. For more details, please refer to 
     \\link{mapes}."
+      if (!is.null(xpred)){
+        if (is.null(xpred.new)){
+          stop("xpred.new cannot be NULL.")
+        } 
+      }
+      
         y.level.est <- data_xts
         
         p <- attr(modelKFS(output), 'p')
@@ -794,10 +859,10 @@ FilterResults <- setRefClass(
         estimation.date.end <- tail(est.date.index, 1)
         
         y.hat.diff.final.ci <- .self$predict_level(
-          n.ahead = n.ahead, confidence.level = 0.68
+          n.ahead = n.ahead, xpred.new=xpred.new, confidence.level = 0.68
         )
         y.hat.diff.final <- .self$predict_level(
-          n.ahead = n.ahead, confidence.level =0.68,
+          n.ahead = n.ahead, xpred.new=xpred.new, confidence.level =0.68,
           sea.on = TRUE
         )
         
