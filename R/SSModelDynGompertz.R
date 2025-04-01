@@ -236,30 +236,65 @@ SSModelDynamicGompertz <- setRefClass(
         # 1. Set prior on state as ~ N(a1, P1) if a1 supplied.
         use.prior <- if (!is.null(a1)) { TRUE } else { FALSE }
         
+        # 2. Check whether there are exogeneous predictors in model
+        need.xpred<-!is.null(xpred)
+        
         if (use.prior) {
           if (sea.type == 'trigonometric') {
-            ss_model <- SSModel(
-              y ~
-                SSMtrend(
-                  degree = 2,
-                  Q = list(matrix(0), matrix(Qt.slope)),
-                  a1 = a1[1:2],
-                  P1 = P1[1:2, 1:2]
-                ) +
-                SSMseasonal(
-                  period = sea.period,
-                  Q = Qt.seas,
-                  sea.type = sea.type,
-                  a1 = a1[3:dim(a1)[1]],
-                  P1 = P1[3:dim(a1)[1], 3:dim(a1)[1]]
-                ),
-              H = Ht
-            )
-            n.pars <- 0
+            if(need.xpred){
+              ss_model <- SSModel(
+                y ~
+                  SSMtrend(
+                    degree = 2,
+                    Q = list(matrix(0), matrix(Qt.slope)),
+                    a1 = a1[1:2],
+                    P1 = P1[1:2, 1:2]
+                  ) +
+                  SSMseasonal(
+                    period = sea.period,
+                    Q = Qt.seas,
+                    sea.type = sea.type,
+                    a1 = a1[3:dim(a1)[1]],
+                    P1 = P1[3:dim(a1)[1], 3:dim(a1)[1]]
+                  )+xpred,
+                H = Ht
+              )
+              n.pars <- 0
+            } else {
+              ss_model <- SSModel(
+                y ~
+                  SSMtrend(
+                    degree = 2,
+                    Q = list(matrix(0), matrix(Qt.slope)),
+                    a1 = a1[1:2],
+                    P1 = P1[1:2, 1:2]
+                  ) +
+                  SSMseasonal(
+                    period = sea.period,
+                    Q = Qt.seas,
+                    sea.type = sea.type,
+                    a1 = a1[3:dim(a1)[1]],
+                    P1 = P1[3:dim(a1)[1], 3:dim(a1)[1]]
+                  ),
+                H = Ht
+              )
+              n.pars <- 0
+            }
           } else if (sea.type == 'none') {
-            ss_model <- SSModel(
-              y ~
-                SSMtrend(
+            if(need.xpred){
+              ss_model <- SSModel(
+              y ~ SSMtrend(
+                  degree = 2,
+                  Q = list(matrix(0), matrix(Qt.slope)),
+                  a1 = a1[1:2],
+                  P1 = P1[1:2, 1:2]
+                )+xpred,
+              H = Ht
+            )
+            n.pars <- 0
+            } else {
+              ss_model <- SSModel(
+              y ~SSMtrend(
                   degree = 2,
                   Q = list(matrix(0), matrix(Qt.slope)),
                   a1 = a1[1:2],
@@ -267,12 +302,12 @@ SSModelDynamicGompertz <- setRefClass(
                 ),
               H = Ht
             )
-            n.pars <- 0
+            n.pars <- 0}
           } else {
             stop(sprintf("sea.type= '%s' not implemented", sea.type))
           }
         } else {
-          if (!is.null(xpred)){
+          if (need.xpred){
             if (sea.type == 'trigonometric') {
               ss_model <- SSModel(
                 y ~

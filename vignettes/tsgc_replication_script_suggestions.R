@@ -92,8 +92,7 @@ y <- cumulative_cases[idx.est]
 # The signal-to-noise ratio was estimated as a free parameter in this step.
 model_q <- SSModelDynamicGompertz$new(Y = y)
 res_q <- estimate(model_q)
-res_q
-
+summary(res_q)
 
 # -----------------------------
 # Estimation: Fixed Signal-to-Noise Ratio Model
@@ -130,7 +129,7 @@ tsgc::plot_new_cases(
 tsgc::plot_holdout(
   res,
   Y = cumulative_cases,
-  n.ahead = 14,
+  n.ahead = n.forecasts,
   confidence.level = confidence.level,
   date_format = date.format,
   title="14-day forecast for new cases Gauteng",
@@ -145,6 +144,63 @@ tsgc::write_results(
   n.ahead = n.forecasts,
   confidence.level = confidence.level
 )
+# -----------------------------
+# Estimation: Diffuse Prior Model with exogenous predictors
+# -----------------------------
+# Load Gauteng weather 
+data(gauteng, package = "tsgc")
+
+# Extract weather information in estimation time frame
+idx.est1 <- (zoo::index(gauteng_weather) >= estimation.date.start) &
+  (zoo::index(gauteng_weather) <= estimation.date.end)
+weather<-gauteng_weather[idx.est1,]
+
+# The signal-to-noise ratio was estimated as a free parameter in this step.
+model_weather <- SSModelDynamicGompertz$new(Y = y, xpred=weather)
+res_weather <- estimate(model_weather)
+summary(res_weather)
+
+# -----------------------------
+# Estimation: Diffuse Prior Model with exogenous predictors
+# -----------------------------
+#Load Gauteng weather 
+data(gauteng, package = "tsgc")
+
+#Extract weather information in estimation time frame
+idx.est1 <- (zoo::index(gauteng_weather) >= estimation.date.start) &
+  (zoo::index(gauteng_weather) <= estimation.date.end)
+weather<-gauteng_weather[idx.est1,]
+
+# The signal-to-noise ratio was estimated as a free parameter in this step.
+model_weather <- SSModelDynamicGompertz$new(Y = y, xpred=weather)
+res_weather <- estimate(model_weather)
+summary(res_weather)
+
+# Prepare future weather data
+idx.est2 <- (zoo::index(gauteng_weather) >= estimation.date.end+1) &
+  (zoo::index(gauteng_weather) <= estimation.date.end+n.forecasts)
+new.weather<-gauteng_weather[idx.est2,]
+
+# Forecasts
+res_weather$plot_log_forecast(gauteng,n.ahead=n.forecasts,
+                              xpred.new=new.weather,
+                              plt.start.date = tail(res$index, 1) - plt.length,
+                              title = "Log Growth Rate Forecast")
+
+res_weather$plot_new_cases(n.ahead=n.forecasts,
+                           xpred.new=new.weather,
+                           confidence.level = confidence.level,
+                           date_format = date.format,
+                           plt.start.date = tail(res$index, 1) - plt.length,
+                           title="14-day forecast for new cases Gauteng",
+                           series.name = "Cases")
+
+res_weather$plot_holdout(gauteng,n.ahead=n.forecasts,
+                         xpred.new=new.weather,
+                         confidence.level = confidence.level,
+                         date_format = date.format,
+                         title="14-day forecast for new cases Gauteng",
+                         series.name = "cases")
 
 # -----------------------------
 # Reproduction Number Calculation

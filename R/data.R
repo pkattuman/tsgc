@@ -45,7 +45,10 @@
 #'
 #' @format An object of class `"xts"`;
 #' \describe{
-#'   \item{Cases}{Cumulative cases of Covid-19}
+#'   \item{cum_cases}{Cumulative cases of Covid-19}
+#'   \item{cum_admissions}{Cumulative hospital admissions due to Covid-19}
+#'   \item{cum_deaths}{Cumulative deaths due to Covid-19}
+#'   \item{hospital_cases}{???}
 #' }
 #'
 #' @keywords datasets
@@ -69,7 +72,8 @@
 #'
 #' @format An object of class `"xts"`;
 #' \describe{
-#'   \item{Cases}{Cumulative cases of Covid-19}
+#'   \item{UK}{Cumulative cases of Covid-19 in the UK}
+#'   \item{Italy}{Cumulative cases of Covid-19 in Italy}
 #' }
 #'
 #' @keywords datasets
@@ -81,3 +85,27 @@
 #' # plot daily cases
 #' plot(diff(ukitaly))
 "ukitaly"
+
+#' Weather data of the South African province of Gauteng.
+#'
+#' @docType data
+#'
+#' @usage data(gauteng_weather)
+#'
+#' @format An object of class `"xts"`;
+#' \describe{
+#'   \item{TempC}{Temperature in degree Celsius}
+#'   \item{TempC_max}{Temperature in degree Celsius in a day}
+#'   \item{RelHumid}{Relative humidity}
+#'   \item{WindSpeed}{Wind speed}
+#' }
+#'
+#' @keywords datasets
+#'
+#' @references Downloaded from NASA POWER  
+#'
+#' @examples
+#' data(gauteng_weather)
+#' # plot daily cases
+#' plot(diff(gauteng_weather))
+"gauteng_weather"
