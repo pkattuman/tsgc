@@ -261,7 +261,6 @@ SSModelDynamicGompertz <- setRefClass(
       get_dynamic_gompertz_model = function(
     y,
     xpred,
-    ar1 = FALSE,
     q = NULL,
     sea.type = 'trigonometric',
     sea.period = 7,
@@ -584,6 +583,7 @@ SSModelDynamicGompertz <- setRefClass(
     }
     
     model <- get_model(y, xpred=xpred, q = q, sea.type, sea.period)
+    base::print(model$inits)
     
     # 3. Estimate via MLE unknown params
     model_fit <- fitSSM(model$model, inits = model$inits, updatefn = updatefn,
