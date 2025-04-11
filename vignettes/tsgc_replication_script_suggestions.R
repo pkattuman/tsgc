@@ -102,7 +102,6 @@ model_ar1 <- SSModelDynamicGompertz$new(Y = y, ar1=TRUE)
 res_ar1 <- estimate(model_ar1)
 summary(res_ar1)
 
-
 # -----------------------------
 # Estimation: Fixed Signal-to-Noise Ratio Model
 # -----------------------------
@@ -281,8 +280,9 @@ reinit.dates <- "2021-04-21"
 # Estimate the reinitialized model.
 model <- SSModelDynamicGompertz$new(
   Y = y,
-  q=q,
-  reinit.date = as.Date(reinit.dates, format = date.format),ar1=TRUE
+  q = q,
+  ar1=TRUE,
+  reinit.date = as.Date(reinit.dates, format = date.format)
 )
 res.reinit <- estimate(model)
 summary(res.reinit)

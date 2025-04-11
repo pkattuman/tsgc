@@ -252,18 +252,12 @@ SSModelDynamicGompertz <- setRefClass(
     
     get_model = function(
     y,
-    xpred=NULL,
-    q = NULL,
-    sea.type = 'trigonometric',
-    sea.period = 7
+    xpred=NULL
     )
     {
       get_dynamic_gompertz_model = function(
     y,
     xpred,
-    q = NULL,
-    sea.type = 'trigonometric',
-    sea.period = 7,
     a1 = NULL,
     P1 = NULL,
     Q = NULL,
@@ -310,9 +304,12 @@ SSModelDynamicGompertz <- setRefClass(
                       period = sea.period,
                       Q = Qt.seas,
                       sea.type = sea.type,
-                      a1 = a1[3:dim(a1)[1]],
-                      P1 = P1[3:dim(a1)[1], 3:dim(a1)[1]]
-                    )+SSMcustom(Z=1,T=ar1_coeff,R=1,Q=Qt.ar1),
+                      a1 = a1[3:(dim(a1)[1]-1)],
+                      P1 = P1[3:(dim(a1)[1]-1), 3:(dim(a1)[1]-1)]
+                    )+SSMcustom(Z=1,T=ar1_coeff,R=1,Q=Qt.ar1, 
+                                a1=a1[dim(a1)[1]], 
+                                P1=P1[dim(a1)[1],dim(a1)[1]], 
+                                state_names="ar1"),
                   H = Ht
                 )
               } else {
@@ -491,7 +488,7 @@ SSModelDynamicGompertz <- setRefClass(
       
       if (is.null(reinit.date)){
         model <- get_dynamic_gompertz_model(
-          y, xpred=xpred, q = q, sea.type = sea.type, sea.period = sea.period
+          y, xpred=xpred
         )
         return(model)
       } else{
@@ -518,7 +515,7 @@ SSModelDynamicGompertz <- setRefClass(
             model <- SSModelDynamicGompertz$new(Y = Y[idx.est], 
                                                 sea.type=sea.type,
                                                 sea.period=sea.period, 
-                                                xpred=xpred1, q = q)
+                                                xpred=xpred1, q = q, ar1=ar1)
             res.original <- model$estimate()
             model_output <- output(res.original)
           } else {
@@ -557,11 +554,11 @@ SSModelDynamicGompertz <- setRefClass(
           dimnames(newZ) <- list(NULL, dimnames(Zt)[[2]], NULL)
           
           out <- get_dynamic_gompertz_model(
-            y = y.reinit, xpred=xpred2, q = q,  sea.type = sea.type, sea.period = sea.period,
+            y = y.reinit, xpred=xpred2,
             a1 = a1, P1 = P1, Q = Qt, H = Ht, T=Tt, R=Rt, newZ=newZ)
         } else {
           out <- get_dynamic_gompertz_model(
-            y = y.reinit, xpred=xpred2, q = q,  sea.type = sea.type, sea.period = sea.period,
+            y = y.reinit, xpred=xpred2,
             a1 = a1, P1 = P1, Q = Qt, H = Ht, ar1_coeff=ar1_coeff)
         }
         
@@ -582,9 +579,8 @@ SSModelDynamicGompertz <- setRefClass(
       )
     }
     
-    model <- get_model(y, xpred=xpred, q = q, sea.type, sea.period)
-    base::print(model$inits)
-    
+    model <- get_model(y, xpred=xpred)
+
     # 3. Estimate via MLE unknown params
     model_fit <- fitSSM(model$model, inits = model$inits, updatefn = updatefn,
                         method = 'BFGS')
