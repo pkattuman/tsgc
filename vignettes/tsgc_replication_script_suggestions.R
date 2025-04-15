@@ -83,17 +83,15 @@ plot(mod1, title="Gauteng daily cases", series.name="cases")
 # -----------------------------
 # Model Estimation Options for the Third Wave
 # -----------------------------
-idx.est <- (zoo::index(cumulative_cases) >= estimation.date.start) &
-  (zoo::index(cumulative_cases) <= estimation.date.end)
-y <- cumulative_cases[idx.est]
+y <- subset(cumulative_cases,estimation.date.start,estimation.date.end)
 
 # -----------------------------
 # Estimation: Diffuse Prior Model
 # -----------------------------
 # The signal-to-noise ratio was estimated as a free parameter in this step.
-model_q <- SSModelDynamicGompertz$new(Y = y)
-res_q <- estimate(model_q)
-summary(res_q)
+model <- SSModelDynamicGompertz$new(Y = y)
+res <- estimate(model)
+summary(res)
 
 # -----------------------------
 # Estimation: Diffuse Prior Model with AR(1) component
@@ -106,33 +104,33 @@ summary(res_ar1)
 # Estimation: Fixed Signal-to-Noise Ratio Model
 # -----------------------------
 # Estimate model
-model <- SSModelDynamicGompertz$new(Y = y, q = q)
-res <- estimate(model)
-summary(res)
+model_q <- SSModelDynamicGompertz$new(Y = y, q = q)
+res_q <- estimate(model_q)
+summary(res_q)
 
 # -----------------------------
 # Forecasting: Log Growth Rate
 # -----------------------------
-res$plot_log_forecast(
+res_q$plot_log_forecast(
   Y = cumulative_cases,
   n.ahead = n.forecasts,
-  plt.start.date = tail(res$index, 1) - plt.length,
+  plt.start.date = tail(res_q$index, 1) - plt.length,
   title = "Log Growth Rate Forecast"
 )
 
 # -----------------------------
 # Forecasting: New Cases and Holdout Evaluation
 # -----------------------------
-res$plot_new_cases(
+res_q$plot_new_cases(
   n.ahead = n.forecasts,
   confidence.level = confidence.level,
   date_format = date.format,
-  plt.start.date = tail(res$index, 1) - plt.length,
+  plt.start.date = tail(res_q$index, 1) - plt.length,
   title="14-day forecast for new cases Gauteng",
   series.name = "Cases"
 )
 
-res$plot_holdout(
+res_q$plot_holdout(
   Y = cumulative_cases,
   n.ahead = n.forecasts,
   confidence.level = confidence.level,
@@ -156,41 +154,37 @@ tsgc::write_results(
 #Load Gauteng weather 
 data(gauteng_weather, package = "tsgc")
 
-#Extract weather information in estimation time frame
-idx.est1 <- (zoo::index(gauteng_weather) >= estimation.date.start) &
-  (zoo::index(gauteng_weather) <= estimation.date.end)
-weather<-gauteng_weather[idx.est1,]
-
-# The signal-to-noise ratio was estimated as a free parameter in this step.
-model_weather <- SSModelDynamicGompertz$new(Y = y, xpred=weather)
+# Set up model and estimate it. Subsetting of gauteng_weather is done inside the 
+# initialize function.
+model_weather <- SSModelDynamicGompertz$new(Y = y, xpred=gauteng_weather)
 res_weather <- estimate(model_weather)
 summary(res_weather)
 
 # Prepare future weather data
-idx.est2 <- (zoo::index(gauteng_weather) >= estimation.date.end+1) &
-  (zoo::index(gauteng_weather) <= estimation.date.end+n.forecasts)
-new.weather<-gauteng_weather[idx.est2,]
+new.weather<-subset(gauteng_weather,estimation.date.end+1)
 
-# Forecasts
-res_weather$plot_log_forecast(gauteng,n.ahead=n.forecasts,
-                              xpred.new=new.weather,
-                              plt.start.date = tail(res$index, 1) - plt.length,
+# Feed future weather data into the results object
+res_weather$xpred.new=new.weather
+
+# Generate Forecasts
+res_weather$plot_log_forecast(cumulative_cases,n.ahead=n.forecasts,
+                              plt.start.date = tail(res_weather$index, 1) - plt.length,
                               title = "Log Growth Rate Forecast")
 
 res_weather$plot_new_cases(n.ahead=n.forecasts,
-                           xpred.new=new.weather,
                            confidence.level = confidence.level,
                            date_format = date.format,
-                           plt.start.date = tail(res$index, 1) - plt.length,
+                           plt.start.date = tail(res_weather$index, 1) - plt.length,
                            title="14-day forecast for new cases Gauteng",
                            series.name = "Cases")
 
-res_weather$plot_holdout(gauteng,n.ahead=n.forecasts,
-                         xpred.new=new.weather,
+res_weather$plot_holdout(cumulative_cases,n.ahead=n.forecasts,
                          confidence.level = confidence.level,
                          date_format = date.format,
                          title="14-day forecast for new cases Gauteng",
                          series.name = "cases")
+
+plot_compare_forecast(list(res,res_q,res_ar1, res_weather), actual=cumulative_cases)
 
 # -----------------------------
 # Reproduction Number Calculation
@@ -199,11 +193,11 @@ gen_int <- 4  # Generation interval in days
 ndays<-7 #Number of days to plot
 
 # Calculate reproduction number estimates and credible intervals.
-r.t <- estimate_r0(res, gen_int, ndays)
+r.t <- estimate_r0(res_q, gen_int, ndays)
 r.t
 
 # Plot reproduction numbers.
-estimate_r0(res, gen_int, ndays, show_plot = TRUE, 
+estimate_r0(res_q, gen_int, ndays, show_plot = TRUE, 
             title="Gauteng Reproduction numbers")
 
 # -----------------------------
@@ -212,9 +206,7 @@ estimate_r0(res, gen_int, ndays, show_plot = TRUE,
 # -----------------------------
 # Update the estimation period.
 estimation.date.end <- as.Date("2021-06-25")
-idx.est <- (zoo::index(cumulative_cases) >= estimation.date.start) &
-  (zoo::index(cumulative_cases) <= estimation.date.end)
-y <- cumulative_cases[idx.est]
+y <- subset(cumulative_cases,estimation.date.start,estimation.date.end)
 
 # Re-estimate the model over the new period.
 model <- SSModelDynamicGompertz$new(Y = y, q = q)
@@ -304,16 +296,14 @@ summary(res.reinit)
 # -----------------------------
 # Plotting: Forecasts after Reinitialisation
 # -----------------------------
-tsgc::plot_log_forecast(
-  res.reinit,
+res.reinit$plot_log_forecast(
   Y = cumulative_cases,
   n.ahead = n.forecasts,
-  plt.start.date = tail(res.reinit$index, 1) - plt.length,
+  plt.start.date = tail(res.reinit$index, 1) - plt.length, 
   title = "Forecast of ln(g_t) after reinitialisation."
 )
 
-tsgc::plot_new_cases(
-  res.reinit,
+res.reinit$plot_new_cases(
   n.ahead = n.forecasts,
   confidence.level = confidence.level,
   date_format = date.format,
@@ -322,8 +312,7 @@ tsgc::plot_new_cases(
   series.name = "cases"
 )
 
-tsgc::plot_holdout(
-  res.reinit,
+res.reinit$plot_holdout(
   Y = cumulative_cases,
   n.ahead = n.forecasts,
   confidence.level = confidence.level,
@@ -336,8 +325,7 @@ tsgc::plot_holdout(
 # Holdout Evaluation Comparison
 # -----------------------------
 # Without reinitialisation.
-tsgc::plot_holdout(
-  res,
+res$plot_holdout(
   Y = cumulative_cases,
   n.ahead = n.forecasts,
   confidence.level = confidence.level,
@@ -345,10 +333,11 @@ tsgc::plot_holdout(
   date_format = date.format
 )
 
+plot_compare_forecast(list(res,res.reinit), actual=cumulative_cases)
+
 # -----------------------------
 # 3. Leading Indicator Analysis: England Data
 # -----------------------------
-
 # Load England data and select the first two columns.
 eng <- tsgc::england[, 1:2]
 
@@ -366,10 +355,7 @@ plt.length            <- 14  # Adjusted for this analysis
 n.lag                 <- 4
 n.forecasts           <- 7
 
-# Select data for the estimation period.
-idx.est <- (zoo::index(eng) >= estimation.date.start) &
-  (zoo::index(eng) <= estimation.date.end)
-y <- eng[idx.est, ]
+y <- subset(eng, estimation.date.start,estimation.date.end)
 
 # Define the leading indicator model and plot the logged time series
 out <- SSModelLeadingIndicator(Y = y, n.lag = n.lag, 
@@ -381,26 +367,24 @@ out$plot(title="COVID Daily Cases and Hospitalizations in England",
 
 # Estimate the leading indicator model.
 res <- estimate(out)
+summary(res)
 
 # Plot forecasts.
-plot_log_forecast(
-  res,
+res$plot_log_forecast(
   Y = eng,
   n.ahead = n.forecasts,
   plt.start.date = estimation.date.end - plt.length,
   title="Forecasts of Log Growth rate of England hospitalizations"
 )
 
-plot_new_cases(
-  res,
+res$plot_new_cases(
   n.ahead = n.forecasts,
   plt.start.date = estimation.date.end - plt.length,
   series.name = "hospitalizations",
   title="Forecasts of England hospitalizations"
 )
 
-plot_holdout(
-  res,
+res$plot_holdout(
   Y = eng,
   n.ahead = n.forecasts,
   series.name = "hospitalizations",
@@ -463,21 +447,21 @@ idx.est <- (zoo::index(ukitaly) >= estimation.date.start) &
   (zoo::index(ukitaly) <= estimation.date.end)
 covid_xts <- ukitaly[idx.est]
 out <- SSModelLeadingIndicator(Y = covid_xts, n.lag = n.lag, sea.period = 7)
-res <- estimate(out)
-plot_new_cases(
-  res,
+res_lead <- estimate(out)
+res_lead$plot_new_cases(
   n.ahead = n.forc,
   title = "UK predictions with leading indicator model",
   plt.start.date = estimation.date.end - 30,
   series.name = "UK cases"
 )
-plot_holdout(
-  res,
+res_lead$plot_holdout(
   Y = ukitaly,
   title = "UK predictions with leading indicator model",
   n.ahead = n.forc,
   series.name = "UK cases"
 )
+
+plot_compare_forecast(list(res,res_lead), actual=ukitaly)
 
 # Case 2: Future peaks.
 Y <- ukitaly[, "UK"]

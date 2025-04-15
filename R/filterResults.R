@@ -86,18 +86,21 @@ FilterResults <- setRefClass(
   fields = list(
     data_xts = "xts",
     xpred = "ANY",
+    xpred.new="ANY",
     index = "Date",
     reinit.date= "ANY",
     ar1 = "logical",
     output = "KFS"
   ),
   methods = list(
-    initialize = function(data_xts,xpred,index,reinit.date, ar1, output)
+    initialize = function(data_xts,xpred,
+                          index,reinit.date, ar1, output, xpred.new=NULL)
     {
       "Create an instance of the \\code{FilterResults} class with fields defined
       earlier in the fields section."
       data_xts<<-data_xts
       xpred<<-xpred
+      xpred.new<<-xpred.new
       index <<- index
       reinit.date<<-reinit.date
       ar1<<-ar1
@@ -105,7 +108,6 @@ FilterResults <- setRefClass(
     },
     predict_level = function(
       n.ahead,
-      xpred.new=NULL,
       confidence.level=0.68,
       sea.on = FALSE, 
       return.diff=TRUE)
@@ -142,7 +144,7 @@ FilterResults <- setRefClass(
 
       freq <- unclass(periodicity(y.cum))$label
       endtime <- end(gety(model)) + c(0, n.ahead)
-      filtered.out <- .self$predict_all(n.ahead, xpred.new=xpred.new, sea.on = sea.on,
+      filtered.out <- .self$predict_all(n.ahead, sea.on = sea.on,
                                         return.all = FALSE)
 
       # # 1. Extract parameters.
@@ -224,8 +226,7 @@ FilterResults <- setRefClass(
 
       return(out)
     },
-    predict_all = function(n.ahead, xpred.new=NULL, sea.on = TRUE, 
-                           return.all = FALSE) {
+    predict_all = function(n.ahead, sea.on = TRUE, return.all = FALSE) {
       "Returns forecasts of the incidence variable \\eqn{y}, the state variables
        and the conditional covariance matrix
       for the states.
@@ -461,8 +462,7 @@ FilterResults <- setRefClass(
       cat("\n")
       cat("Seasonality noise:",format(Q_seasonal, digits = 4))
     }, 
-    plot_new_cases=function(n.ahead=14, xpred.new=NULL,
-                            confidence.level = 0.68, 
+    plot_new_cases=function(n.ahead=14, confidence.level = 0.68, 
                             date_format = "%Y-%m-%d",
                             title=NULL, plt.start.date=NULL, 
                             series.name="target variable") {
@@ -491,10 +491,11 @@ FilterResults <- setRefClass(
     if (is.null(plt.start.date)) {plt.start.date <- head(est.date.index, 1)}
     
     y.hat.diff.final.ci <- .self$predict_level(
-      n.ahead = n.ahead, xpred.new=xpred.new, confidence.level = confidence.level
+      n.ahead = n.ahead, confidence.level = confidence.level,
+      sea.on=TRUE
     )
     y.hat.diff.final <- .self$predict_level(
-      n.ahead = n.ahead, xpred.new=xpred.new, confidence.level = confidence.level,
+      n.ahead = n.ahead, confidence.level = confidence.level,
       sea.on = TRUE
     )
     
@@ -543,8 +544,7 @@ FilterResults <- setRefClass(
       ggplot2::scale_x_date(labels = scales::date_format("%d %b %y")) +
       ggplot2::scale_size_manual(values = c(1, 1, 1))
     },
-    plot_log_forecast=function(Y,n.ahead = 14, xpred.new=NULL,
-                               plt.start.date=NULL, title="", caption = "") {
+    plot_log_forecast=function(Y,n.ahead = 14, plt.start.date=NULL, title="", caption = "") {
       "Plots actual and filtered values of the log cumulative growth rate 
       (\\eqn{\\ln(g_t)}) in the estimation sample and the forecast and realised 
       log cumulative growth rate out of the estimation sample. For more details,
@@ -562,14 +562,13 @@ FilterResults <- setRefClass(
       y <- xts::xts(model$y %>% as.numeric(), order.by = est.date.index)
       p <- attr(model, 'p')
       
-      y.hat.all <- .self$predict_all(n.ahead, xpred.new=xpred.new, return.all = TRUE)
-      y.pred <-  subset(y.hat.all$y.hat,index(y.hat.all$y.hat) > tail(index,1))
+      y.hat.all <- .self$predict_all(n.ahead, return.all = TRUE)
+      y.pred <-  subset(y.hat.all$y.hat, tail(est.date.index,1)+1)
       filtered.level <- y.hat.all$level
       
       if (p == 1) {
         EstimationSample <- FilteredLevel <- Forecast <- RealisedData <- NULL
-        d <- cbind(y, filtered.level, y.pred,
-                   y.eval[index(y.eval)>tail(index(est.date.index),1),])
+        d <- cbind(y, filtered.level, y.pred, subset(y.eval, tail(est.date.index,1)+1))
         if (!is.null(plt.start.date)) { d <- d[index(d) > plt.start.date] }
         d <- d[index(d) <= tail(index(y.pred),1)]
         names(d) <- c(
@@ -745,7 +744,7 @@ FilterResults <- setRefClass(
       
       return(p1)
     }, 
-    plot_holdout = function(Y, n.ahead=14,xpred.new=NULL, 
+    plot_holdout = function(Y, n.ahead=14,
                             confidence.level = 0.68,
                              date_format = "%Y-%m-%d", 
                             series.name = "target variable",
@@ -782,11 +781,11 @@ FilterResults <- setRefClass(
       estimation.date.end <- tail(est.date.index, 1)
       
       y.hat.diff.final.ci <-.self$predict_level(
-        n.ahead = n.ahead, xpred.new=xpred.new, 
+        n.ahead = n.ahead,  sea.on=TRUE,
         confidence.level = confidence.level
       )
       y.hat.diff.final <-.self$predict_level(
-        n.ahead = n.ahead, xpred.new=xpred.new, 
+        n.ahead = n.ahead, 
         confidence.level = confidence.level,
         sea.on = TRUE
       )
@@ -847,7 +846,7 @@ FilterResults <- setRefClass(
       
       return(p1)
     },
-    mapes=function(n.ahead,Y,xpred.new=NULL){
+    mapes=function(n.ahead,Y){
       "Compute Mean Absolute Percentage Error (MAPE) for trend and seasonal 
     forecasts against a holdout sample. For more details, please refer to 
     \\link{mapes}."
@@ -870,10 +869,10 @@ FilterResults <- setRefClass(
         estimation.date.end <- tail(est.date.index, 1)
         
         y.hat.diff.final.ci <- .self$predict_level(
-          n.ahead = n.ahead, xpred.new=xpred.new, confidence.level = 0.68
+          n.ahead = n.ahead, confidence.level = 0.68
         )
         y.hat.diff.final <- .self$predict_level(
-          n.ahead = n.ahead, xpred.new=xpred.new, confidence.level =0.68,
+          n.ahead = n.ahead, confidence.level =0.68,
           sea.on = TRUE
         )
         

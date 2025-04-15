@@ -74,11 +74,12 @@ SSModelLeadingIndicator <- setRefClass(
     sea.period= "numeric",
     n.lag = "numeric",
     LeadIndCol ="numeric",
-    xpred = "ANY"
+    xpred1 = "ANY",  #separate xpred1 and xpred2? 
+    xpred2 = "ANY"
   ),
   methods = list(
     initialize = function(Y, n.lag, sea.period=7, q = NA,
-                          LeadIndCol=1, xpred=NULL)
+                          LeadIndCol=1, xpred1=NULL, xpred2=NULL)
     {
       "Create an instance of the \\code{SSModelLeadingIndicator} class with the 
       fields laid out at the beginning of the documentation."
@@ -87,7 +88,8 @@ SSModelLeadingIndicator <- setRefClass(
       sea.period<<-sea.period
       n.lag <<- n.lag
       LeadIndCol <<- LeadIndCol
-      xpred<<-xpred
+      xpred1<<-xpred1[index(Y)]
+      xpred2<<-xpred2[index(Y)]
     },
     estimate = function()
     {
@@ -140,17 +142,64 @@ SSModelLeadingIndicator <- setRefClass(
       # This has a common trend and slope (common trend of degree 2),
       # an extra trend [random walk] in LDLhosp only [degree = 1],
       # and 7 day dummy variable seasonal.
-
+      
       if (is.na(sea.period)){
-        mod <- SSModel(data_mat ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,NA),2,2),type = 'common')+
-                      SSMtrend(degree = 1, Q = matrix(NA),index=1),
-                      H = matrix(c(NA,0,0,NA),2,2))
+        if (is.null(xpred1)){
+          if (is.null(xpred2)){
+            mod <- SSModel(data_mat ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,NA),2,2),type = 'common')+
+                             SSMtrend(degree = 1, Q = matrix(NA),index=1),
+                           H = matrix(c(NA,0,0,NA),2,2))
+          } else {
+            mod <- SSModel(data_mat ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,NA),2,2),type = 'common')+
+                             SSMtrend(degree = 1, Q = matrix(NA),index=1)+
+                             SSMregression(~xpred2, type="distinct", index=2),
+                           H = matrix(c(NA,0,0,NA),2,2))
+          }
+        } else {
+          if (is.null(xpred2)){
+            mod <- SSModel(data_mat ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,NA),2,2),type = 'common')+
+                             SSMtrend(degree = 1, Q = matrix(NA),index=1)+
+                             SSMregression(~xpred1, type="distinct", index=1),
+                           H = matrix(c(NA,0,0,NA),2,2))
+          } else {
+            mod <- SSModel(data_mat ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,NA),2,2),type = 'common')+
+                             SSMtrend(degree = 1, Q = matrix(NA),index=1)+
+                             SSMregression(~xpred1, type="distinct", index=1)+
+                             SSMregression(~xpred2, type="distinct", index=2),
+                           H = matrix(c(NA,0,0,NA),2,2))
+          }
+        }
       }
       else {
-        mod <- SSModel(data_mat ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,NA),2,2),type = 'common')+
-                      SSMseasonal(sea.period,Q = matrix(c(0,0,0,0),2,2), sea.type='dummy', type='distinct')+
-                      SSMtrend(degree = 1, Q = matrix(NA),index=1),
-                      H = matrix(c(NA,0,0,NA),2,2))
+        if (is.null(xpred1)){
+          if (is.null(xpred2)){
+            mod <- SSModel(data_mat ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,NA),2,2),type = 'common')+
+                             SSMseasonal(sea.period,Q = matrix(c(0,0,0,0),2,2), sea.type='trigonometric', type='distinct')+
+                             SSMtrend(degree = 1, Q = matrix(NA),index=1),
+                           H = matrix(c(NA,0,0,NA),2,2))
+          } else {
+            mod <- SSModel(data_mat ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,NA),2,2),type = 'common')+
+                             SSMseasonal(sea.period,Q = matrix(c(0,0,0,0),2,2), sea.type='trigonometric', type='distinct')+
+                             SSMtrend(degree = 1, Q = matrix(NA),index=1)+
+                             SSMregression(~xpred2, type="distinct", index=2),
+                           H = matrix(c(NA,0,0,NA),2,2))
+          }
+        } else {
+          if (is.null(xpred2)){
+            mod <- SSModel(data_mat ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,NA),2,2),type = 'common')+
+                             SSMseasonal(sea.period,Q = matrix(c(0,0,0,0),2,2), sea.type='trigonometric', type='distinct')+
+                             SSMtrend(degree = 1, Q = matrix(NA),index=1)+
+                             SSMregression(~xpred1, type="distinct", index=1),
+                           H = matrix(c(NA,0,0,NA),2,2))
+          } else {
+            mod <- SSModel(data_mat ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,NA),2,2),type = 'common')+
+                             SSMseasonal(sea.period,Q = matrix(c(0,0,0,0),2,2), sea.type='trigonometric', type='distinct')+
+                             SSMtrend(degree = 1, Q = matrix(NA),index=1)+
+                             SSMregression(~xpred1, type="distinct", index=1)+
+                             SSMregression(~xpred2, type="distinct", index=2),
+                           H = matrix(c(NA,0,0,NA),2,2))
+          }
+        }
       }
 
       # Compute number of parameters - this is just the number of NAs in the model Q and H combined.

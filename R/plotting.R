@@ -287,8 +287,8 @@ plot_holdout <- function(res,Y, n.ahead=14,confidence.level = 0.68,
 #'
 #' @param results A list of `filterResults` or `filterResultsLI` object, obtained from
 #' \code{estimate()} method. 
-#' @param actual Values of the cumulated variable, including the holdout sample.
-#' sample (i.e. to which the forecasts should be compared to).
+#' @param actual Actual values of the cumulated variable, can be the raw dataset. 
+#' Subsetting is done within the code.
 #' @param sea.on Logical value indicating whether to plot the seasonality-adjusted
 #' forecasts. Defaults to \code{TRUE}.
 #' @param n.ahead The duration of the holdout sample. Default is 14.
@@ -310,13 +310,11 @@ plot_holdout <- function(res,Y, n.ahead=14,confidence.level = 0.68,
 #'
 #'
 #' @export
-plot_compare_forecast <- function(results, labels, sea.on = TRUE, actual = NULL, n.ahead = 14, 
+plot_compare_forecast <- function(results,  n.ahead = 14, sea.on = TRUE, actual = NULL,
                                   title = "Comparison of forecasts") {
   
-  # Check if labels match number of models
-  if (length(results) != length(labels)) {
-    stop("Length of 'results' must match length of 'labels'")
-  }
+  # Automatically get object names as labels
+  labels <- sapply(substitute(results)[-1], deparse)
   
   # Extract forecast data from each model
   prediction_list <- lapply(seq_along(results), function(i) {
@@ -334,17 +332,26 @@ plot_compare_forecast <- function(results, labels, sea.on = TRUE, actual = NULL,
   
   # Process actual values if provided
   if (!is.null(actual)) {
+    actual<-na.omit(diff(actual))
+    start.date<-tail(results[[1]]$index,1)+1
+    end.date<-tail(results[[1]]$index,1)+n.ahead
+    idx.est <- (zoo::index(actual) >= start.date) &
+      (zoo::index(actual) <= end.date)
+    actual<-actual[idx.est]
+    
     if (inherits(actual, "xts")) {
       actual_df <- data.frame(
         date = as.Date(index(actual)),
-        actual = as.numeric(actual)
+        forecast = as.numeric(actual)
       )
     } else {
       actual_df <- data.frame(
         date = as.Date(names(actual)),
-        actual = as.numeric(actual)
+        forecast = as.numeric(actual)
       )
     }
+    actual_df$model <- "Actual"
+    df_forecasts <- dplyr::bind_rows(df_forecasts, actual_df)
   }
   df_forecasts$model<-unlist(df_forecasts$model)
   
@@ -363,15 +370,8 @@ plot_compare_forecast <- function(results, labels, sea.on = TRUE, actual = NULL,
       plot.title = element_text(margin = margin(b = 5)),
       plot.subtitle = element_text(size = rel(1), hjust = 0, margin = margin(t = 3))
     ) +
-    scale_linetype_manual(values = c("solid", "solid", "solid")) +
     scale_x_date(labels = scales::date_format("%d %b %y")) +
     scale_size_manual(values = c(1, 1.5, 1))
-  
-  # Add actuals
-  if (!is.null(actual)) {
-    p <- p + geom_line(data = actual_df, aes(x = date, y = actual),
-                       color = "black", linewidth = 1.1, linetype = "dashed")
-  }
   
   return(p)
 }

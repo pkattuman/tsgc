@@ -146,7 +146,7 @@ SSModelDynamicGompertz <- setRefClass(
     reinit.date <<- reinit.date
     original.results <<- original.results
     use.presample.info <<- use.presample.info
-    xpred<<-xpred
+    xpred<<-xpred[index(Y)]
     ar1<<-ar1
   },
   estimate = function() {

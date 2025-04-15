@@ -6,10 +6,9 @@
 \usage{
 plot_compare_forecast(
   results,
-  labels,
+  n.ahead = 14,
   sea.on = TRUE,
   actual = NULL,
-  n.ahead = 14,
   title = "Comparison of forecasts"
 )
 }
@@ -17,13 +16,13 @@ plot_compare_forecast(
 \item{results}{A list of \code{filterResults} or \code{filterResultsLI} object, obtained from
 \code{estimate()} method.}
 
+\item{n.ahead}{The duration of the holdout sample. Default is 14.}
+
 \item{sea.on}{Logical value indicating whether to plot the seasonality-adjusted
 forecasts. Defaults to \code{TRUE}.}
 
-\item{actual}{Values of the cumulated variable, including the holdout sample.
-sample (i.e. to which the forecasts should be compared to).}
-
-\item{n.ahead}{The duration of the holdout sample. Default is 14.}
+\item{actual}{Actual values of the cumulated variable, can be the raw dataset.
+Subsetting is done within the code.}
 
 \item{title}{Title for forecast plot. Enter as text string. \code{NULL}
 (i.e. no title) by default.}

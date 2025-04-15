@@ -382,12 +382,9 @@ FilterResultsLI <- setRefClass(
         as.xts()
 
       if (!return.all) {
-        y.hat <- y.hat %>%
-          subset(index(.) > tail(index, 1))
-        level.t.t <- level.t.t %>%
-          subset(index(.) > tail(index, 1))
-        slope.t.t <- slope.t.t %>%
-          subset(index(.) > tail(index, 1))
+        y.hat <- subset(y.hat, tail(index, 1)+1)
+        level.t.t <- subset(level.t.t, tail(index, 1)+1)
+        slope.t.t <-  subset(slope.t.t, tail(index, 1)+1)
       }
 
       out <- list(
@@ -540,7 +537,7 @@ FilterResultsLI <- setRefClass(
         #df_plot$Smooth<-smAdmit
         df_plot$Forecast<-sea
         df_plot$ForecastTrend<-fadmits$forc
-        df_plot<-df_plot%>% subset(index(.) > plt.start.date)
+        df_plot<-subset(df_plot,plt.start.date)
         df_plot=fortify.zoo(df_plot)
         
         ci<-fortify.zoo(fadmits)
@@ -779,7 +776,7 @@ FilterResultsLI <- setRefClass(
     end_date<-tail(index(data_xts),1)
     sea<-sea[,1] #get the forecast column
     
-    future_data<-add_daily_ldl(Y,LeadIndCol = .self$LeadIndCol) %>% subset(index(.) > end_date)
+    future_data<-subset(add_daily_ldl(Y,LeadIndCol = .self$LeadIndCol), end_date+1)
     data_validation<-future_data[1:n.ahead, c("cAdmit", "newAdmit")]
     
     newAdmit_validation<-data_validation[,c("newAdmit")]

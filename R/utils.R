@@ -36,6 +36,31 @@ df2ldl <- function(dt) {
   return(dt.ldl)
 }
 
+#' @title Subsetting xts objects given start dates and end dates
+#
+#' @description Helper method to subset a data frame for a specified time frame
+#'
+#' @param df xts object
+#' @param start.date Start date of time frame, Date object.
+#' @param end.date End date of time frame, Date object.
+#' @returns A subsetted data frame
+#'
+#' @examples
+#' library(tsgc)
+#' data(gauteng,package="tsgc")
+#'
+#'
+#' @export
+subset.xts<-function(df, start.date, end.date=NULL){
+  if (is.null(end.date)){
+    idx.est1 <- (zoo::index(df) >= start.date)
+  } else {
+    idx.est1 <- (zoo::index(df) >= start.date) & (zoo::index(df) <= end.date)
+  }
+  return(df[idx.est1,])
+}
+
+
 #' @title Compute successive increments and log growth rate of 2-variable
 #' cumulated dataset
 #
