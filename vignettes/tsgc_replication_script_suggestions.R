@@ -83,7 +83,7 @@ plot(mod1, title="Gauteng daily cases", series.name="cases")
 # -----------------------------
 # Model Estimation Options for the Third Wave
 # -----------------------------
-y <- subset(cumulative_cases,estimation.date.start,estimation.date.end)
+y <- get_timeframe(cumulative_cases,estimation.date.start,estimation.date.end)
 
 # -----------------------------
 # Estimation: Diffuse Prior Model
@@ -152,19 +152,17 @@ tsgc::write_results(
 # Estimation: Diffuse Prior Model with exogenous predictors
 # -----------------------------
 #Load Gauteng weather 
-data(gauteng_weather, package = "tsgc")
+data(gauteng_weather_2021, package = "tsgc")
+gauteng_weather<-gauteng_weather_2021[,1:4]
 
-# Set up model and estimate it. Subsetting of gauteng_weather is done inside the 
-# initialize function.
+# Set up model and estimate it
 model_weather <- SSModelDynamicGompertz$new(Y = y, xpred=gauteng_weather)
 res_weather <- estimate(model_weather)
 summary(res_weather)
 
-# Prepare future weather data
-new.weather<-subset(gauteng_weather,estimation.date.end+1)
-
-# Feed future weather data into the results object
-res_weather$xpred.new=new.weather
+# Feed future weather data into the results object. Subsetting of gauteng_weather 
+#is done inside the function.
+res_weather$xpred.new=gauteng_weather
 
 # Generate Forecasts
 plot_log_forecast(res_weather,Y=cumulative_cases,n.ahead=n.forecasts,
@@ -206,7 +204,7 @@ estimate_r0(res_q, gen_int, ndays, show_plot = TRUE,
 # -----------------------------
 # Update the estimation period.
 estimation.date.end <- as.Date("2021-06-25")
-y <- subset(cumulative_cases,estimation.date.start,estimation.date.end)
+y <- get_timeframe(cumulative_cases,estimation.date.start,estimation.date.end)
 
 # Re-estimate the model over the new period.
 model <- SSModelDynamicGompertz$new(Y = y, q = q)
@@ -278,15 +276,14 @@ model <- SSModelDynamicGompertz$new(
 res.reinit <- estimate(model)
 summary(res.reinit)
 
-# Estimate the reinitialized model with exogenous predictors.
-weather3 <- subset(gauteng_weather,estimation.date.start,estimation.date.end)
-
-# #AR1 is not successfully integrated here.
+# # Estimate the reinitialized model with exogenous predictors.
+# weather3 <- get_timeframe(gauteng_weather,estimation.date.start,estimation.date.end)
+# 
+# #can do this with xpred, but cannot do estimation with AR1 yet. 
 # model.x <- SSModelDynamicGompertz$new(
 #   Y = y,
 #   xpred=weather3,
 #   q = q,
-#   ar1=TRUE,
 #   reinit.date = as.Date(reinit.dates, format = date.format)
 # )
 # res.reinit.x <- estimate(model.x)
@@ -354,15 +351,11 @@ plt.length            <- 14  # Adjusted for this analysis
 n.lag                 <- 4
 n.forecasts           <- 7
 
-y <- subset(eng, estimation.date.start,estimation.date.end)
+y <- get_timeframe(eng, estimation.date.start,estimation.date.end)
 
-# Define the leading indicator model and plot the logged time series
+# Define the leading indicator model
 out <- SSModelLeadingIndicator(Y = y, n.lag = n.lag, 
                                q = NULL, LeadIndCol = 1, sea.period = 7)
-plot(out,title="COVID Daily Cases and Hospitalizations in England",
-         series.name.lead="Cases", 
-         series.name.target="Hospitalizations",
-         take.log=TRUE)
 
 # Estimate the leading indicator model.
 res <- estimate(out)
@@ -403,11 +396,12 @@ cross_val(y=eng[index(eng)>=estimation.date.start],
           vanilla=TRUE,freq=2,LeadIndCol=1, criterion="mape")
 
 # -----------------------------
-# Leading Indicator with exogenous predictors
+# Leading Indicator with exogenous predictors (Unfinished)
 # -----------------------------
 xpred1<-xpred2<-england_weather_2021
 mod<-SSModelLeadingIndicator$new(y, n.lag=4, xpred1=xpred1, xpred2=xpred2)
 res_lead.x<-estimate(mod)
+summary(res_lead.x)
 
 # -----------------------------
 # 4. Leading Indicator vs Gompertz Growth curves: UK and Italy Examples
@@ -425,7 +419,7 @@ n.forecasts <- 14
 confidence.level <- 0.68
 plt.length <- 30
 estimation.date.end <- as.Date("2020-04-01")
-y <- subset(Y, estimation.date.start, estimation.date.end)
+y <- get_timeframe(Y, estimation.date.start, estimation.date.end)
 
 model_q <- SSModelDynamicGompertz$new(Y = y, q = 0.005)
 res <- estimate(model_q)
@@ -452,9 +446,7 @@ plot_holdout(
 # Compare to leading indicator model.
 n.lag <- 14
 n.forc <- 14
-idx.est <- (zoo::index(ukitaly) >= estimation.date.start) &
-  (zoo::index(ukitaly) <= estimation.date.end)
-covid_xts <- ukitaly[idx.est]
+covid_xts <- get_timeframe(ukitaly,estimation.date.start+1, estimation.date.end)
 out <- SSModelLeadingIndicator(Y = covid_xts, n.lag = n.lag, sea.period = 7)
 res_lead <- estimate(out)
 
@@ -510,7 +502,7 @@ plot_holdout(
 # For leading indicator.
 n.lag <- 14
 n.forc <- 14
-covid_xts <- subset(ukitaly,estimation.date.start,estimation.date.end)
+covid_xts <- get_timeframe(ukitaly,estimation.date.start,estimation.date.end)
 out <- SSModelLeadingIndicator(Y = covid_xts, n.lag = n.lag)
 res_lead <- estimate(out)
 plot_new_cases(

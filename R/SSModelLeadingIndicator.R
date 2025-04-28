@@ -111,10 +111,10 @@ SSModelLeadingIndicator <- setRefClass(
       data_mat = as.matrix(data_ldl)
       
       if (!is.null(xpred1)){
-        xpred1<<-subset(lag(xpred1,n.lag),index(data_ldl)[1],tail(index(data_ldl),1))
+        xpred1<<-get_timeframe(lag(xpred1,n.lag),index(data_ldl)[1],tail(index(data_ldl),1))
       }
       if (!is.null(xpred2)){
-        xpred2<<-subset(lag(xpred2,n.lag),index(data_ldl)[1],tail(index(data_ldl),1))
+        xpred2<<-get_timeframe(xpred2,index(data_ldl)[1],tail(index(data_ldl),1))
       }
 
       # Standard update function - edited to allow the targeting of the signal-to-noise ratio

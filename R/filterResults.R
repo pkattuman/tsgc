@@ -99,9 +99,9 @@ FilterResults <- setRefClass(
       "Create an instance of the \\code{FilterResults} class with fields defined
       earlier in the fields section."
       data_xts<<-data_xts
+      index <<- index
       xpred<<-xpred
       xpred.new<<-xpred.new
-      index <<- index
       reinit.date<<-reinit.date
       ar1<<-ar1
       output <<- output
@@ -260,11 +260,11 @@ FilterResults <- setRefClass(
         if (is.null(xpred.new)){
           stop("xpred.new cannot be NULL.")
         } else {
-          xpred.subsetted<-xpred.new[1:n.ahead]
+          xpred.new<<-get_timeframe(xpred.new,tail(index,1)+1,tail(index,1)+n.ahead)
           
           newZ<-array(new.model$Z[,,dim(new.model$Z)[3]], 
                       dim = c(dim(new.model$Z)[1], dim(new.model$Z)[2], n.ahead))
-          newZ[,1:dim(xpred.subsetted)[2],]<-t(xpred.subsetted)
+          newZ[,1:dim(xpred.new)[2],]<-t(xpred.new)
           
           new.model$Z <- abind::abind(
             new.model$Z,
@@ -274,7 +274,7 @@ FilterResults <- setRefClass(
           
           model_output <- KFS(new.model)
           
-          newdata<-SSModel(rep(NA,dim(xpred.subsetted)[1])~-1+
+          newdata<-SSModel(rep(NA,dim(xpred.new)[1])~-1+
                              SSMcustom(Z=newZ, T=new.model$T, R=new.model$R, 
                                        Q=new.model$Q))
           if (sea.on == TRUE) {
@@ -560,12 +560,12 @@ FilterResults <- setRefClass(
       p <- attr(model, 'p')
       
       y.hat.all <- .self$predict_all(n.ahead, return.all = TRUE)
-      y.pred <-  subset(y.hat.all$y.hat, tail(est.date.index,1)+1)
+      y.pred <-  get_timeframe(y.hat.all$y.hat, tail(est.date.index,1)+1)
       filtered.level <- y.hat.all$level
       
       if (p == 1) {
         EstimationSample <- FilteredLevel <- Forecast <- RealisedData <- NULL
-        d <- cbind(y, filtered.level, y.pred, subset(y.eval, tail(est.date.index,1)+1))
+        d <- cbind(y, filtered.level, y.pred, get_timeframe(y.eval, tail(est.date.index,1)+1))
         if (!is.null(plt.start.date)) { d <- d[index(d) > plt.start.date] }
         d <- d[index(d) <= tail(index(y.pred),1)]
         names(d) <- c(

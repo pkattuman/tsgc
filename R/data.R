@@ -126,10 +126,9 @@
 #'
 #' @keywords datasets
 #'
-#' @references Downloaded from https://power.larc.nasa.gov/data-access-viewer/
+#' @references Downloaded from 
 #'
 #' @examples
 #' data(england_weather_2021)
-#' # plot daily cases
-#' plot(diff(gauteng_weather_2021))
+#' 
 "england_weather_2021"

@@ -51,7 +51,7 @@ df2ldl <- function(dt) {
 #'
 #'
 #' @export
-subset.xts<-function(df, start.date, end.date=NULL){
+get_timeframe<-function(df, start.date, end.date=NULL){
   if (is.null(end.date)){
     idx.est1 <- (zoo::index(df) >= start.date)
   } else {
@@ -483,12 +483,12 @@ cross_val<-function(y,est.end.date,n.ahead,all_lags,totaldays=1,freq=1, vanilla=
       date_format="%Y-%m-%d"
       Z = y[,-LeadIndCol]
       model_q <- SSModelDynamicGompertz$new(Y = Z[index(Z) <= est.end.date+(k-1)*freq])
-      res <- model_q$estimate()
+      res <- estimate(model_q)
       results[1,k+1]=round(mapes(res,n.ahead,Z)[[criterion]],2)
     }
     for (i in all_lags){
       out<-SSModelLeadingIndicator(Y=y[index(y) <= est.end.date+(k-1)*freq],n.lag = i)
-      res<-out$estimate()
+      res<-estimate(out)
       results[vanilla+i,k+1]<-round(mapes(res,n.ahead,y)[[criterion]],2)
     }
     results[length(all_lags)+vanilla+1,k+1]=allall_lags[which.min(results[,k+1])]

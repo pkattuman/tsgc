@@ -21,10 +21,9 @@ Weather data of England.
 }
 \examples{
 data(england_weather_2021)
-# plot daily cases
-plot(diff(gauteng_weather_2021))
+
 }
 \references{
-Downloaded from https://power.larc.nasa.gov/data-access-viewer/
+Downloaded from
 }
 \keyword{datasets}
