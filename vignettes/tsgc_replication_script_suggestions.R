@@ -396,12 +396,27 @@ cross_val(y=eng[index(eng)>=estimation.date.start],
           vanilla=TRUE,freq=2,LeadIndCol=1, criterion="mape")
 
 # -----------------------------
-# Leading Indicator with exogenous predictors (Unfinished)
+# Leading Indicator with exogenous predictors
 # -----------------------------
-xpred1<-xpred2<-england_weather_2021
+xpred1<-xpred2<-england_weather_2021[,1:4]
 mod<-SSModelLeadingIndicator$new(y, n.lag=4, xpred1=xpred1, xpred2=xpred2)
 res_lead.x<-estimate(mod)
 summary(res_lead.x)
+
+res_lead.x$xpred1.new<-res_lead.x$xpred2.new<-england_weather_2021[,1:4]
+
+# Plot forecasts
+plot_new_cases(res_lead.x,
+               n.ahead = n.forecasts,
+               plt.start.date = estimation.date.end - plt.length,
+               title="Forecasts of Log Growth rate of England hospitalizations")
+
+plot_holdout(res_lead.x,
+            Y = eng, n.ahead = n.forecasts,
+            title="Forecasts of Log Growth rate of England hospitalizations"
+)
+
+plot_compare_forecast(res_lead.x)
 
 # -----------------------------
 # 4. Leading Indicator vs Gompertz Growth curves: UK and Italy Examples

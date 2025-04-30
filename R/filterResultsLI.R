@@ -18,6 +18,8 @@ setOldClass("KFS")
 #'   effect with daily data, this would be 7. 
 #' @field LeadIndCol The column in \code{data_xts} that contains the leading 
 #' indicator, inherited from the estimated \code{SSModelLeadingIndicator} model.
+#' @field xpred_logical Vector of lenth 2 with logical values, indicating whether
+#' there are exogenous predictors for leading series and target series. 
 #'
 #'@references Harvey, A. (2021). TIME SERIES MODELLING OF EPIDEMICS: 
 #'LEADING INDICATORS, CONTROL GROUPS AND POLICY ASSESSMENT. 
@@ -97,12 +99,13 @@ FilterResultsLI <- setRefClass(
     n.lag="numeric",
     sea.period="numeric",
     LeadIndCol="numeric",
-    new.xpred1="ANY",
-    new.xpred2="ANY"
+    xpred1.new="ANY",
+    xpred2.new="ANY",
+    xpred_logical="logical"
   ),
   methods = list(
     initialize = function(index,data_xts, output,n.lag,sea.period,LeadIndCol,
-                          new.xpred1=NULL, new.xpred2=NULL)
+                          xpred1.new=NULL, xpred2.new=NULL, xpred_logical)
     {
       "Create an instance of the \\code{FilterResultsLI} class with fields defined
       earlier in the fields section."
@@ -112,8 +115,9 @@ FilterResultsLI <- setRefClass(
       n.lag <<- n.lag
       sea.period <<- sea.period
       LeadIndCol<<-LeadIndCol
-      new.xpred1<<-new.xpred1
-      new.xpred2<<-new.xpred2
+      xpred1.new<<-xpred1.new
+      xpred2.new<<-xpred2.new
+      xpred_logical<<-xpred_logical
     },
     predict_level = function(n.ahead=n.lag, 
                              confidence.level=0.68,
@@ -140,49 +144,14 @@ FilterResultsLI <- setRefClass(
       } else{
         unity=FALSE
       }
-      start_date<-index(data_xts)[1]
-      end_date<-tail(index(data_xts),1)
-      data_ldl = data_xts[,c("LDLcases","LDLhosp")] %>% na.omit
-      
-      data_ldl$LDLcases = lag(data_ldl$LDLcases,n.lag)
-      
-      data_ldl <- na.omit(data_ldl)
-      
-      data_mat = as.matrix(data_ldl)
-      # Create forecast data (using fact have some "future" case observations)
-      forcdata <- matrix(NA,ncol=2,nrow=max(n.ahead,n.lag))
-      colnames(forcdata) = colnames(data_mat)
-      forcdata[1:n.lag,1] = as.vector(tail(data_xts,n.lag)$LDLcases)
-      
-      # Extract estimate of Q from earlier model
-      Qf = matrixKFS(output,"Q")[,,1]
-      
-      # Create forecast model object
-      # Same structure as model before but NAs replaced with the parameter estimates from earlier
-      if (is.na(sea.period)) {
-        forcmodel = SSModel(forcdata ~ SSMtrend(degree = 2, 
-                                                Q = matrix(c(0,0,0,Qf[2,2]),2,2),
-                                                type = 'common')
-                            +SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1),
-                            H = matrixKFS(output,"H"))
-      }
-      else{
-        forcmodel = SSModel(forcdata ~ SSMtrend(degree = 2, 
-                                                Q = matrix(c(0,0,0,Qf[2,2]),2,2),
-                                                type = 'common')
-                            +SSMseasonal(sea.period,Q = matrix(c(Qf[4,4],0,0,Qf[5,5]),2,2), 
-                                         sea.type='trigonometric', type='distinct')
-                            +SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1),H = matrixKFS(output,"H"))
-      }
-      
-      # Create the forecasts
-      # This gives the forecasts of delta
-      forcout = predict(modelKFS(output),forcmodel,interval=c('prediction'),
-                        level=confidence.level, states=c('trend'))
       
       if (!sea.on){
+        # Create the forecasts
+        # This gives the forecasts of delta
+        forcout<-.self$predict_all(n.ahead, sea.on = FALSE, return.all = FALSE, confidence.level=confidence.level)$y.hat.kfas
+        
         # Create empty dataframe to put forecasts in
-        forecasts <- matrix(NA,ncol=ncol(data_ldl),nrow=max(n.ahead,n.lag)) %>%
+        forecasts <- matrix(NA,ncol=dim(data_xts)-n.lag-1,nrow=max(n.ahead,n.lag)) %>%
           as.data.frame()
         colnames(forecasts) = c('Admissions','Cases')
         
@@ -228,11 +197,10 @@ FilterResultsLI <- setRefClass(
         
       } else {
         #Re-do with seasonal component
-        forcout_sea = predict(modelKFS(output),forcmodel,interval=c('prediction'),
-                              level=confidence.level,states='all')
+        forcout_sea = .self$predict_all(n.ahead, sea.on = TRUE, return.all = FALSE)$y.hat.kfas
         
         # Create empty dataframe to put forecasts in
-        forecasts_sea <- matrix(NA,ncol=ncol(data_ldl),nrow=max(n.ahead,n.lag)) %>%
+        forecasts_sea <- matrix(NA,ncol=dim(data_xts)-n.lag-1,nrow=max(n.ahead,n.lag)) %>%
           as.data.frame()
         colnames(forecasts_sea) = c('Admissions','Cases')
         
@@ -255,7 +223,6 @@ FilterResultsLI <- setRefClass(
         startforc = (index %>% tail(1))+1
         finds = seq(startforc,length.out = n.ahead,by='day')
         sea = xts(forecasts_sea[1:n.ahead,],finds)
-        
         
         if (unity){
           return(sea[1,])
@@ -295,7 +262,8 @@ FilterResultsLI <- setRefClass(
       
       return(out)
     },
-    predict_all = function(n.ahead, sea.on = FALSE, return.all = FALSE) {
+    predict_all = function(n.ahead, sea.on = FALSE, return.all = FALSE, 
+                           confidence.level=0.68) {
       "Returns forecasts of the incidence variable \\eqn{y}, the state variables
        and the conditional covariance matrix
       for the states.
@@ -316,92 +284,138 @@ FilterResultsLI <- setRefClass(
       \\eqn{\\gamma} (\\code{slope.t.t}), vector of states including the
       seasonals where applicable (\\code{a.t.t}) and covariance matrix of all
       states including seasonals where applicable (\\code{P.t.t}).}"
+      new.model <- modelKFS(output)
+      oldn<-attr(new.model, 'n')
+
+      na_vals<-matrix(NA, ncol = ncol(gety(new.model)), nrow = n.ahead)
+      na_vals[1:n.lag,1] = as.vector(tail(data_xts,n.lag)$LDLcases)
+      new.model$y <- rbind(gety(new.model),na_vals) %>% as.ts()
+      
+      if (or(xpred_logical[1],xpred_logical[2])){
+        newZ<-array(new.model$Z[,,dim(new.model$Z)[3]], 
+                    dim = c(dim(new.model$Z)[1], dim(new.model$Z)[2], n.ahead))
+        if (xpred_logical[1]){
+          if (is.xts(xpred1.new)){
+            xpred1.new.subset<-get_timeframe(lag(xpred1.new,n.lag),tail(index,1)+1,tail(index,1)+n.ahead)
+            d1<-dim(xpred1.new.subset)[2]
+            newZ[1,1:d1,]<-t(xpred1.new.subset)
+          } else {
+            stop("xpred1.new not provided.")
+          }
+        }
+        if (xpred_logical[2]){
+          if (is.xts(xpred2.new)){
+            xpred2.new.subset<-get_timeframe(xpred2.new,tail(index,1)+1,tail(index,1)+n.ahead)
+            d2<-dim(xpred2.new.subset)[2]
+            if (!xpred_logical[1]){d1=0}
+            newZ[2,(d1+1):(d1+d2),]<-t(xpred2.new.subset)
+          } else {
+            stop("xpred2.new not provided.")
+          }
+        }
+        new.model$Z <- abind::abind(new.model$Z,newZ,along = 3)
+        attr(new.model, 'n') <- as.integer(oldn + n.ahead)
+        model_output <- KFS(new.model)
+        
+        newdata<-SSModel(na_vals~-1+
+                           SSMcustom(Z=newZ, T=new.model$T, R=new.model$R,
+                                     Q=new.model$Q))
+        if (sea.on == TRUE) {
+          y.hat.kfas <- predict(
+            modelKFS(output), interval = 'prediction',
+            newdata = newdata, level = confidence.level, states = 'all')
+        } else {
+          y.hat.kfas <- predict(
+            modelKFS(output), interval = 'prediction',
+            newdata = newdata, level = confidence.level, states = 'level')
+        }
+        y.t.t<-matrix(nrow=2,ncol=oldn)
+        
+        for (j in 1:2){
+          for (i in 1:oldn){
+            y.t.t[j,i] <- output$att[i,] %*% drop(matrixKFS(output,"Z"))[j,,i]
+          }
+        }
+        
+      } else {
+        attr(new.model, 'n') <- as.integer(oldn + n.ahead)
+        model_output <- KFS(new.model)
+        
+        newdata<-SSModel(na_vals~-1+
+                           SSMcustom(Z=new.model$Z, T=new.model$T, R=new.model$R,
+                                     Q=new.model$Q))
+        if (sea.on == TRUE) {
+          y.hat.kfas <- predict(
+            output$model, interval = 'prediction',
+            newdata = newdata, level = confidence.level, states = 'all')
+        } else {
+          y.hat.kfas <- predict(
+            output$model, interval = 'prediction',
+            newdata = newdata, level = confidence.level, states = 'level')
+        }
+        # Assumes time invariant Z.t
+        y.t.t <- t(output$att %*% t(drop(matrixKFS(output,"Z"))))
+      }
+      
+      n <- attr(output$model, "n")
+      dates <- seq(index[1]+n.lag+1, by = 'day', length.out = (n + n.ahead))
+      
+      
+      # start_date<-index(data_xts)[1]
+      # end_date<-tail(index(data_xts),1)
+      # data_ldl = data_xts[,c("LDLcases","LDLhosp")] %>% na.omit
+      # 
+      # data_ldl$LDLcases = lag(data_ldl$LDLcases,n.lag)
+      # 
+      # data_ldl <- na.omit(data_ldl)
+      # 
+      # data_mat = as.matrix(data_ldl)
+      # # Create forecast data (using fact have some "future" case observations)
+      # forcdata <- matrix(NA,ncol=2,nrow=max(n.ahead,n.lag))
+      # colnames(forcdata) = colnames(data_mat)
+      # forcdata[1:n.lag,1] = as.vector(tail(data_xts,n.lag)$LDLcases)
+      # 
+      # # Extract estimate of Q from earlier model
+      # Qf = matrixKFS(output,"Q")[,,1]
+      # 
+      # # Create forecast model object
+      # # Same structure as model before but NAs replaced with the parameter estimates from earlier
+      # if (is.na(sea.period)) {
+      #   forcmodel = SSModel(forcdata ~ SSMtrend(degree = 2, 
+      #                                           Q = matrix(c(0,0,0,Qf[2,2]),2,2),
+      #                                           type = 'common')
+      #                       +SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1),
+      #                       H = matrixKFS(output,"H"))
+      # }
+      # else{
+      #   forcmodel = SSModel(forcdata ~ SSMtrend(degree = 2, 
+      #                                           Q = matrix(c(0,0,0,Qf[2,2]),2,2),
+      #                                           type = 'common')
+      #                       +SSMseasonal(sea.period,Q = matrix(c(Qf[4,4],0,0,Qf[5,5]),2,2), 
+      #                                    sea.type='trigonometric', type='distinct')
+      #                       +SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1),H = matrixKFS(output,"H"))
+      # }
+      # 
       # new.model <- modelKFS(output)
-      # oldn<-attr(new.model, 'n')
+      # new.matrix<-matrix(NA, ncol = ncol(gety(new.model)), nrow = n.ahead)
+      # new.matrix[1:min(n.lag, n.ahead),1]<-tail(data_xts[,5],min(n.lag, n.ahead))
+      # new.model$y <- rbind(
+      #   gety(new.model),new.matrix) %>% as.ts()
       # 
-      # na_vals<-matrix(NA, ncol = ncol(gety(new.model)), nrow = n.ahead)
-      # na_vals[1:n.lag,1] = as.vector(tail(data_xts,n.lag)$LDLcases)
-      # new.model$y <- rbind(gety(new.model),na_vals) %>% as.ts()
+      # attr(new.model, 'n') <- as.integer(length(gety(modelKFS(output)))/2 + n.ahead)
       # 
-      # newdata<-SSModel(na_vals~-1+
-      #                    SSMcustom(Z=newZ, T=new.model$T, R=new.model$R, 
-      #                              Q=new.model$Q))
-      # 
-      # attr(new.model, 'n') <- as.integer(oldn + n.ahead)
       # model_output <- KFS(new.model)
       # 
       # if (sea.on == TRUE) {
       #   y.hat.kfas <- predict(
-      #     output$model, interval = 'prediction',
-      #     newdata = newdata, level = 0.68, states = 'all')
+      #     modelKFS(output), forcmodel, interval = 'prediction', level = 0.68, states = 'all')
       # } else {
       #   y.hat.kfas <- predict(
-      #     output$model, interval = 'prediction',
-      #     newdata = newdata, level = 0.68, states = 'level')
+      #     modelKFS(output), forcmodel, interval = 'prediction', level = 0.68, states = 'level')
       # }
       
-      start_date<-index(data_xts)[1]
-      end_date<-tail(index(data_xts),1)
-      data_ldl = data_xts[,c("LDLcases","LDLhosp")] %>% na.omit
-      
-      data_ldl$LDLcases = lag(data_ldl$LDLcases,n.lag)
-      
-      data_ldl <- na.omit(data_ldl)
-      
-      data_mat = as.matrix(data_ldl)
-      # Create forecast data (using fact have some "future" case observations)
-      forcdata <- matrix(NA,ncol=2,nrow=max(n.ahead,n.lag))
-      colnames(forcdata) = colnames(data_mat)
-      forcdata[1:n.lag,1] = as.vector(tail(data_xts,n.lag)$LDLcases)
-      
-      # Extract estimate of Q from earlier model
-      Qf = matrixKFS(output,"Q")[,,1]
-      
-      # Create forecast model object
-      # Same structure as model before but NAs replaced with the parameter estimates from earlier
-      if (is.na(sea.period)) {
-        forcmodel = SSModel(forcdata ~ SSMtrend(degree = 2, 
-                                                Q = matrix(c(0,0,0,Qf[2,2]),2,2),
-                                                type = 'common')
-                            +SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1),
-                            H = matrixKFS(output,"H"))
-      }
-      else{
-        forcmodel = SSModel(forcdata ~ SSMtrend(degree = 2, 
-                                                Q = matrix(c(0,0,0,Qf[2,2]),2,2),
-                                                type = 'common')
-                            +SSMseasonal(sea.period,Q = matrix(c(Qf[4,4],0,0,Qf[5,5]),2,2), 
-                                         sea.type='trigonometric', type='distinct')
-                            +SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1),H = matrixKFS(output,"H"))
-      }
-      
-      new.model <- modelKFS(output)
-      new.matrix<-matrix(NA, ncol = ncol(gety(new.model)), nrow = n.ahead)
-      new.matrix[1:min(n.lag, n.ahead),1]<-tail(data_xts[,5],min(n.lag, n.ahead))
-      new.model$y <- rbind(
-        gety(new.model),new.matrix) %>% as.ts()
-
-      attr(new.model, 'n') <- as.integer(length(gety(modelKFS(output)))/2 + n.ahead)
-
-      model_output <- KFS(new.model)
-
-      if (sea.on == TRUE) {
-        y.hat.kfas <- predict(
-          modelKFS(output), forcmodel, interval = 'prediction', level = 0.68, states = 'all')
-      } else {
-        y.hat.kfas <- predict(
-          modelKFS(output), forcmodel, interval = 'prediction', level = 0.68, states = 'level')
-      }
-
-      n <- attr(output$model, "n")
-      dates <- seq(index[1]+n.lag, by = 'day', length.out = (n + n.ahead))
-
-      # Assumes time invariant Z.t
-      y.t.t <- output$att %*% t(drop(matrixKFS(output,"Z")))
-      
-      #====Change above===============================================
       y.hat <- xts::xts(
-        c(y.t.t[,2], y.hat.kfas$LDLhosp[, 1] %>% as.matrix()),
+        c(y.t.t[2,], y.hat.kfas$LDLhosp[, 1] %>% as.matrix()),
         order.by = dates)
 
       i.level <- grep("level", colnames(att(model_output)))[1]
@@ -419,6 +433,7 @@ FilterResultsLI <- setRefClass(
 
       out <- list(
         y.hat = y.hat,
+        y.hat.kfas=y.hat.kfas,
         level.t.t = level.t.t,
         slope.t.t = slope.t.t,
         a.t.t = att(model_output),
@@ -605,6 +620,7 @@ FilterResultsLI <- setRefClass(
       the forecast and realised log cumulative growth rate of the target variable
       out of the estimation sample. For more details, see \\link{plot_log_forecast}."
     
+    forcout<-.self$predict_all(n.ahead, sea.on = FALSE, return.all = FALSE)$y.hat
     old=data_xts[,"LDLhosp"]
     old=old[index(old)>head(index(old),1)+n.lag]
     
@@ -612,46 +628,45 @@ FilterResultsLI <- setRefClass(
     eng_full<-eng_full[index(eng_full)>tail(index(old),1),"LDLhosp"]
     actual=eng_full[1:n.ahead]
     
-    lcadmit = lag(data_xts$cAdmit) %>% na.omit()
     smldlh = predict(output$model,states='trend')$LDLhosp
     filtered=xts(smldlh,(head(index(data_xts),1)+n.lag)+(1:length(smldlh)))
+    # 
+    # start_date<-index(data_xts)[1]
+    # end_date<-tail(index(data_xts),1)
+    # data_ldl = data_xts[,c("LDLcases","LDLhosp")] %>% na.omit
+    # 
+    # data_ldl$LDLcases = lag(data_ldl$LDLcases,n.lag)
+    # 
+    # data_ldl <- na.omit(data_ldl)
+    # 
+    # data_mat = as.matrix(data_ldl)
+    # # Create forecast data (using fact have some "future" case observations)
+    # forcdata <- matrix(NA,ncol=2,nrow=max(n.ahead,n.lag))
+    # colnames(forcdata) = colnames(data_mat)
+    # forcdata[1:n.lag,1] = as.vector(tail(data_xts,n.lag)$LDLcases)
+    # 
+    # # Extract estimate of Q from earlier model
+    # Qf = matrixKFS(output, "Q")[,,1]
+    # if (is.na(.self$sea.period)) {
+    #   forcmodel = 
+    #     SSModel(forcdata ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,Qf[2,2]),2,2),type = 'common')
+    #             +SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1),
+    #             H = output$model$H)
+    # } else {
+    #   forcmodel = 
+    #     SSModel(forcdata ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,Qf[2,2]),2,2),type = 'common')
+    #             +SSMseasonal(.self$sea.period,Q = matrix(c(Qf[4,4],0,0,Qf[5,5]),2,2), sea.type='trigonometric', type='distinct')
+    #             +SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1),H = output$model$H)
+    # }
+    # forcout = predict(output$model,forcmodel,interval='prediction',
+    #                   level=0.68,states='trend')
+    # if (n.lag>=n.ahead){
+    #   trend=xts(forcout$LDLhosp[,"fit"],tail(index(old),1)+(1:n.ahead))
+    # } else {
+    #   trend=xts(forcout$LDLhosp[1:n.ahead,"fit"],tail(index(old),1)+(1:n.ahead))
+    # }
     
-    start_date<-index(data_xts)[1]
-    end_date<-tail(index(data_xts),1)
-    data_ldl = data_xts[,c("LDLcases","LDLhosp")] %>% na.omit
-    
-    data_ldl$LDLcases = lag(data_ldl$LDLcases,n.lag)
-    
-    data_ldl <- na.omit(data_ldl)
-    
-    data_mat = as.matrix(data_ldl)
-    # Create forecast data (using fact have some "future" case observations)
-    forcdata <- matrix(NA,ncol=2,nrow=max(n.ahead,n.lag))
-    colnames(forcdata) = colnames(data_mat)
-    forcdata[1:n.lag,1] = as.vector(tail(data_xts,n.lag)$LDLcases)
-    
-    # Extract estimate of Q from earlier model
-    Qf = matrixKFS(output, "Q")[,,1]
-    if (is.na(.self$sea.period)) {
-      forcmodel = 
-        SSModel(forcdata ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,Qf[2,2]),2,2),type = 'common')
-                +SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1),
-                H = output$model$H)
-    } else {
-      forcmodel = 
-        SSModel(forcdata ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,Qf[2,2]),2,2),type = 'common')
-                +SSMseasonal(.self$sea.period,Q = matrix(c(Qf[4,4],0,0,Qf[5,5]),2,2), sea.type='trigonometric', type='distinct')
-                +SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1),H = output$model$H)
-    }
-    forcout = predict(output$model,forcmodel,interval='prediction',
-                      level=0.68,states='trend')
-    
-    if (n.lag>=n.ahead){
-      trend=xts(forcout$LDLhosp[,"fit"],tail(index(old),1)+(1:n.ahead))
-    } else {
-      trend=xts(forcout$LDLhosp[1:n.ahead,"fit"],tail(index(old),1)+(1:n.ahead))
-    }
-    
+    trend=xts(forcout,tail(index(old),1)+(1:n.ahead))
     
     d.plot<-cbind(old,filtered,trend,actual)
     colnames(d.plot)<-c('EstimationSample', 'FilteredLevel', 'Forecast', 'RealisedData')

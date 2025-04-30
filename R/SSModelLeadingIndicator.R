@@ -235,7 +235,8 @@ SSModelLeadingIndicator <- setRefClass(
         output = out,
         n.lag=n.lag,
         sea.period=sea.period,
-        LeadIndCol=LeadIndCol)
+        LeadIndCol=LeadIndCol,
+        xpred_logical=c(!is.null(xpred1),!is.null(xpred2)))
       return(results)},
     summary = function() {
       out <- output(.self$estimate())
