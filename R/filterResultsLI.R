@@ -287,8 +287,9 @@ FilterResultsLI <- setRefClass(
       new.model <- modelKFS(output)
       oldn<-attr(new.model, 'n')
 
-      na_vals<-matrix(NA, ncol = ncol(gety(new.model)), nrow = n.ahead)
+      na_vals<-matrix(NA, ncol = ncol(gety(new.model)), nrow = max(n.ahead, n.lag))
       na_vals[1:n.lag,1] = as.vector(tail(data_xts,n.lag)$LDLcases)
+      na_vals<-na_vals[1:n.ahead,]
       new.model$y <- rbind(gety(new.model),na_vals) %>% as.ts()
       
       if (or(xpred_logical[1],xpred_logical[2])){
@@ -341,6 +342,7 @@ FilterResultsLI <- setRefClass(
         attr(new.model, 'n') <- as.integer(oldn + n.ahead)
         model_output <- KFS(new.model)
         
+        #May need to change this?
         newdata<-SSModel(na_vals~-1+
                            SSMcustom(Z=new.model$Z, T=new.model$T, R=new.model$R,
                                      Q=new.model$Q))
