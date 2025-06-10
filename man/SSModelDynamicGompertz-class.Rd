@@ -81,6 +81,10 @@ attempt to use information from before the reinitialisation date is made.}
 \item{\code{xpred}}{An \code{xts} object containing the dataset of exogenous variables
 to include in the model. Defaults to \code{NULL}.}
 
+\item{\code{varying_coef}}{Logical value indicating whether regression
+coefficients on xpred should be modeled as a random walk (if \code{TRUE}) or
+as a constant (if \code{FALSE}). Default is \code{FALSE}.}
+
 \item{\code{ar1}}{Logical value indicating whether an ar1 component should be
 included in the model. Default is \code{FALSE}.}
 }}
@@ -103,6 +107,7 @@ model.}}
   original.results = NULL,
   use.presample.info = TRUE,
   xpred = NULL,
+  varying_coef = FALSE,
   ar1 = FALSE
 )}}{Create an instance of the \code{SSModelDynamicGompertz} class. Parameters 
 are defined in `fields` section. 

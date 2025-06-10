@@ -9,7 +9,7 @@ An object of class \code{"xts"};
 \describe{
 \item{cum_cases}{Cumulative cases of Covid-19}
 \item{cum_admissions}{Cumulative hospital admissions with Covid-19 since the start of the pandemic.}
-\item{cum_deaths}{Cumulative deaths with Covid-19 on the death certificate.}
+\item{cum_deaths}{Cumulative deaths within 28 days of a positive test for Covid-19 by death date since the start of the pandemic.}
 \item{hospital_cases}{Number of patients in hospital with confirmed Covid-19 each day. Note this is NOT cumulative.}
 }
 }

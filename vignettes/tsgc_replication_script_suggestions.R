@@ -163,7 +163,7 @@ summary(res_weather)
 
 # Feed future weather data into the results object. Subsetting of gauteng_weather 
 #is done inside the function.
-res_weather$xpred.new=gauteng_weather
+supply_xpred.new(res_weather,gauteng_weather)
 
 # Generate Forecasts
 plot_log_forecast(res_weather,Y=cumulative_cases,n.ahead=n.forecasts,

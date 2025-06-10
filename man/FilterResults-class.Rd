@@ -13,18 +13,30 @@ the incidence variable \eqn{y}, and forecasts of \eqn{y}.
 \section{Fields}{
 
 \describe{
-\item{\code{data_xts}}{The non-reinitialized cumulated variable.}
+\item{\code{data_xts}}{An xts object containing the non-reinitialized cummulated
+variable.}
 
-\item{\code{xpred}}{The exogeneous predictors used to estimate the FilterResults object.
-If no exogeneous predictors were used, this will be NULL.}
+\item{\code{need.xpred}}{Logical value indicating whether exogenous predictors were
+used to estimate the FilterResults object.}
+
+\item{\code{varying_coef}}{Logical value indicating whether regression
+coefficients on xpred should be modeled as a random walk (if \code{TRUE}) or
+as a constant (if \code{FALSE}). Default is \code{FALSE}.}
 
 \item{\code{index}}{The list of dates in the index of \code{data_xts}.}
 
 \item{\code{reinit.date}}{The reinitialisation date of the estimated \code{SSModelDynamicGompertz} model (if applicable).
 Should be specified as an object of class \code{\"Date\"}.}
 
+\item{\code{ar1}}{Logical value indicating whether an ar1 component should be
+included in the model.}
+
 \item{\code{output}}{A \code{KFS} results object obtained after fitting a
 \code{SSModelDynamicGompertz} model.}
+
+\item{\code{xpred.new}}{An xts object containing exogenous predictors to be used in
+prediction. Defaults to \code{NULL}, and should be provided if xpred is
+used for model estimation.}
 }}
 
 \section{Methods}{
@@ -62,7 +74,16 @@ variable (\eqn{Y}). Computed as
 \subsection{Return Value}{\code{xts} object containing smoothed/filtered
  growth rates and upper and lower bounds for the confidence intervals.}}
 
-\item{\code{initialize(data_xts, xpred, index, reinit.date, ar1, output, xpred.new = NULL)}}{Create an instance of the \code{FilterResults} class with fields defined
+\item{\code{initialize(
+  data_xts,
+  need.xpred,
+  varying_coef,
+  index,
+  reinit.date,
+  ar1,
+  output,
+  xpred.new = NULL
+)}}{Create an instance of the \code{FilterResults} class with fields defined
 earlier in the fields section.}
 
 \item{\code{mapes(n.ahead, Y)}}{Compute Mean Absolute Percentage Error (MAPE) for trend and seasonal 

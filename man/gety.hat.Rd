@@ -7,7 +7,7 @@
 gety.hat(object)
 }
 \arguments{
-\item{object}{A \code{SSModel} object}
+\item{object}{An \code{SSModel} object}
 }
 \description{
 Accessor method to access prediction y.hat in \code{SSModel} object

@@ -10,5 +10,6 @@ alphahat(object)
 \item{object}{A \code{SSModel} object}
 }
 \description{
-Accessor method to access alphahat in \code{SSModel} object
+Accessor method to access alphahat (smoothed state estimates)
+from a fitted \code{SSModel} object which has had the Kalman filter applied to it
 }

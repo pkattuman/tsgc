@@ -16,6 +16,18 @@
 
 #' @title Extract output of FilterResults
 #
+#' @description Accessor method to provide new exogenous predictors for the 
+#' estimation period
+#'
+#' @param object FilterResults object
+#' @param new.xts An xts object containing new exogenous predictors
+#'
+#' @export
+supply_xpred.new<-function(object, new.xts){
+  object$xpred.new<-new.xts
+  print("xpred.new registered.")
+}
+
 #' @description Accessor method to access the fitted KFS model from `FilterResults`
 #'
 #' @param object FilterResults object

@@ -617,8 +617,9 @@ SSModelDynamicGompertz <- setRefClass(
     "Supplies details of the SSModelDynamicGompertz object, such as estimated 
       parameter values, start and end dates of estimation."
     out <- suppressWarnings(output(.self$estimate()))
+    reg.dim<-if (!is.null(xpred)){dim(xpred)[2]} else {0}
     if(is.null(q)){
-      qest <- matrixKFS(out,"Q")[2, 2, 1]/matrixKFS(out,"H")[, , 1]
+      qest <- matrixKFS(out,"Q")[2+reg.dim, 2+reg.dim, 1]/matrixKFS(out,"H")[, , 1]
     }
     reinit<-!is.null(reinit.date)
     dates<-index(Y)

@@ -7,7 +7,7 @@
 gety(object)
 }
 \arguments{
-\item{object}{SSModel object}
+\item{object}{An \code{SSModel} object}
 }
 \description{
 Accessor method to access time series y in \code{SSModel} object
