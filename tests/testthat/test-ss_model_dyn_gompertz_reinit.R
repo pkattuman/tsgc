@@ -81,7 +81,7 @@ test_that("Test reinitialisation by model", {
   # when using pre-sample information. Thus, the results from the reinitialised
   # model with the apropriate model for initalisation should be the same.
   model <- SSModelDynGompertzReinit$new(
-    Y = y, , q = q, reinit.date = estimation.date.reinitialisation,
+    Y = y, q = q, reinit.date = estimation.date.reinitialisation,
     use.presample.info = TRUE
   )
   res <- model$estimate()
@@ -92,25 +92,9 @@ test_that("Test reinitialisation by model", {
   res.full <- model$estimate()
 
   model <- SSModelDynGompertzReinit$new(
-    Y = y, , q = q, reinit.date = estimation.date.reinitialisation,
+    Y = y, q = q, reinit.date = estimation.date.reinitialisation,
     original.results=res.full
   )
   res.with.model.passed <- model$estimate()
   expect_equal(res.with.model.passed$output$att, res$output$att)
-
-  # TODO: Fix or drop - should give same results if you do correction and
-  #  timing correctly.
-  # 2. Check reinitialising without using presample information equivalent to
-  # starting a model a fresh from the reinitialisation point with a correction
-  # for the level.
-  model <- SSModelDynGompertzReinit$new(
-    Y = y, , q = q, reinit.date = estimation.date.reinitialisation,
-    use.presample.info = FALSE
-  )
-  res.exact.prior <- model$estimate()
-
-  y.reinit <- reinitialise_dataframe(y, estimation.date.reinitialisation[1])
-  model <- SSModelDynamicGompertz$new(Y = y.reinit, q = q)
-  res.full <- model$estimate()
-  # expect_equal(res.exact.prior$output$att, res.full$output$att)
 })

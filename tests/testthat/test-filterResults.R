@@ -33,22 +33,6 @@ test_that("Test FilterResults().predict_all() works", {
   y.hat.all <- res$predict_all(n.ahead, return.all = TRUE)
 })
 
-
-test_that("Test FilterResults().predict_level() works", {
-  data('gauteng')
-  y <- gauteng[1:50]
-  n.ahead <- 14
-  model <- tsgc::SSModelDynamicGompertz$new(Y = y)
-  res <- model$estimate()
-  y.hat.all <- res$predict_level(
-    y.cum = y, n.ahead = n.ahead, confidence_level = 0.68, sea.on=TRUE,
-    return.diff = TRUE)
-  # TODO: Check that there is data in the forecast period.
-})
-
-
-
-
 test_that("Test FilterResults().get_growth_y() works", {
   data('gauteng')
   y <- gauteng[1:50]

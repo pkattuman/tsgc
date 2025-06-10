@@ -120,7 +120,7 @@ matrixKFS<-function(object,matrix){
 #
 #' @description Accessor method to access time series y in `SSModel` object
 #'
-#' @param object SSModel object
+#' @param object An `SSModel` object
 #'
 #' @export
 gety<-function(object){
@@ -131,7 +131,7 @@ gety<-function(object){
 #
 #' @description Accessor method to access prediction y.hat in `SSModel` object
 #'
-#' @param object A `SSModel` object
+#' @param object An `SSModel` object
 #'
 #' @export
 gety.hat<-function(object){
@@ -141,7 +141,8 @@ gety.hat<-function(object){
 
 #' @title Extract alphahat in SSModel
 #
-#' @description Accessor method to access alphahat in `SSModel` object
+#' @description Accessor method to access alphahat (smoothed state estimates) 
+#' from a fitted `SSModel` object which has had the Kalman filter applied to it
 #'
 #' @param object A `SSModel` object
 #'
