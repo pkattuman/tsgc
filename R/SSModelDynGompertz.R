@@ -83,9 +83,6 @@ setOldClass("KFS")
 #' attempt to use information from before the reinitialisation date is made.
 #' @field xpred An \code{xts} object containing the dataset of exogenous variables 
 #' to include in the model. Defaults to \code{NULL}.
-#' @field varying_coef Logical value indicating whether regression
-#' coefficients on xpred should be modeled as a random walk (if \code{TRUE}) or 
-#' as a constant (if \code{FALSE}). Default is \code{FALSE}.
 #' @field ar1 Logical value indicating whether an ar1 component should be 
 #' included in the model. Default is \code{FALSE}.
 #' 
@@ -132,14 +129,13 @@ SSModelDynamicGompertz <- setRefClass(
     original.results = "ANY",
     use.presample.info = "ANY",
     xpred="ANY",
-    varying_coef="logical",
     ar1="logical"
   ),
   methods = list(initialize = function(Y, q = NULL, sea.type = 'trigonometric',
                                        sea.period = 7,reinit.date=NULL, 
                                        original.results=NULL,
                                        use.presample.info=TRUE, xpred=NULL, 
-                                       varying_coef=FALSE, ar1=FALSE)
+                                       ar1=FALSE)
   {
     "Create an instance of the \\code{SSModelDynamicGompertz} class. Parameters 
     are defined in `fields` section. 
@@ -153,7 +149,6 @@ SSModelDynamicGompertz <- setRefClass(
     original.results <<- original.results
     use.presample.info <<- use.presample.info
     xpred<<-xpred[index(Y)]
-    varying_coef<<-varying_coef
     ar1<<-ar1
   },
   estimate = function() {
@@ -283,11 +278,7 @@ SSModelDynamicGompertz <- setRefClass(
         need.xpred<-!is.null(xpred)
         if (need.xpred){
           xpred_dim<-dim(xpred)[2]
-          Q_pred<-if (varying_coef)
-          {diag(c(rep(NA, xpred_dim)))
-          } else {
-            matrix(0,nrow=xpred_dim, ncol=xpred_dim)}
-        }
+          Q_pred<-matrix(0,nrow=xpred_dim, ncol=xpred_dim)}
         
         #Write out the model depending on case
         if (use.prior) {
@@ -605,7 +596,6 @@ SSModelDynamicGompertz <- setRefClass(
     results <- FilterResults$new(
       data_xts = Y,
       need.xpred=!is.null(xpred),
-      varying_coef=varying_coef,
       index = date.index,
       reinit.date=reinit.date,
       ar1=ar1,

@@ -10,9 +10,6 @@ setOldClass("KFS")
 #' variable.
 #' @field need.xpred Logical value indicating whether exogenous predictors were 
 #' used to estimate the FilterResults object. 
-#' @field varying_coef Logical value indicating whether regression
-#' coefficients on xpred should be modeled as a random walk (if \code{TRUE}) or 
-#' as a constant (if \code{FALSE}). Default is \code{FALSE}.
 #' @field index The list of dates in the index of \code{data_xts}.
 #' @field reinit.date The reinitialisation date of the estimated \code{SSModelDynamicGompertz} model (if applicable). 
 #' Should be specified as an object of class \code{\"Date\"}.
@@ -95,7 +92,6 @@ FilterResults <- setRefClass(
   fields = list(
     data_xts = "xts",
     need.xpred = "ANY",
-    varying_coef = "logical",
     xpred.new="ANY",
     index = "Date",
     reinit.date= "ANY",
@@ -104,15 +100,14 @@ FilterResults <- setRefClass(
     sea.period="numeric"
   ),
   methods = list(
-    initialize = function(data_xts,need.xpred,varying_coef,
-                          index,reinit.date, ar1, output, sea.period, xpred.new=NULL)
+    initialize = function(data_xts,need.xpred,index,reinit.date, ar1, 
+                          output, sea.period, xpred.new=NULL)
     {
       "Create an instance of the \\code{FilterResults} class with fields defined
       earlier in the fields section."
       data_xts<<-data_xts
       index <<- index
       need.xpred<<-need.xpred
-      varying_coef<<-varying_coef
       xpred.new<<-xpred.new
       reinit.date<<-reinit.date
       ar1<<-ar1
