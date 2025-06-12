@@ -100,11 +100,12 @@ FilterResults <- setRefClass(
     index = "Date",
     reinit.date= "ANY",
     ar1 = "logical",
-    output = "KFS"
+    output = "KFS",
+    sea.period="numeric"
   ),
   methods = list(
     initialize = function(data_xts,need.xpred,varying_coef,
-                          index,reinit.date, ar1, output, xpred.new=NULL)
+                          index,reinit.date, ar1, output, sea.period, xpred.new=NULL)
     {
       "Create an instance of the \\code{FilterResults} class with fields defined
       earlier in the fields section."
@@ -116,6 +117,7 @@ FilterResults <- setRefClass(
       reinit.date<<-reinit.date
       ar1<<-ar1
       output <<- output
+      sea.period<<-sea.period
     },
     predict_level = function(
       n.ahead,
@@ -284,10 +286,18 @@ FilterResults <- setRefClass(
           )
           
           model_output <- KFS(new.model)
-          
-          newdata<-SSModel(rep(NA,dim(xpred.new)[1])~-1+
-                             SSMcustom(Z=newZ, T=new.model$T, R=new.model$R, 
-                                       Q=new.model$Q))
+          new.Q <- new.model$Q
+          dim.xpred<-dim(xpred.new)[2]
+          newdata<-SSModel(rep(NA,dim(xpred.new)[1])
+                           ~SSMtrend(degree = 2, 
+                            Q = list(matrix(0), matrix(new.Q[2+dim.xpred,2+dim.xpred,1]))) 
+                          +SSMseasonal(
+                            period = sea.period, #Need to provide sea.period
+                            Q = new.Q[3+dim.xpred,3+dim.xpred,1],
+                            sea.type = "trigonometric")
+                          +SSMregression(~xpred.new, Q = new.Q[1:dim.xpred,1:dim.xpred,1]))
+                          #+SSMcustom(Z=1,T=1,R=1,Q=matrix(NA),state_names="ar1") #Need to add AR1
+                #SSMcustom(Z=newZ, T=new.model$T, R=new.model$R, Q=new.model$Q))
           if (sea.on == TRUE) {
             y.hat.kfas <- predict(
               output$model, interval = 'prediction',
@@ -304,6 +314,7 @@ FilterResults <- setRefClass(
           }
         }
       } else {
+        dim.xpred<-0
         model_output <- KFS(new.model)
         
         if (sea.on == TRUE) {
@@ -323,7 +334,7 @@ FilterResults <- setRefClass(
       dates <- seq(index[1], by = 'day', length.out = (oldn + n.ahead))
 
       y.hat <- xts::xts(
-        c(y.t.t, y.hat.kfas[, 1] %>% as.matrix()),
+        c(y.t.t, y.hat.kfas[, 1+dim.xpred] %>% as.matrix()),
         order.by = dates)
       names(y.hat)<-c("y.hat")
       

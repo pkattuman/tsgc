@@ -609,6 +609,7 @@ SSModelDynamicGompertz <- setRefClass(
       index = date.index,
       reinit.date=reinit.date,
       ar1=ar1,
+      sea.period=sea.period,
       output = model_output
     )
     return(results)
