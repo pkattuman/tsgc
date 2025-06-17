@@ -283,24 +283,43 @@ FilterResults <- setRefClass(
           model_output <- KFS(new.model)
           new.Q <- new.model$Q
           if (ar1){
-            ar1_index<-dim(new.Q)[1]
-            newdata<-SSModel(rep(NA,dim(xpred.new)[1])
-                             ~SSMtrend(degree = 2,
-                                       Q = list(matrix(0), matrix(new.Q[2,2,1])))
-                             +SSMseasonal(
-                               period = sea.period, #Need to provide sea.period
-                               Q = new.Q[3,3,1],
-                               sea.type = "trigonometric")
-                             +SSMregression(~xpred.new)
-                             +SSMcustom(Z=1,T=1,R=1,Q=new.Q[ar1_index,ar1_index,1],state_names="ar1"))
+            #AR1 with sea.period
+            if (!is.null(sea.period)){
+              ar1_index<-dim(new.Q)[1]
+              newdata<-SSModel(rep(NA,dim(xpred.new)[1])
+                               ~SSMtrend(degree = 2,
+                                         Q = list(matrix(0), matrix(new.Q[2,2,1])))
+                               +SSMseasonal(
+                                 period = sea.period, 
+                                 Q = new.Q[3,3,1],
+                                 sea.type = "trigonometric")
+                               +SSMregression(~xpred.new)
+                               +SSMcustom(Z=1,T=1,R=1,Q=new.Q[ar1_index,ar1_index,1],state_names="ar1"))
+            } else {
+              #AR1 and no sea.period
+              ar1_index<-dim(new.Q)[1]
+              newdata<-SSModel(rep(NA,dim(xpred.new)[1])
+                               ~SSMtrend(degree = 2,
+                                         Q = list(matrix(0), matrix(new.Q[2,2,1])))
+                               +SSMregression(~xpred.new)
+                               +SSMcustom(Z=1,T=1,R=1,Q=new.Q[ar1_index,ar1_index,1],state_names="ar1"))
+            }
           } else {
+            #sea period only
+            if (!is.null(sea.period)){
+              newdata<-SSModel(rep(NA,dim(xpred.new)[1])
+                               ~SSMtrend(degree = 2,
+                                         Q = list(matrix(0), matrix(new.Q[2,2,1])))
+                               +SSMseasonal(
+                                 period = sea.period, 
+                                 Q = new.Q[3,3,1],
+                                 sea.type = "trigonometric")
+                               +SSMregression(~xpred.new))
+            } else {
+              #no sea period 
             newdata<-SSModel(rep(NA,dim(xpred.new)[1])
                              ~SSMtrend(degree = 2,
                                        Q = list(matrix(0), matrix(new.Q[2,2,1])))
-                             +SSMseasonal(
-                               period = sea.period, #Need to provide sea.period
-                               Q = new.Q[3,3,1],
-                               sea.type = "trigonometric")
                              +SSMregression(~xpred.new))
           }
           if (sea.on == TRUE) {
@@ -318,8 +337,7 @@ FilterResults <- setRefClass(
             y.t.t[i] <- output$att[i,] %*% drop(matrixKFS(output,"Z"))[,i]
           }
         }
-      } else {
-        dim.xpred<-0
+      }} else {
         model_output <- KFS(new.model)
         
         if (sea.on == TRUE) {
@@ -462,7 +480,9 @@ FilterResults <- setRefClass(
       parameter values, start and end dates of estimation."
       H <- matrixKFS(output, "H")[, , 1]
       Q_gamma <- matrixKFS(output, "Q")[2, 2, 1]
-      Q_seasonal <- matrixKFS(output, "Q")[3, 3, 1]
+      if (sea.period>1){  
+        Q_seasonal <- matrixKFS(output, "Q")[3, 3, 1]
+      }
       
       start_date <- index[1]
       end_date <- index[length(index)]
@@ -487,7 +507,9 @@ FilterResults <- setRefClass(
       cat("\n")
       cat("Signal-to-Noise Ratio (q):", format(Q_gamma / H, digits = 4))
       cat("\n")
-      cat("Seasonality noise:",format(Q_seasonal, digits = 4))
+      if (sea.period>1){
+        cat("Seasonality noise:",format(Q_seasonal, digits = 4))
+      }
     }, 
     plot_new_cases=function(n.ahead=14, confidence.level = 0.68, 
                             date_format = "%Y-%m-%d",

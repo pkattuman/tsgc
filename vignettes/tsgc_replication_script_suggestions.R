@@ -269,7 +269,7 @@ reinit.dates <- "2021-04-21"
 
 # Estimate the reinitialized model.
 model <- SSModelDynamicGompertz$new(
-  Y = y,
+  Y = y, 
   q = q,
   reinit.date = as.Date(reinit.dates, format = date.format)
 )

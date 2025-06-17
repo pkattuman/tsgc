@@ -180,7 +180,7 @@ SSModelDynamicGompertz <- setRefClass(
         # If nothing to update then return model
         return(model)
       } else {
-        nparQ <- if (sea.type == 'trigonometric') { 1 } else { 0 }
+        nparQ <- 0
         # 1. Set seasonal noise
         if (estQ) {
           Q <- as.matrix(model$Q[, , 1])
@@ -191,31 +191,35 @@ SSModelDynamicGompertz <- setRefClass(
             naQd <- setdiff(naQd, i.ar1)
           }
           
-          Q[naQd, naQd][lower.tri(Q[naQd, naQd])] <- 0
-          diag(Q)[naQd] <- exp(0.5 * pars[1])
-          # Check for off-diagonal elements and raise error if found.
-          naQnd <- which(upper.tri(Q[naQd, naQd]) & is.na(Q[naQd, naQd]))
-          if (length(naQnd) > 0) {
-            stop("NotImplmentedError: Unexpected off-diagonal element updating")
+          if (sea.type == 'trigonometric'){
+            nparQ <- 1
+            Q[naQd, naQd][lower.tri(Q[naQd, naQd])] <- 0
+            diag(Q)[naQd] <- exp(0.5 * pars[nparQ])
+            # Check for off-diagonal elements and raise error if found.
+            naQnd <- which(upper.tri(Q[naQd, naQd]) & is.na(Q[naQd, naQd]))
+            if (length(naQnd) > 0) {
+              stop("NotImplmentedError: Unexpected off-diagonal element updating")
+            }
           }
-        }
         
-        # 2. Set observation noise
-        H <- as.matrix(model$H[, , 1])
-        if (estH) {
-          naHd <- which(is.na(diag(H)))
-          H[naHd, naHd][lower.tri(H[naHd, naHd])] <- 0
-          diag(H)[naHd] <- exp(0.5 * pars[(nparQ + 1)])
-          model$H[naHd, naHd, 1] <- crossprod(H[naHd, naHd])
-        }
-        
+          # 2. Set observation noise
+          H <- as.matrix(model$H[, , 1])
+          if (estH) {
+            naHd <- which(is.na(diag(H)))
+            H[naHd, naHd][lower.tri(H[naHd, naHd])] <- 0
+            nparQ<-nparQ+1
+            diag(H)[naHd] <- exp(0.5 * pars[nparQ])
+            model$H[naHd, naHd, 1] <- crossprod(H[naHd, naHd])
+          }
+            
         # 3. Set slope noise
         # Get index of slope, 1 before the seasonal component.
         model$Q[naQd, naQd, 1] <- crossprod(Q[naQd, naQd])
         i.slope <- 2
         # Estimate slope if no signal to noise ratio specified.
         if (is.null(q)) {
-          Q.slope <- exp(0.5 * pars[(nparQ + 2)])
+          nparQ<-nparQ+1
+          Q.slope <- exp(0.5 * pars[nparQ])
         } else {
           Q.slope <- crossprod(H[naHd, naHd]) * q
         }
@@ -223,12 +227,15 @@ SSModelDynamicGompertz <- setRefClass(
         
         # 4. Set AR1 noise
         if (ar1){
+          nparQ<-nparQ+1
           i.ar1 <- nrow(Q)
-          Q[i.ar1, i.ar1] <- exp(0.5 * pars[nparQ + 3])
+          Q[i.ar1, i.ar1] <- exp(0.5 * pars[nparQ])
           model$Q[i.ar1, i.ar1, 1] <- Q[i.ar1, i.ar1]
           
-          T = model$T[,,1]
-          model$T[nrow(T),ncol(T),1] = pars[nparQ + 4]
+          nparQ<-nparQ+1
+          T <- model$T[,,1]
+          model$T[nrow(T),ncol(T),1] <- pars[nparQ]
+        }
         }
       }
       return(model)
@@ -244,13 +251,14 @@ SSModelDynamicGompertz <- setRefClass(
     H = NULL,
     T=NULL,
     R=NULL,
-    newZ=NULL,
-    ar1_coeff=NULL)
+    newZ=NULL)
       { "Obtain the model object which is then used for 
         estimation."
-        Qt.slope <- if (is.null(Q)) { NA } else { Q[2, 2] }
-        Qt.seas <- if (is.null(Q)) { NA } else { Q[3, 3] }
         Ht <- if (is.null(H)) { NA } else { H }
+        Qt.slope <- if (is.null(Q)) { NA } else { Q[2, 2] }
+        if (sea.type=='trigonometric'){
+          Qt.seas <- if (is.null(Q)) { NA } else { Q[3, 3] }
+        }
         Qt.ar1 <- if (is.null(Q)) { NA } else {Q[dim(Q)[1],dim(Q)[2]]}
         
         # 1. Set prior on state as ~ N(a1, P1) if a1 supplied.
@@ -259,16 +267,54 @@ SSModelDynamicGompertz <- setRefClass(
         # 2. Check whether there are exogenous predictors in model
         need.xpred<-!is.null(xpred)
         
+        # 3. When needed, extract the AR1 coefficient
+        ar1_coeff<-Tt[dim(Tt)[1],dim(Tt)[2]]
+        
         #Write out the model depending on case
         if (use.prior) {
+          seasonal_idx<-grep("sea_trig", rownames(a1))
+          trend_idx<-c(grep("level", rownames(a1)), 
+                       grep("slope", rownames(a1)))
           #Case 1: With prior info, seasonality, xpred
           if (sea.type == 'trigonometric') {
             if (need.xpred){
-              ss_model <- SSModel(
-                y ~-1+SSMcustom(Z=newZ, T=T, R=R, Q=Q, 
-                                a1=a1, P1=P1, state_names=dimnames(newZ)[[2]]),
-                H = Ht
-              )
+              if (ar1){
+                ss_model <-SSModel(
+                  y ~ SSMtrend(
+                      degree = 2,
+                      Q = list(matrix(0), matrix(Qt.slope)),
+                      a1 = a1[trend_idx],
+                      P1 = P1[trend_idx, trend_idx]
+                    ) +
+                    SSMseasonal(
+                      period = sea.period,
+                      Q = Qt.seas,
+                      sea.type = sea.type,
+                      a1 = a1[seasonal_idx],
+                      P1 = P1[seasonal_idx, seasonal_idx]
+                    )+SSMcustom(Z=1,T=ar1_coeff,R=1,Q=Qt.ar1, 
+                                a1=a1[dim(a1)[1]], 
+                                P1=P1[dim(a1)[1],dim(a1)[1]], 
+                                state_names="ar1")
+                  +SSMregression(~xpred),
+                  H = Ht)
+              } else {
+                ss_model <-SSModel(
+                  y ~SSMtrend(
+                      degree = 2,
+                      Q = list(matrix(0), matrix(Qt.slope)),
+                      a1 = a1[trend_idx],
+                      P1 = P1[trend_idx, trend_idx]
+                    ) +
+                    SSMseasonal(
+                      period = sea.period,
+                      Q = Qt.seas,
+                      sea.type = sea.type,
+                      a1 = a1[seasonal_idx],
+                      P1 = P1[seasonal_idx, seasonal_idx])
+                  +SSMregression(~xpred),
+                  H = Ht)
+              }
             } else {
               #Case 2: With prior info, seasonality, no xpred
               if (ar1){
@@ -290,8 +336,7 @@ SSModelDynamicGompertz <- setRefClass(
                                 a1=a1[dim(a1)[1]], 
                                 P1=P1[dim(a1)[1],dim(a1)[1]], 
                                 state_names="ar1"),
-                  H = Ht
-                )
+                  H = Ht)
               } else {
                 ss_model <- SSModel(
                   y ~
@@ -306,8 +351,7 @@ SSModelDynamicGompertz <- setRefClass(
                       Q = Qt.seas,
                       sea.type = sea.type,
                       a1 = a1[3:dim(a1)[1]],
-                      P1 = P1[3:dim(a1)[1], 3:dim(a1)[1]]
-                    ),
+                      P1 = P1[3:dim(a1)[1], 3:dim(a1)[1]]),
                   H = Ht
                 ) 
               }
@@ -315,11 +359,29 @@ SSModelDynamicGompertz <- setRefClass(
           } else if (sea.type == 'none') {
             #Case 3: With prior info, no seasonality, yes xpred
             if (need.xpred){
-              ss_model <- SSModel(
-                y ~-1+SSMcustom(Z=newZ, T=T, R=R, Q=Q, 
-                                a1=a1, P1=P1, state_names=dimnames(newZ)[[2]]),
-                H = Ht
-              )
+              if (ar1){
+                 ss_model <-SSModel(
+                  y ~ SSMtrend(
+                    degree = 2,
+                    Q = list(matrix(0), matrix(Qt.slope)),
+                    a1 = a1[trend_idx],
+                    P1 = P1[trend_idx, trend_idx]
+                  )+SSMcustom(Z=1,T=ar1_coeff,R=1,Q=Qt.ar1, 
+                                a1=a1[dim(a1)[1]], 
+                                P1=P1[dim(a1)[1],dim(a1)[1]], 
+                                state_names="ar1")
+                  +SSMregression(~xpred),
+                  H = Ht)
+              } else {
+                ss_model <-SSModel(
+                  y ~ SSMtrend(
+                    degree = 2,
+                    Q = list(matrix(0), matrix(Qt.slope)),
+                    a1 = a1[trend_idx],
+                    P1 = P1[trend_idx, trend_idx])
+                  +SSMregression(~xpred),
+                  H = Ht)
+              }
             } else {
               #Case 4: With prior info, no seasonality, no xpred
               if (ar1){
@@ -328,7 +390,9 @@ SSModelDynamicGompertz <- setRefClass(
                     degree = 2,
                     Q = list(matrix(0), matrix(Qt.slope)),
                     a1 = a1[1:2],
-                    P1 = P1[1:2, 1:2])+SSMcustom(Z=1,T=ar1_coeff,R=1,Q=Qt.ar1),
+                    P1 = P1[1:2, 1:2])
+                  +SSMcustom(Z=1,T=ar1_coeff,R=1,Q=Qt.ar1, 
+                             state_names="ar1"),
                   H = Ht)
               } else {
                 ss_model <- SSModel(
@@ -436,8 +500,7 @@ SSModelDynamicGompertz <- setRefClass(
               #Case 8: No prior info, no seasonality, no xpred
               if (ar1){
                 ss_model <- SSModel(
-                  y ~
-                    SSMtrend(
+                  y ~SSMtrend(
                       degree = 2,
                       Q = list(matrix(0), matrix(Qt.slope))
                     )+
@@ -521,26 +584,14 @@ SSModelDynamicGompertz <- setRefClass(
           # b. Set slope to 0 and add correction (\ln(Y_r/y_r) to level.
           a1["slope",] <- 0
           a1["level",] <- a1["level",] + log(Y[idx] / (Y[idx] - Y.t.r_0))
-          ar1_coeff<-Tt[dim(Tt)[1],dim(Tt)[2]]
+          
         } else {
           # Don't use presample info
           a1 <- NULL; P1 <- NULL; Qt <- NULL; Ht <- NULL
         }
-        if (!is.null(xpred)){
-          Zt <- matrixKFS(model_output,"Z")
-          newZ<-array(Zt[,,dim(Zt)[3]], 
-                      dim = c(dim(Zt)[1], dim(Zt)[2], dim(xpred2)[1]))
-          newZ[,1:dim(xpred2)[2],]<-t(xpred2)
-          dimnames(newZ) <- list(NULL, dimnames(Zt)[[2]], NULL)
-          
-          out <- get_dynamic_gompertz_model(
-            y = y.reinit, xpred=xpred2,
-            a1 = a1, P1 = P1, Q = Qt, H = Ht, T=Tt, R=Rt, newZ=newZ)
-        } else {
-          out <- get_dynamic_gompertz_model(
-            y = y.reinit, xpred=xpred2,
-            a1 = a1, P1 = P1, Q = Qt, H = Ht, ar1_coeff=ar1_coeff)
-        }
+        out <- get_dynamic_gompertz_model(
+          y = y.reinit, xpred=xpred2,
+          a1 = a1, P1 = P1, Q = Qt, H = Ht, T=Tt)
         
         out[['index']] <- index(y.reinit)
         return(out)
@@ -573,7 +624,7 @@ SSModelDynamicGompertz <- setRefClass(
       index = date.index,
       reinit.date=reinit.date,
       ar1=ar1,
-      sea.period=sea.period,
+      sea.period=if (sea.type!='trigonometric'){0} else (sea.period),
       output = model_output
     )
     return(results)
