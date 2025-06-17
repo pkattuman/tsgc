@@ -264,8 +264,10 @@ SSModelDynamicGompertz <- setRefClass(
         # 2. Check whether there are exogenous predictors in model
         need.xpred<-!is.null(xpred)
         
-        # 3. When needed, extract the AR1 coefficient
-        ar1_coeff<-Tt[dim(Tt)[1],dim(Tt)[2]]
+        if (ar1){
+          # 3. When needed, extract the AR1 coefficient
+          ar1_coeff<-T[dim(T)[1],dim(T)[2]]
+        }
         
         #Write out the model depending on case
         if (use.prior) {
@@ -406,7 +408,7 @@ SSModelDynamicGompertz <- setRefClass(
         } else {
           #Case 5: No prior info, yes seasonality, yes xpred
           if (need.xpred){
-            if (sea.type) {
+            if (sea.period>1) {
               if(ar1){
                 ss_model <- SSModel(
                   y ~SSMtrend(
@@ -577,7 +579,7 @@ SSModelDynamicGompertz <- setRefClass(
           
         } else {
           # Don't use presample info
-          a1 <- NULL; P1 <- NULL; Qt <- NULL; Ht <- NULL
+          a1 <- NULL; P1 <- NULL; Qt <- NULL; Ht <- NULL; Tt<- NULL
         }
         out <- get_dynamic_gompertz_model(
           y = y.reinit, xpred=xpred2,
