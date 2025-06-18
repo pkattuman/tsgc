@@ -241,7 +241,7 @@ write_results <- function(res, res.dir, n.ahead, confidence.level=0.68) {
 
 #' @title Calculate reproduction number estimates and credible intervals
 #'
-#' @description Since Harvey and Kattuman (2021)
+#' @description Following Harvey and Kattuman (2021)
 #'
 #' @param res A `filterResults` object, obtained from \code{estimate()} method.
 #' @param gen_int Generation interval in days
