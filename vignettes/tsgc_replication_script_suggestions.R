@@ -414,8 +414,6 @@ plot_holdout(res_lead.x,
             title="Forecasts of Log Growth rate of England hospitalizations"
 )
 
-plot_compare_forecast(res_lead.x)
-
 # -----------------------------
 # 4. Leading Indicator vs Gompertz Growth curves: UK and Italy Examples
 # -----------------------------
