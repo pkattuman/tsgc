@@ -384,7 +384,7 @@ mapes<-function(res,n.ahead,Y){
 #' vanilla=TRUE,freq=2,LeadIndCol=1, criterion="mae")
 #'
 #' @export
-cross_val<-function(y,est.end.date,n.ahead,all_lags,totaldays=1,freq=1, vanilla=TRUE,
+cross_val<-function(y,est.start.date=index(y)[1],est.end.date,n.ahead,all_lags,totaldays=1,freq=1, vanilla=TRUE,
                     LeadIndCol=1, criterion="mape"){
   if (vanilla){
     allall_lags<-c(0,all_lags)
@@ -404,7 +404,8 @@ cross_val<-function(y,est.end.date,n.ahead,all_lags,totaldays=1,freq=1, vanilla=
       results[1,k+1]=round(mapes(res,n.ahead,Z)[[criterion]],2)
     }
     for (i in all_lags){
-      out<-SSModelLeadingIndicator(Y=y[index(y) <= est.end.date+(k-1)*freq],n.lag = i)
+      out<-SSModelLeadingIndicator(Y=y,n.lag = i, start.date=est.start.date,
+                                   end.date=est.end.date+(k-1)*freq)
       res<-estimate(out)
       results[vanilla+i,k+1]<-round(mapes(res,n.ahead,y)[[criterion]],2)
     }

@@ -118,7 +118,7 @@ SSModelLeadingIndicator <- setRefClass(
       
       data_ldl <- na.omit(data_ldl)
       
-      data_ldl <- get_timeframe(data_ldl, estimation.date.start,estimation.date.end)
+      data_ldl <- get_timeframe(data_ldl, start.date, end.date)
 
       data_mat = as.matrix(data_ldl)
       
