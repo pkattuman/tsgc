@@ -396,7 +396,9 @@ cross_val(y=eng[index(eng)>=estimation.date.start],
 # Leading Indicator with exogenous predictors
 # -----------------------------
 xpred1<-xpred2<-england_weather_2021[,1:4]
-mod<-SSModelLeadingIndicator$new(y, n.lag=4, xpred1=xpred1, xpred2=xpred2)
+mod<-SSModelLeadingIndicator$new(eng, n.lag=4, xpred1=xpred1, xpred2=xpred2, 
+                                 start.date = estimation.date.start, 
+                                 end.date = estimation.date.end)
 res_lead.x<-estimate(mod)
 summary(res_lead.x)
 
@@ -461,8 +463,9 @@ plot_holdout(
 # Compare to leading indicator model.
 n.lag <- 14
 n.forc <- 14
-covid_xts <- get_timeframe(ukitaly,estimation.date.start+1, estimation.date.end)
-out <- SSModelLeadingIndicator(Y = covid_xts, n.lag = n.lag, sea.period = 7)
+out <- SSModelLeadingIndicator(Y = covid_xts, n.lag = n.lag, sea.period = 7,
+                               start.date = estimation.date.start, 
+                               end.date = estimation.date.end)
 res_lead <- estimate(out)
 
 plot_new_cases(res_lead,
@@ -517,8 +520,9 @@ plot_holdout(
 # For leading indicator.
 n.lag <- 14
 n.forc <- 14
-covid_xts <- get_timeframe(ukitaly,estimation.date.start,estimation.date.end)
-out <- SSModelLeadingIndicator(Y = covid_xts, n.lag = n.lag)
+out <- SSModelLeadingIndicator(Y = covid_xts, n.lag = n.lag,
+                               start.date = estimation.date.start, 
+                               end.date = estimation.date.end)
 res_lead <- estimate(out)
 plot_new_cases(
   res_lead,

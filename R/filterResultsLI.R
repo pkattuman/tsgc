@@ -388,14 +388,13 @@ FilterResultsLI <- setRefClass(
         model_output <- KFS(new.model)
         
         # Create forecast model object
-        if (is.na(sea.period)) {
+        if (sea.period==0) {
           forcmodel = SSModel(na_vals ~ SSMtrend(degree = 2, 
                                                   Q = matrix(c(0,0,0,Qf[2,2]),2,2),
                                                   type = 'common')
                               +SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1),
                               H = matrixKFS(output,"H"))
-        }
-        else{
+        } else {
           forcmodel = SSModel(na_vals ~ SSMtrend(degree = 2, 
                                                   Q = matrix(c(0,0,0,Qf[2,2]),2,2),
                                                   type = 'common')
@@ -419,7 +418,7 @@ FilterResultsLI <- setRefClass(
       }
       
       n <- attr(output$model, "n")
-      dates <- seq(start.date+n.lag+1, by = 'day', length.out = (n + n.ahead))
+      dates <- seq(start.date+1, by = 'day', length.out = (n + n.ahead))
 
       y.hat <- xts::xts(
         c(y.t.t[2,], y.hat.kfas$LDLhosp[, 1] %>% as.matrix()),
@@ -465,17 +464,16 @@ FilterResultsLI <- setRefClass(
       \\subsection{Return Value}{\\code{xts} object containing
       smoothed/filtered growth rates and components (\\eqn{\\delta} and
       \\eqn{\\gamma}), where applicable.}"
-      kfs_out <- output
       idx <- index(data_xts)
 
       if (smoothed) {
-        att <- kfs_out$alphahat
+        att <- alphahat(output)
       } else {
-        att <- kfs_out$att
+        att <- att(output)
       }
 
-      filtered_slope <- xts(att[, "slope"], order.by = idx[(n.lag+2):length(idx)])
-      filtered.level <- xts(att[, "level"], order.by = idx[(n.lag+2):length(idx)])
+      filtered_slope <- xts(att[, "slope"], order.by = idx)
+      filtered.level <- xts(att[, "level"], order.by = idx)
       g.t <- exp(filtered.level)
       gy.t <- g.t + filtered_slope
       names(gy.t) <- if (smoothed) { "smoothed gy.t" } else { "filtered gy.t" }
@@ -504,26 +502,25 @@ FilterResultsLI <- setRefClass(
       \\subsection{Return Value}{\\code{xts} object containing smoothed/filtered
        growth rates and upper and lower bounds for the confidence intervals.}"
       
-      kfs_out <- output
       idx <- index(data_xts)
       
       if (smoothed) {
-        att <- alphahat(kfs_out)
+        att <- alphahat(output)
       } else {
-        att <- att(kfs_out)
+        att <- att(output)
       }
       
-      filtered_slope <- xts(att[, "slope"], order.by = idx[(n.lag+2):length(idx)])
-      filtered.level <- xts(att[, "level"], order.by = idx[(n.lag+2):length(idx)])
+      filtered_slope <- xts(att[, "slope"], order.by = idx)
+      filtered.level <- xts(att[, "level"], order.by = idx)
       g.t <- exp(filtered.level)
       gy.t <- g.t + filtered_slope
       
-      idx.slope <- grep("slope", colnames(att(kfs_out)))
+      idx.slope <- grep("slope", colnames(att(output)))
       ci <- qnorm((1 - confidence.level) / 2) *
-        sqrt(kfs_out$Ptt[idx.slope, idx.slope,]) %o% c(1, -1)
+        sqrt(output$Ptt[idx.slope, idx.slope,]) %o% c(1, -1)
       ci_bounds <- as.vector(gy.t) + ci
       
-      pred <- xts(cbind(gy.t, ci_bounds), order.by = idx[(n.lag+2):length(idx)])
+      pred <- xts(cbind(gy.t, ci_bounds), order.by = idx)
       colnames(pred) <- c("fit","lower","upper")
       
       return(pred)
@@ -540,13 +537,11 @@ FilterResultsLI <- setRefClass(
       H <- matrixKFS(output, "H")[, , 1]
       Q_gamma <- matrixKFS(output, "Q")[2, 2, 1]
       Q_seasonal <- matrixKFS(output, "Q")[3, 3, 1]
-      start_date <- index[1]
-      end_date <- index[length(index)]
       cat("Summary of FilterResults Object\n")
       cat("Model Details:\n")
-      cat("  - Estimation start date:", format(as.Date(start_date, origin = "1970-01-01")))
+      cat("  - Estimation start date:", format(as.Date(start.date, origin = "1970-01-01")))
       cat("\n")
-      cat("  - Estimation end date:", format(as.Date(end_date, origin = "1970-01-01")))
+      cat("  - Estimation end date:", format(as.Date(end.date, origin = "1970-01-01")))
       cat("\n")
       cat("  - Model States and Standard Errors\n")
       base::print(output)
@@ -567,7 +562,7 @@ FilterResultsLI <- setRefClass(
       and prediction intervals around the forecasts. For more details, see 
       \\link{plot_new_cases}."
         
-        if (is.null(plt.start.date)){plt.start.date <- head(index(data_xts), 1)}
+        if (is.null(plt.start.date)){plt.start.date <- start.date}
         # add forecasts to plotting dataframe
         # fadmits<-.self$predict_level(n.ahead=n.ahead, 
         #                              confidence.level=confidence.level, 
@@ -575,13 +570,12 @@ FilterResultsLI <- setRefClass(
         sea<-.self$predict_level(n.ahead=n.ahead, 
                                  confidence.level=confidence.level, 
                                  sea.on=TRUE)
-        # fadmits$zero=NA
         
         # Create smoothed admissions
-        lcadmit = lag(data_xts$cAdmit) %>% na.omit()
-        smldlh = predict(output$model,states='trend')$LDLhosp %>% exp %>% as.vector
-        smadmit = smldlh*lcadmit[(n.lag+1):length(lcadmit)]
-        smAdmit = smadmit %>% xts(index(data_xts[(n.lag+1):(length(lcadmit)),])+1)
+        # lcadmit = lag(data_xts$cAdmit) %>% na.omit()
+        #smldlh = predict(output$model,states='trend')$LDLhosp %>% exp %>% as.vector
+        #smadmit = smldlh*lcadmit
+        #smAdmit = smadmit %>% xts(index(data_xts[(n.lag+1):(length(lcadmit)),])+1)
         
         #Plot forecast graph
         df_plot<-data_xts$newAdmit   #rbind(data_xts$newAdmit,fadmits$zero)
@@ -629,10 +623,9 @@ FilterResultsLI <- setRefClass(
     
     forcout_sea<-.self$predict_all(n.ahead, sea.on = TRUE, return.all = FALSE)$y.hat
     old<-data_xts[,"LDLhosp"]
-    old<-old[index(old)>head(index(old),1)+n.lag]
     
     eng_full<-add_daily_ldl(Y)
-    eng_full<-eng_full[index(eng_full)>tail(index(old),1),"LDLhosp"]
+    eng_full<-eng_full[index(eng_full)>end.date,"LDLhosp"]
     actual=eng_full[1:n.ahead]
     
     # Show filtered level only when xpred_logical is both FALSE
@@ -640,7 +633,7 @@ FilterResultsLI <- setRefClass(
       forcout<-.self$predict_all(n.ahead, sea.on = FALSE, return.all = FALSE)$y.hat
       smldlh = predict(output$model,states='trend')$LDLhosp
       
-      start_date_filtered <- as.Date(head(index(data_xts), 1)) + n.lag + 1
+      start_date_filtered <- start.date
       dates_filtered <- seq(from = start_date_filtered, by = "day", length.out = length(smldlh))
       
       filtered=as.xts(as.vector(smldlh), order.by=dates_filtered)
@@ -705,7 +698,7 @@ FilterResultsLI <- setRefClass(
     Date <- Value <- Variable <- NULL
     # Determine plot start date
     if(is.null(plt.start.date)) {
-        plt.start.date <- index[1]
+        plt.start.date <- start.date
     }
     
     # Get gy.t, g.t and gamma
@@ -750,7 +743,7 @@ FilterResultsLI <- setRefClass(
     
     # Determine plot start date
     if(is.null(plt.start.date)) {
-        plt.start.date <- .self$index[1]
+        plt.start.date <- start.date
     }
     
     # Get confidence intervals to plot
@@ -793,10 +786,10 @@ FilterResultsLI <- setRefClass(
       scale_x_date(labels = scales::date_format("%d %b %y"))
     
     if (!is.null(pad.right)) {
-      end.date <- tail(index(gy.ci),1)
+      plt.end.date <- tail(index(gy.ci),1)
       p1 <- p1 +
         ggplot2::scale_x_date(
-          limits = c(as.Date(plt.start.date), end.date + pad.right))
+          limits = c(as.Date(plt.start.date), plt.end.date + pad.right))
     }
     
     return(p1)
@@ -814,9 +807,7 @@ FilterResultsLI <- setRefClass(
                              confidence.level=confidence.level, 
                              sea.on=TRUE)
     
-    end_date<-tail(index(data_xts),1)
-    
-    future_data<-get_timeframe(add_daily_ldl(Y,LeadIndCol = .self$LeadIndCol), end_date+1)
+    future_data<-get_timeframe(add_daily_ldl(Y,LeadIndCol = .self$LeadIndCol), end.date+1)
     data_validation<-future_data[1:n.ahead, c("cAdmit", "newAdmit")]
     
     newAdmit_validation<-data_validation[,c("newAdmit")]
@@ -872,7 +863,6 @@ FilterResultsLI <- setRefClass(
     # fadmits<-.self$predict_level(n.ahead=n.ahead, sea.on=FALSE)
       sea<-.self$predict_level(n.ahead=n.ahead, sea.on=TRUE)
       
-      end.date<-tail(index(data_xts),1)
       idx.dates <- (index(Y) >=end.date)
       data_validation<-na.omit(add_daily_ldl(Y[idx.dates], LeadIndCol = LeadIndCol))[1:n.ahead]
       

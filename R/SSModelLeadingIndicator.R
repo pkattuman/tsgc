@@ -334,14 +334,14 @@ SSModelLeadingIndicator <- setRefClass(
       out = KFS(fit$model)
 
       results <- FilterResultsLI$new(
-        data_xts = y,
+        data_xts = get_timeframe(y, index(data_ldl)[1], tail(index(data_ldl),1)),
         output = out,
         n.lag=n.lag,
         sea.period=sea.period,
         LeadIndCol=LeadIndCol,
         xpred_logical=c(!is.null(xpred1),!is.null(xpred2)),
-        start.date=start.date,
-        end.date=end.date)
+        start.date=index(data_ldl)[1],
+        end.date=tail(index(data_ldl),1))
       return(results)},
     summary = function() {
       out <- output(.self$estimate())
