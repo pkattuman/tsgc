@@ -7,10 +7,10 @@ Percentage Error (MAPE)}
 \usage{
 cross_val(
   y,
-  est.start.date = index(y)[1],
   est.end.date,
   n.ahead,
   all_lags,
+  est.start.date = index(y)[1],
   totaldays = 1,
   freq = 1,
   vanilla = TRUE,
@@ -72,7 +72,7 @@ estimation.date.start = as.Date("2021-04-30")
 estimation.date.end = as.Date("2021-07-24")
 
 #Output cross validation result
-cross_val(y=Y[index(Y)>=estimation.date.start],
+cross_val(y=Y,est.start.date=estimation.date.start,
 est.end.date=estimation.date.end,n.ahead=7,all_lags=1:9,totaldays=3, 
 vanilla=TRUE,freq=2,LeadIndCol=1, criterion="mae")
 

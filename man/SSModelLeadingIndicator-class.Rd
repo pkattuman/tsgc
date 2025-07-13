@@ -24,12 +24,26 @@ signal-to-noise ratio will be imposed. Instead, it will be estimated.}
 effect with daily data, this would be 7. Not required if
 \code{sea.type = 'none'}.}
 
-\item{\code{n.lag}}{Number of days to lag the leading indicator.}
+\item{\code{n.lag}}{Number of days/months/quarters/years to lag the leading indicator.}
+
+\item{\code{xpred1}}{An xts object containing the values of exogenous variables for
+the leading indicator. Dataset must contain values for all dates in the
+estimation time frame.}
+
+\item{\code{xpred2}}{An xts object containing the values of exogenous variables for
+the target variable. Dataset must contain values for all dates in the
+estimation time frame.}
 
 \item{\code{LeadIndCol}}{The column in \code{Y} that contains the leading indicator.}
 
 \item{\code{ar1}}{A logical value indicating whether AR1 terms should be included in
 the model.}
+
+\item{\code{start.date}}{Start date of the estimation period for estimating the target variable.
+Must be one of the following types: \code{yearqtr}, \code{date} or \code{yearmon}.}
+
+\item{\code{end.date}}{End date of the estimation period for estimating the target variable.
+Must be one of the following types: \code{yearqtr}, \code{date} or \code{yearmon}.}
 }}
 
 \section{Methods}{
@@ -78,14 +92,14 @@ cumulated dataset \code{Y} against time.}}
 
 \examples{
 library(tsgc)
-#Set up the estimation timeframe
-idx.est <- (zoo::index(ukitaly) >= estimation.date.start) & 
-(zoo::index(ukitaly) <= estimation.date.end)
-y <- ukitaly[idx.est]
 
-# Specify a model
-model <- SSModelLeadingIndicator(Y=y, n.lag = 14, 
-sea.period = 7,LeadIndCol=1)
+# Specify a model with the estimation timeframe
+estimation.date.start <- as.Date("2020-02-25")
+estimation.date.end <- as.Date("2020-04-01")
+
+model <- SSModelLeadingIndicator(Y=ukitaly, n.lag = 14, 
+sea.period = 7,LeadIndCol=1, start.date=estimation.date.start,
+end.date=estimation.date.end)
 
 # Show summary of the model object
 summary(model)

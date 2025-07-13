@@ -7,9 +7,13 @@
 get_time_resolution(dates)
 }
 \arguments{
-\item{dates}{}
+\item{dates}{A vector of dates}
+}
+\value{
+A character string from "daily", "monthly, "quarterly" and "yearly".
 }
 \description{
-This function identifies the time resolution of the xts object
-from its dates.
+This function identifies the time resolution of a vector of
+dates, where all dates must come from the same class ("yearmon", "yearqtr",
+"date").
 }

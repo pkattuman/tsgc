@@ -199,6 +199,7 @@ estimate<-function(model){
 #'
 #' @param model A `SSModelLeadingIndicator` object
 #' 
+#' @method print SSModelLeadingIndicator
 #' @export
 print.SSModelLeadingIndicator <- function(model) {
   # Call the object's print() method if it exists
@@ -215,6 +216,7 @@ print.SSModelLeadingIndicator <- function(model) {
 #' `SSModelLeadingIndicator` class
 #'
 #' @param model A `SSModelLeadingIndicator` object
+#' @method plot SSModelLeadingIndicator
 #' 
 #' @export
 plot.SSModelLeadingIndicator <- function(model,title=NULL, series.name.lead="Leading Indicator", 
@@ -235,6 +237,7 @@ plot.SSModelLeadingIndicator <- function(model,title=NULL, series.name.lead="Lea
 #' `SSModelLeadingIndicator` class
 #'
 #' @param model A `SSModelLeadingIndicator` object
+#' @method summary SSModelLeadingIndicator
 #' 
 #' @export
 summary.SSModelLeadingIndicator <- function(model) {
@@ -252,6 +255,7 @@ summary.SSModelLeadingIndicator <- function(model) {
 #' `SSModelDynamicGompertz` class
 #'
 #' @param model A `SSModelDynamicGompertz` object
+#' @method print SSModelDynamicGompertz
 #' 
 #' @examples
 #' library(tsgc)
@@ -280,7 +284,7 @@ print.SSModelDynamicGompertz <- function(model) {
 #' `SSModelDynamicGompertz` class
 #'
 #' @param model A `SSModelDynamicGompertz` object
-#' 
+#' @method summary SSModelDynamicGompertz
 #' @examples
 #' library(tsgc)
 #' data(gauteng,package="tsgc")
@@ -310,6 +314,7 @@ summary.SSModelDynamicGompertz <- function(model) {
 #' `SSModelDynamicGompertz` class
 #'
 #' @param model A `SSModelDynamicGompertz` object
+#' @method plot SSModelDynamicGompertz
 #' 
 #' @export
 plot.SSModelDynamicGompertz <- function(model,title=NULL, 
@@ -328,6 +333,7 @@ plot.SSModelDynamicGompertz <- function(model,title=NULL,
 #' `FilterResults` class
 #'
 #' @param model A `FilterResults` object
+#' @method summary FilterResults
 #' 
 #' @export
 summary.FilterResults <- function(model) {
@@ -345,6 +351,7 @@ summary.FilterResults <- function(model) {
 #' `FilterResults` class
 #'
 #' @param model A `FilterResults` object
+#' @method print FilterResults
 #' 
 #' @export
 print.FilterResults <- function(model) {
@@ -362,6 +369,7 @@ print.FilterResults <- function(model) {
 #' `FilterResultsLI` class
 #'
 #' @param model A `FilterResultsLI` object
+#' @method summary FilterResultsLI
 #' 
 #' @export
 summary.FilterResultsLI <- function(model) {
@@ -379,6 +387,7 @@ summary.FilterResultsLI <- function(model) {
 #' `FilterResultsLI` class
 #'
 #' @param model A `FilterResultsLI` object
+#' @method print FilterResultsLI
 #' 
 #' @export
 print.FilterResultsLI <- function(model) {

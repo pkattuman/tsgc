@@ -7,9 +7,13 @@
 qtr2date(dates)
 }
 \arguments{
-\item{dates}{}
+\item{dates}{A vector of dates.}
+}
+\value{
+A vector of transformed dates
 }
 \description{
 This function changes the yearqtr or yearmon object into a date object,
-the first day of the quarter in order to allow plotting in ggplot.
+e.g. the first day of the quarter/month, in order to make plotting these dates
+possible in ggplot.
 }

@@ -7,8 +7,22 @@
 seq_dates(from, resolution, to = NA, length.out = NA)
 }
 \arguments{
-\item{dates}{}
+\item{from}{The first date in the sequence.}
+
+\item{resolution}{The time resolution of the date sequence. Options are
+"daily", "monthly, "quarterly" and "yearly".}
+
+\item{to}{The end date in the sequence, optional. If supplied, \code{to} must be after
+(later than) \code{from}. Must be supplied when \code{length.out} is not provided.}
+
+\item{length.out}{An integer for the length of the sequence, optional.
+Must be supplied when \code{to} is not provided. Should not specify both
+\code{length.out} and \code{to}.}
+}
+\value{
+A vector of dates.
 }
 \description{
-Create a regularly spaced object of class "yearqtr".
+Creates a sequence of equally spaced dates that is of the class
+"yearqtr", "date" or "yearmon".
 }

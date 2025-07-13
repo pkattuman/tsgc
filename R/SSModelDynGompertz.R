@@ -83,6 +83,10 @@ setOldClass("KFS")
 #' to include in the model. Defaults to \code{NULL}.
 #' @field ar1 Logical value indicating whether an ar1 component should be 
 #' included in the model. Default is \code{FALSE}.
+#' @field start.date Start date of the estimation period. 
+#' Must be one of the following types: \code{yearqtr}, \code{date} or \code{yearmon}. 
+#' @field end.date End date of the estimation period. 
+#' Must be one of the following types: \code{yearqtr}, \code{date} or \code{yearmon}. 
 #' 
 #' @importFrom xts periodicity last
 #' @importFrom methods new
@@ -96,10 +100,9 @@ setOldClass("KFS")
 #' @examples
 #' library(tsgc)
 #' data(gauteng,package="tsgc")
-#' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-06")
 #'
 #' # Specify a model
-#' model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+#' model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("2020-07-06"))
 #' 
 #' # Show summary of the model object
 #' summary(model)
@@ -617,7 +620,7 @@ SSModelDynamicGompertz <- setRefClass(
     
     results <- FilterResults$new(
       data_xts = Y,
-      need.xpred=!is.null(xpred),
+      xpred_logical=!is.null(xpred),
       index = date.index,
       reinit.date=reinit.date,
       ar1=ar1,
@@ -631,14 +634,17 @@ SSModelDynamicGompertz <- setRefClass(
       parameter values, start and end dates of estimation."
     result<-.self$estimate()
     out <- output(result)
-    start<-result$start.date
-    end<-result$end.date
+    start<-result$index[1]
+    end<-tail(result$index,1)
+    resolution<-result$resolution
     
     if(is.null(q)){
       qest <- matrixKFS(out,"Q")[2, 2, 1]/matrixKFS(out,"H")[, , 1]
     }
     reinit<-!is.null(reinit.date)
-    ar1_comp<-matrixKFS(out,"T")["ar1","ar1",1]
+    if (ar1){
+      ar1_comp<-matrixKFS(out,"T")["ar1","ar1",1]
+    }
     
     cat("Summary of SSModelDynamicGompertz Model")
     if (reinit) {

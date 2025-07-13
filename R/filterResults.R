@@ -8,11 +8,11 @@ setOldClass("KFS")
 #' 
 #' @field data_xts An xts object containing the non-reinitialized cummulated 
 #' variable.
-#' @field need.xpred Logical value indicating whether exogenous predictors were 
+#' @field xpred_logical Logical value indicating whether exogenous predictors were 
 #' used to estimate the FilterResults object. 
 #' @field index The list of dates in the index of \code{data_xts}.
 #' @field reinit.date The reinitialisation date of the estimated \code{SSModelDynamicGompertz} model (if applicable). 
-#' Should be specified as an object of class \code{\"Date\"}.
+#' Should be specified as an object of class \code{"Date"}.
 #' @field ar1 Logical value indicating whether an ar1 component should be 
 #' included in the model.
 #' @field output A \code{KFS} results object obtained after fitting a 
@@ -20,6 +20,9 @@ setOldClass("KFS")
 #' @field xpred.new An xts object containing exogenous predictors to be used in 
 #' prediction. Defaults to \code{NULL}, and should be provided if xpred is 
 #' used for model estimation.
+#' @field resolution A character object showing the time resolution of the data 
+#' in \code{data_xts}. Options are "daily", "monthly, "quarterly" and "yearly".
+#' Automatically estimated when \code{data_xts} is provided.
 #' 
 #' @references Harvey, A. C. and Kattuman, P. (2021). A Farewell to R:
 #' Time Series Models for Tracking and
@@ -31,22 +34,27 @@ setOldClass("KFS")
 #' @importFrom methods new
 #' @importFrom abind abind
 #' @importFrom zoo as.yearqtr as.yearmon
+#' 
 #' @examples
 #' library(tsgc)
 #' data(gauteng,package="tsgc")
-#' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
 #'
+#' # Estimation and prediction settings
+#' estimation.date.end=as.Date("2020-07-20")
+#' plt.length=30
+#' 
 #' # Specify a model
-#' model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+#' model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, 
+#' end.date=estimation.date.end)
 #' 
 #' # Estimate a specified model
 #' res <- estimate(model)
 #' 
 #' # Show summary of object
-#' res$summary()
+#' summary(res)
 #' 
 #' # Print a short description of the object
-#' res$print()
+#' print(res)
 #' 
 #' # Print estimation results
 #' res$print_estimation_results()
@@ -66,7 +74,7 @@ setOldClass("KFS")
 #' res$get_gy_ci(smoothed = TRUE, confidence.level = 0.68)
 #'
 #' # Plot forecast and realised log growth rate of cumulative cases
-#' res$plot_log_forecast(Y=Y,n.ahead=7,
+#' res$plot_log_forecast(Y=gauteng,n.ahead=7,
 #' plt.start.date=estimation.date.end-plt.length)
 #' 
 #' # Plot forecast of new cases 7 days ahead
@@ -75,7 +83,7 @@ setOldClass("KFS")
 #' series.name="hospitalizations")
 #' 
 #' # Plot forecasts and outcomes over evaluation period
-#' res$plot_holdout(Y=Y,n.ahead=7, series.name="hospitalizations")
+#' res$plot_holdout(Y=gauteng,n.ahead=7, series.name="hospitalizations")
 #' 
 #' # Plot filtered gy, g and gamma
 #' res$plot_gy_components()
@@ -92,24 +100,23 @@ FilterResults <- setRefClass(
   "FilterResults",
   fields = list(
     data_xts = "xts",
-    need.xpred = "ANY",
+    xpred_logical = "ANY",
     xpred.new="ANY",
     index = "ANY",
     reinit.date= "ANY",
     ar1 = "logical",
     output = "KFS",
     sea.period="numeric",
-    resolution="character"
-  ),
+    resolution="character"),
   methods = list(
-    initialize = function(data_xts,need.xpred,index,reinit.date, ar1, 
+    initialize = function(data_xts,xpred_logical,index,reinit.date, ar1, 
                           output, sea.period, xpred.new=NULL, resolution="daily")
     {
       "Create an instance of the \\code{FilterResults} class with fields defined
       earlier in the fields section."
       data_xts<<-data_xts
       index <<- index
-      need.xpred<<-need.xpred
+      xpred_logical<<-xpred_logical
       xpred.new<<-xpred.new
       reinit.date<<-reinit.date
       ar1<<-ar1
@@ -280,7 +287,7 @@ FilterResults <- setRefClass(
       
       attr(new.model, 'n') <- as.integer(oldn + n.ahead)
       
-      if (need.xpred){
+      if (xpred_logical){
         if (is.null(xpred.new)){
           stop("xpred.new cannot be NULL.")
         } else {
@@ -537,7 +544,7 @@ FilterResults <- setRefClass(
       and prediction intervals around the forecasts. 
       For more details, see \\link{plot_forecast}."
       
-      if (need.xpred){
+      if (xpred_logical){
         if (is.null(xpred.new)){
           stop("xpred.new cannot be NULL.")
         } 
@@ -653,7 +660,7 @@ FilterResults <- setRefClass(
       if (p == 1) {
         EstimationSample <- FilteredLevel <- Forecast <- RealisedData <- NULL
         
-        if (need.xpred){
+        if (xpred_logical){
           d <- cbind(y, y.pred, get_timeframe(y.eval, firstpred))
           if (!is.null(plt.start.date)) { d <- d[index(d) > plt.start.date] }
           d <- d[index(d) <= tail(index(y.pred),1)]
@@ -676,7 +683,7 @@ FilterResults <- setRefClass(
         }
         
         
-        if (!need.xpred){
+        if (!xpred_logical){
           color_values <- c("Estimation\nSample" = 1, "Filtered\nLevel" = 2, 
                             "Forecast" = 3, "Realised\nData" = "grey")
           linetype_values <-c("solid",
@@ -882,7 +889,7 @@ FilterResults <- setRefClass(
       variable) over a holdout sample. For more details, please refer to 
       \\link{plot_holdout}."
       
-      if (need.xpred){
+      if (xpred_logical){
         if (is.null(xpred.new)){
           stop("xpred.new cannot be NULL.")
         } 
@@ -989,7 +996,7 @@ FilterResults <- setRefClass(
       "Compute Mean Absolute Percentage Error (MAPE) for trend and seasonal 
     forecasts against a holdout sample. For more details, please refer to 
     \\link{mapes}."
-      if (need.xpred){
+      if (xpred_logical){
         if (is.null(xpred.new)){
           stop("xpred.new cannot be NULL.")
         } 
@@ -1031,7 +1038,7 @@ FilterResults <- setRefClass(
         
         mae<-abs(d.eval$Actual - d.eval$Forecast) %>% mean
         rmse<-sqrt(mean((d.eval$Actual - d.eval$Forecast)^2))
-        coverage<-100*sum(and(y.hat.diff.final[,2]<=y.eval.diff, y.hat.diff.final[,3]>=y.eval.diff))/n.forecasts
+        coverage<-100*sum(and(y.hat.diff.final[,2]<=y.eval.diff, y.hat.diff.final[,3]>=y.eval.diff))/n.ahead
         
         return(list(mape=mape.sea, mae=mae, rmse=rmse, coverage=coverage))
       }

@@ -16,13 +16,13 @@ the incidence variable \eqn{y}, and forecasts of \eqn{y}.
 \item{\code{data_xts}}{An xts object containing the non-reinitialized cummulated
 variable.}
 
-\item{\code{need.xpred}}{Logical value indicating whether exogenous predictors were
+\item{\code{xpred_logical}}{Logical value indicating whether exogenous predictors were
 used to estimate the FilterResults object.}
 
 \item{\code{index}}{The list of dates in the index of \code{data_xts}.}
 
 \item{\code{reinit.date}}{The reinitialisation date of the estimated \code{SSModelDynamicGompertz} model (if applicable).
-Should be specified as an object of class \code{\"Date\"}.}
+Should be specified as an object of class \code{"Date"}.}
 
 \item{\code{ar1}}{Logical value indicating whether an ar1 component should be
 included in the model.}
@@ -33,6 +33,10 @@ included in the model.}
 \item{\code{xpred.new}}{An xts object containing exogenous predictors to be used in
 prediction. Defaults to \code{NULL}, and should be provided if xpred is
 used for model estimation.}
+
+\item{\code{resolution}}{A character object showing the time resolution of the data
+in \code{data_xts}. Options are "daily", "monthly, "quarterly" and "yearly".
+Automatically estimated when \code{data_xts} is provided.}
 }}
 
 \section{Methods}{
@@ -72,7 +76,7 @@ variable (\eqn{Y}). Computed as
 
 \item{\code{initialize(
   data_xts,
-  need.xpred,
+  xpred_logical,
   index,
   reinit.date,
   ar1,
@@ -194,19 +198,23 @@ parameter values, start and end dates of estimation.}
 \examples{
 library(tsgc)
 data(gauteng,package="tsgc")
-idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
+
+# Estimation and prediction settings
+estimation.date.end=as.Date("2020-07-20")
+plt.length=30
 
 # Specify a model
-model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, 
+end.date=estimation.date.end)
 
 # Estimate a specified model
 res <- estimate(model)
 
 # Show summary of object
-res$summary()
+summary(res)
 
 # Print a short description of the object
-res$print()
+print(res)
 
 # Print estimation results
 res$print_estimation_results()
@@ -226,7 +234,7 @@ res$get_growth_y(return.components = TRUE)
 res$get_gy_ci(smoothed = TRUE, confidence.level = 0.68)
 
 # Plot forecast and realised log growth rate of cumulative cases
-res$plot_log_forecast(Y=Y,n.ahead=7,
+res$plot_log_forecast(Y=gauteng,n.ahead=7,
 plt.start.date=estimation.date.end-plt.length)
 
 # Plot forecast of new cases 7 days ahead
@@ -235,7 +243,7 @@ plt.start.date = estimation.date.end-plt.length,
 series.name="hospitalizations")
 
 # Plot forecasts and outcomes over evaluation period
-res$plot_holdout(Y=Y,n.ahead=7, series.name="hospitalizations")
+res$plot_holdout(Y=gauteng,n.ahead=7, series.name="hospitalizations")
 
 # Plot filtered gy, g and gamma
 res$plot_gy_components()

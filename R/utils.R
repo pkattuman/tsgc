@@ -380,12 +380,13 @@ mapes<-function(res,n.ahead,Y){
 #' estimation.date.end = as.Date("2021-07-24")
 #' 
 #' #Output cross validation result
-#' cross_val(y=Y[index(Y)>=estimation.date.start],
+#' cross_val(y=Y,est.start.date=estimation.date.start,
 #' est.end.date=estimation.date.end,n.ahead=7,all_lags=1:9,totaldays=3, 
 #' vanilla=TRUE,freq=2,LeadIndCol=1, criterion="mae")
 #'
 #' @export
-cross_val<-function(y,est.start.date=index(y)[1],est.end.date,n.ahead,all_lags,totaldays=1,freq=1, vanilla=TRUE,
+cross_val<-function(y,est.end.date,n.ahead,all_lags,est.start.date=index(y)[1],
+                    totaldays=1,freq=1, vanilla=TRUE,
                     LeadIndCol=1, criterion="mape"){
   if (vanilla){
     allall_lags<-c(0,all_lags)
@@ -419,11 +420,13 @@ cross_val<-function(y,est.start.date=index(y)[1],est.end.date,n.ahead,all_lags,t
 
 #' @title Identify time resolution of given dates
 #'
-#' @description This function identifies the time resolution of the xts object
-#' from its dates.
+#' @description This function identifies the time resolution of a vector of 
+#' dates, where all dates must come from the same class ("yearmon", "yearqtr", 
+#' "date"). 
 #'
-#' @param dates
+#' @param dates A vector of dates
 #' 
+#' @returns A character string from "daily", "monthly, "quarterly" and "yearly".
 #'
 #' @export
 get_time_resolution <- function(dates) {
@@ -473,9 +476,11 @@ get_time_resolution <- function(dates) {
 #' @title Change yearqtr object into date object 
 #'
 #' @description This function changes the yearqtr or yearmon object into a date object, 
-#' the first day of the quarter in order to allow plotting in ggplot.
+#' e.g. the first day of the quarter/month, in order to make plotting these dates 
+#' possible in ggplot.
 #'
-#' @param dates
+#' @param dates A vector of dates.
+#' @returns A vector of transformed dates
 #' 
 #' @importFrom zoo as.yearmon
 #'
@@ -486,11 +491,21 @@ qtr2date<-function(dates){
 
 #' @title Regularly spaced time objects
 #'
-#' @description Create a regularly spaced object of class "yearqtr".
+#' @description Creates a sequence of equally spaced dates that is of the class
+#' "yearqtr", "date" or "yearmon". 
 #'
-#' @param dates
+#' @param from The first date in the sequence.
+#' @param resolution The time resolution of the date sequence. Options are
+#' "daily", "monthly, "quarterly" and "yearly".
+#' @param to The end date in the sequence, optional. If supplied, \code{to} must be after 
+#' (later than) \code{from}. Must be supplied when \code{length.out} is not provided.
+#' @param length.out An integer for the length of the sequence, optional. 
+#' Must be supplied when \code{to} is not provided. Should not specify both 
+#' \code{length.out} and \code{to}.
 #' 
 #' @importFrom zoo as.yearmon
+#' 
+#' @returns A vector of dates.
 #'
 #' @export
 seq_dates<-function(from, resolution, to=NA, length.out=NA){

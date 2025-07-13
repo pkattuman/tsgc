@@ -80,6 +80,12 @@ to include in the model. Defaults to \code{NULL}.}
 
 \item{\code{ar1}}{Logical value indicating whether an ar1 component should be
 included in the model. Default is \code{FALSE}.}
+
+\item{\code{start.date}}{Start date of the estimation period.
+Must be one of the following types: \code{yearqtr}, \code{date} or \code{yearmon}.}
+
+\item{\code{end.date}}{End date of the estimation period.
+Must be one of the following types: \code{yearqtr}, \code{date} or \code{yearmon}.}
 }}
 
 \section{Methods}{
@@ -134,10 +140,9 @@ parameter values, start and end dates of estimation.}
 \examples{
 library(tsgc)
 data(gauteng,package="tsgc")
-idx.est <- zoo::index(gauteng) <= as.Date("2020-07-06")
 
 # Specify a model
-model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("2020-07-06"))
 
 # Show summary of the model object
 summary(model)

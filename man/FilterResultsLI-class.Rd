@@ -16,8 +16,6 @@ level of the incidence variable \eqn{y}, and forecasts of \eqn{y}.
 \item{\code{data_xts}}{A xts object with cumulated variables: lagged leading indicator and
 target variable.}
 
-\item{\code{index}}{The list of dates in the index of \code{data_xts}.}
-
 \item{\code{output}}{A \code{KFS} results object obtained after fitting a
 \code{SSModelLeadingIndicator} model.}
 
@@ -34,11 +32,15 @@ indicator, inherited from the estimated \code{SSModelLeadingIndicator} model.}
 \item{\code{xpred_logical}}{Vector of length 2 with logical values, indicating whether
 there are exogenous predictors for leading series and target series.}
 
-\item{\code{xpred1.new}}{xts object containing the values of exogenous variables for
-series 1 over the prediction time frame}
+\item{\code{xpred1.new}}{An xts object containing the values of exogenous variables for
+the leading indicator over the prediction time frame.}
 
-\item{\code{xpred2.new}}{xts object containing the values of exogenous variables for
-series 2 over the prediction time frame}
+\item{\code{xpred2.new}}{An xts object containing the values of exogenous variables for
+the target variable over the prediction time frame.}
+
+\item{\code{resolution}}{A character object showing the time resolution of the data
+in \code{data_xts}. Options are "daily", "monthly, "quarterly" and "yearly".
+Automatically estimated when \code{data_xts} is provided.}
 }}
 
 \section{Methods}{
@@ -201,17 +203,14 @@ Y = england[,1:2] #select only cumulative cases and cumulative hospitalizations
 estimation.date.start = as.Date("2021-04-30")
 estimation.date.end = as.Date("2021-07-24")
 plt.length=30
-q = NA
+q = NULL
 confidence.level = 0.68
 plt.length = 14
 n.lag = 4
 
-#Select data in the desired timeframe
-idx.est =(zoo::index(Y) >= estimation.date.start) & (zoo::index(Y) <= estimation.date.end)
-y = Y[idx.est]
-
 # Define and Estimate the model
-out<-SSModelLeadingIndicator(Y=y,n.lag = n.lag,q=q,LeadIndCol=1, sea.period=7) 
+out<-SSModelLeadingIndicator(Y=Y,n.lag = n.lag,q=q,LeadIndCol=1, sea.period=7,
+start.date=estimation.date.start, end.date=estimation.date.end) 
 res<-estimate(out) 
 
 # Print estimation results

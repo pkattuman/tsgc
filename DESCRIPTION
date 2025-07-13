@@ -49,7 +49,7 @@ Imports:
     dplyr,
     tidyr,
     methods,
-    ForecastComb,
+    abind,
     purrr
 BugReports: https://github.com/Craig-PT/tsgc/issues
 Depends:

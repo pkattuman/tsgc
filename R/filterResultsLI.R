@@ -8,7 +8,6 @@ setOldClass("KFS")
 #'
 #' @field data_xts A xts object with cumulated variables: lagged leading indicator and 
 #' target variable.
-#' @field index The list of dates in the index of \code{data_xts}.
 #' @field output A \code{KFS} results object obtained after fitting a 
 #' \code{SSModelLeadingIndicator} model.
 #' @field n.lag Number of days to lag the leading indicator, inherited from the 
@@ -20,10 +19,13 @@ setOldClass("KFS")
 #' indicator, inherited from the estimated \code{SSModelLeadingIndicator} model.
 #' @field xpred_logical Vector of length 2 with logical values, indicating whether
 #' there are exogenous predictors for leading series and target series. 
-#' @field xpred1.new xts object containing the values of exogenous variables for 
-#' series 1 over the prediction time frame
-#' @field xpred2.new xts object containing the values of exogenous variables for 
-#' series 2 over the prediction time frame
+#' @field xpred1.new An xts object containing the values of exogenous variables for 
+#' the leading indicator over the prediction time frame.
+#' @field xpred2.new An xts object containing the values of exogenous variables for 
+#' the target variable over the prediction time frame.
+#' @field resolution A character object showing the time resolution of the data 
+#' in \code{data_xts}. Options are "daily", "monthly, "quarterly" and "yearly".
+#' Automatically estimated when \code{data_xts} is provided.
 #'
 #'@references Harvey, A. (2021). TIME SERIES MODELLING OF EPIDEMICS: 
 #'LEADING INDICATORS, CONTROL GROUPS AND POLICY ASSESSMENT. 
@@ -42,17 +44,14 @@ setOldClass("KFS")
 #' estimation.date.start = as.Date("2021-04-30")
 #' estimation.date.end = as.Date("2021-07-24")
 #' plt.length=30
-#' q = NA
+#' q = NULL
 #' confidence.level = 0.68
 #' plt.length = 14
 #' n.lag = 4
 #' 
-#' #Select data in the desired timeframe
-#' idx.est =(zoo::index(Y) >= estimation.date.start) & (zoo::index(Y) <= estimation.date.end)
-#' y = Y[idx.est]
-#' 
 #' # Define and Estimate the model
-#' out<-SSModelLeadingIndicator(Y=y,n.lag = n.lag,q=q,LeadIndCol=1, sea.period=7) 
+#' out<-SSModelLeadingIndicator(Y=Y,n.lag = n.lag,q=q,LeadIndCol=1, sea.period=7,
+#' start.date=estimation.date.start, end.date=estimation.date.end) 
 #' res<-estimate(out) 
 #' 
 #' # Print estimation results
@@ -107,8 +106,7 @@ FilterResultsLI <- setRefClass(
     xpred_logical="logical",
     resolution="character",
     start.date="ANY",
-    end.date="ANY"
-  ),
+    end.date="ANY"),
   methods = list(
     initialize = function(data_xts, output,n.lag,sea.period,LeadIndCol,
                           xpred_logical, start.date, end.date, 
