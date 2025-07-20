@@ -36,9 +36,6 @@ estimation time frame.}
 
 \item{\code{LeadIndCol}}{The column in \code{Y} that contains the leading indicator.}
 
-\item{\code{ar1}}{A logical value indicating whether AR1 terms should be included in
-the model.}
-
 \item{\code{start.date}}{Start date of the estimation period for estimating the target variable.
 Must be one of the following types: \code{yearqtr}, \code{date} or \code{yearmon}.}
 

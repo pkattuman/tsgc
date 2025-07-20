@@ -533,9 +533,13 @@ plot_compare_forecast(list(res,res_lead), actual=ukitaly[,"UK"])
 
 # -----------------------------
 # 5. Other data resolutions
-# 
-# Parameter Definitions
 # -----------------------------
+# -----------------------------
+# Quarterly Example
+# -----------------------------
+data(nintendo_sales, package = "tsgc")
+wii<-nintendo_sales[,1]
+
 # Gather all parameters in one centralised block for easy modification.
 n.forecasts      <- 4
 q                <- NULL
@@ -543,30 +547,23 @@ confidence.level <- 0.68
 estimation.date.start <- as.yearqtr("2006 Q4")
 estimation.date.end   <- as.yearqtr("2010 Q3")
 
-# -----------------------------
-# Monthly Example
-# -----------------------------
-data(nintendo_sales, package = "tsgc")
-wii<-nintendo_sales[,1]
-
 # Get a glimpse of data by plotting its moving average series
 mod1<-SSModelDynamicGompertz$new(Y=wii)
 plot(mod1, title="Wii sales by quarter", series.name="Sales (Million)", MA_period=4)
 
 # Model Estimation 
-y <- get_timeframe(wii,estimation.date.start,estimation.date.end)
-mod_wii<-SSModelDynamicGompertz$new(Y=y, sea.period=4,
+mod_wii<-SSModelDynamicGompertz$new(Y=wii, sea.period=4,
                                     start.date=estimation.date.start, 
                                     end.date=estimation.date.end)
 res_wii<-estimate(mod_wii)
 
-plot_log_forecast(res_wii, Y=wii, n.ahead=8, title="Log forecasts of Wii sales")
-plot_forecast(res_wii, n.ahead=8, title="Wii sales")
-plot_holdout(res_wii, Y=wii, n.ahead=8, title="Wii sales")
+plot_log_forecast(res_wii, Y=wii, n.ahead=n.forecasts, title="Log forecasts of Wii sales")
+plot_forecast(res_wii, n.ahead=n.forecasts, title="Wii sales")
+plot_holdout(res_wii, Y=wii, n.ahead=n.forecasts, title="Wii sales")
 
 # Extend to leading indicator
 # Gather all parameters in one centralised block for easy modification.
-n.forecasts      <- 4
+n.forecasts      <- 8
 estimation.date.start <- as.yearqtr("2017 Q1")
 estimation.date.end   <- as.yearqtr("2019 Q4")
 n.lag<-as.yearqtr("2017 Q1")-as.yearqtr("2006 Q4")  #Time difference (in number of quarters) in release dates for switch and wii
@@ -577,9 +574,58 @@ mod_switch<-SSModelLeadingIndicator$new(Y=y, sea.period=4, n.lag=n.lag,
                                      start.date=estimation.date.start,
                                      end.date=estimation.date.end)
 res_switch<-estimate(mod_switch)
-plot_log_forecast(res_switch, Y=y, n.ahead=8, title="Log forecasts of switch sales")
-plot_forecast(res_switch, n.ahead=8, title="Switch sales", series.name = "sales")
-plot_holdout(res_switch, Y=y, n.ahead=8, title="Switch sales", series.name = "sales")
+
+plot_log_forecast(res_switch, Y=y, n.ahead=n.forecasts, title="Log forecasts of switch sales")
+plot_forecast(res_switch, n.ahead=n.forecasts, title="Switch sales", series.name = "sales")
+plot_holdout(res_switch, Y=y, n.ahead=n.forecasts, title="Switch sales", series.name = "sales")
+
+# -----------------------------
+# Monthly Example
+# -----------------------------
+data(etrading_apps, package = "tsgc")
+Plus500<-etrading_apps[,1]
+
+# Gather all parameters in one centralised block for easy modification.
+n.forecasts      <- 4
+q                <- NULL
+confidence.level <- 0.68
+estimation.date.start <- as.yearmon(2016)
+estimation.date.end   <- as.yearmon(2021)
+
+# Get a glimpse of data by plotting its moving average series
+
+# Model Estimation 
+mod_500<-SSModelDynamicGompertz$new(Y=Plus500, sea.period=12,
+                                    start.date=estimation.date.start, 
+                                    end.date=estimation.date.end)
+plot(mod_500, title="Plus500 monthly downloads in France", series.name="Monthly downloads", MA_period=4)
+
+res_500<-estimate(mod_500)
+
+plot_log_forecast(res_500, Y=Plus500, n.ahead=n.forecasts, title="Log forecasts of Plus500 monthly downloads")
+plot_forecast(res_500, n.ahead=n.forecasts, title="Plus500 monthly downloads")
+plot_holdout(res_500, Y=Plus500, n.ahead=n.forecasts, title="Plus500 monthly downloads")
+
+# Extend to leading indicator
+# Gather all parameters in one centralised block for easy modification.
+n.forecasts      <- 4
+q                <- NULL
+confidence.level <- 0.68
+estimation.date.start <- as.yearmon(2017.5)
+estimation.date.end   <- as.yearmon(2021+1/12)
+n.lag<-as.yearmon(2017.5)-as.yearmon(2017)  #Time difference (in number of quarters) in release dates for switch and wii
+
+# Prepare dataset and estimate model
+y<-etrading_apps[,c("DEGIRO", "AvaTrade")]
+mod_500_lead<-SSModelLeadingIndicator$new(Y=y, sea.period=12, n.lag=n.lag,
+                                        start.date=estimation.date.start,
+                                        end.date=estimation.date.end)
+res_500_lead<-estimate(mod_500_lead)
+
+plot_log_forecast(res_500_lead, Y=y, n.ahead=n.forecasts, title="Log forecasts of AvaTrade monthly downloads")
+plot_forecast(res_500_lead, n.ahead=n.forecasts, title="AvaTrade monthly downloads", series.name = "downloads")
+plot_holdout(res_500_lead, Y=y, n.ahead=n.forecasts, title="AvaTrade monthly downloads", series.name = "downloads")
+
 
 # -----------------------------
 # Yearly Example
@@ -589,46 +635,33 @@ n.forecasts      <- 2
 q                <- NULL
 confidence.level <- 0.68
 estimation.date.start <- yearmon(2011)
-estimation.date.end   <- yearmon(2021)
+estimation.date.end   <- yearmon(2018)
 
-# From Statista, annual battery-electric vehicle sales in the United States between 2011 and 2023
+# For illustration, we change the time resolution of nintendo_sales data to be of yearly resolution.
 # Since xts objects cannot have year by itself as date index, introduce it as yearmon. 
-ev_sales<-cumsum(c(10092,14587,48094,63525,71064,86731,104487,207062,233822,238540,459474,747982,1162669))
-ev_xts<-xts(ev_sales, order.by = yearmon(2011:2023))
-
-# Get a glimpse of data by plotting its moving average series
-mod1<-SSModelDynamicGompertz$new(Y=ev_xts)
-plot(mod1, title="Annual battery-electric vehicle sales in the US between 2011 and 2023", 
-     series.name="New Annual Sales (units)", 
-     MA_period=0)
+yearly_nintendo<-nintendo_sales[4*(1:19), c("wii", "3ds")]
+threeds_xts<-xts(coredata(yearly_nintendo[,"3ds"]), order.by = yearmon(2005:2023))
+yearly_nintendo_xts<-xts(coredata(yearly_nintendo), order.by = yearmon(2005:2023))
 
 # Model Estimation 
-mod_ev<-SSModelDynamicGompertz$new(Y=ev_xts, sea.period=0, 
+mod_3ds<-SSModelDynamicGompertz$new(Y=threeds_xts, sea.period=0, 
                                    start.date=estimation.date.start, 
                                    end.date=estimation.date.end)
-res_ev<-estimate(mod_ev)
+res_3ds<-estimate(mod_3ds)
 
-plot_log_forecast(res_ev, Y=ev_xts, n.ahead=2, title="Log Forecasts for upcoming annual EV sales in the US")
-plot_forecast(res_ev, n.ahead=2, title="Forecasts for upcoming annual EV sales in the US")
-plot_holdout(res_ev, Y=ev_xts, n.ahead=2, title="Accuracy of predictions for upcoming annual EV sales in the US")
+plot_log_forecast(res_3ds, Y=threeds_xts, n.ahead=2, title="Log Forecasts for upcoming annual EV sales in the US")
+plot_forecast(res_3ds, n.ahead=2, title="Forecasts for upcoming annual EV sales in the US")
+plot_holdout(res_3ds, Y=threeds_xts, n.ahead=2, title="Accuracy of predictions for upcoming annual EV sales in the US")
 
-# -----------------------------
-# Weekly Example
-# -----------------------------
-# Gather all parameters in one centralised block for easy modification.
-n.forecasts      <- 4
-q                <- NULL
-confidence.level <- 0.68
-estimation.date.start <- yearmon(2011)
-estimation.date.end   <- yearmon(2021)
+# Leading Indicator Example
+n.lag<-as.yearmon(2011)-as.yearmon(2007)
+mod_lead<-SSModelLeadingIndicator$new(Y=yearly_nintendo_xts, 
+                                      sea.period=0, n.lag=n.lag,
+                                          start.date=estimation.date.start,
+                                          end.date=estimation.date.end,
+                                          LeadIndCol=1)
+res_lead<-estimate(mod_lead)
 
-# Weekly downloads of deliveroo app in Italy in 2021-2022
-
-# Model Estimation 
-y <- get_timeframe(ev_xts,estimation.date.start,estimation.date.end)
-mod_ev<-SSModelDynamicGompertz$new(Y=y, sea.period=0)
-res_ev<-estimate(mod_ev)
-
-plot_log_forecast(res_ev, Y=ev_xts, n.ahead=2, title="Log Forecasts for upcoming annual EV sales in the US")
-plot_forecast(res_ev, n.ahead=2, title="Forecasts for upcoming annual EV sales in the US")
-plot_holdout(res_ev, Y=ev_xts, n.ahead=2, title="Accuracy of predictions for upcoming annual EV sales in the US")
+plot_log_forecast(res_lead, Y=yearly_nintendo_xts, n.ahead=n.forecasts, title="Log forecasts of 3ds sales")
+plot_forecast(res_lead, n.ahead=n.forecasts, title="Annual global 3ds sales", series.name = "sales (in Million)")
+plot_holdout(res_lead, Y=yearly_nintendo_xts, n.ahead=n.forecasts, title="Annual global 3ds sales", series.name = "sales (in Million)")

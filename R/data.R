@@ -151,3 +151,21 @@
 #' data(nintendo_sales)
 #' 
 "nintendo_sales"
+
+#' Monthly number of downloads of selected leading apps that allow for online 
+#' share trading in France from January 2017 to July 2021, by app
+#'
+#' @docType data
+#'
+#' @usage data(etrading_apps)
+#'
+#' @format An object of class `"xts"`
+#'
+#' @keywords datasets
+#'
+#' @references Taken from https://www.statista.com/statistics/1260008/etrading-app-downloads-france/
+#'
+#' @examples
+#' data(etrading_apps)
+#' 
+"etrading_apps"

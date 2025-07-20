@@ -509,14 +509,24 @@ FilterResults <- setRefClass(
         Q_seasonal <- matrixKFS(output, "Q")[3, 3, 1]
       }
       
-      start_date <- index[1]
-      end_date <- index[length(index)]
+      start.date <- index[1]
+      end.date <- index[length(index)]
       
       cat("Summary of FilterResults Object\n")
       cat("Model Details:\n")
-      cat("  - Estimation start date:", format(as.Date(start_date, origin = "1970-01-01")))
-      cat("\n")
-      cat("  - Estimation end date:", format(as.Date(end_date, origin = "1970-01-01")))
+      if (resolution=="daily"){
+        cat("  - Estimation start date:", format(as.Date(start.date, origin = "1970-01-01"))) 
+        cat("\n")
+        cat("  - Estimation end date:", format(as.Date(end.date, origin = "1970-01-01")))
+      } else if (resolution=="quarterly"){
+        cat("  - Estimation start date:", format(as.yearqtr(start.date))) 
+        cat("\n")
+        cat("  - Estimation end date:", format(as.yearqtr(end.date)))
+      } else if (resolution=="monthly"  || resolution=="yearly"){
+        cat("  - Estimation start date:", format(as.yearmon(start.date))) 
+        cat("\n")
+        cat("  - Estimation end date:", format(as.yearmon(end.date)))
+      } 
       cat("\n")
       cat("  - Model States and Standard Errors\n")
       base::print(output)

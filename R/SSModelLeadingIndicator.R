@@ -38,8 +38,6 @@ setOldClass("KFS")
 #' the target variable. Dataset must contain values for all dates in the 
 #' estimation time frame.
 #' @field LeadIndCol The column in \code{Y} that contains the leading indicator.
-#' @field ar1 A logical value indicating whether AR1 terms should be included in 
-#' the model.
 #' @field start.date Start date of the estimation period for estimating the target variable. 
 #' Must be one of the following types: \code{yearqtr}, \code{date} or \code{yearmon}. 
 #' @field end.date End date of the estimation period for estimating the target variable. 
@@ -89,11 +87,10 @@ SSModelLeadingIndicator <- setRefClass(
     xpred1 = "ANY",  
     xpred2 = "ANY",
     start.date = "ANY",
-    end.date = "ANY",
-    ar1="logical"),
+    end.date = "ANY"),
   methods = list(
     initialize = function(Y, n.lag, sea.period=7, q = NULL,
-                          LeadIndCol=1, xpred1=NULL, xpred2=NULL, ar1=FALSE, 
+                          LeadIndCol=1, xpred1=NULL, xpred2=NULL,
                           start.date=index(Y)[1], end.date=tail(index(Y),1))
     {
       "Create an instance of the \\code{SSModelLeadingIndicator} class with the 
@@ -111,7 +108,6 @@ SSModelLeadingIndicator <- setRefClass(
       LeadIndCol <<- LeadIndCol
       xpred1<<-xpred1
       xpred2<<-xpred2
-      ar1<<-ar1
       start.date<<-start.date
       end.date<<-end.date
     },
@@ -145,96 +141,91 @@ SSModelLeadingIndicator <- setRefClass(
         xpred2<<-get_timeframe(xpred2,index(data_ldl)[1],tail(index(data_ldl),1))
       }
       
-      update = function(pars, model, q) {
-        "Update method for Kalman filter to implement the dynamic Gompertz curve
-       model.
-       A maximum of 3 parameters are used to set the observation noise
-       (1 parameter), the transition equation slope and seasonal noise. If q (signal
-        to noise ratio) is not null then the slope noise is set using this
-        ratio.
-       \\subsection{Parameters}{\\itemize{
-        \\item{\\code{pars} Vector of parameters.}
-        \\item{\\code{model} \\code{KFS} model object.}
-        \\item{\\code{q} The signal-to-noise ratio (ratio of slope to irregular
-         variance).}
-      }}
-      \\subsection{Return Value}{\\code{KFS} model object.}"
-        estH <- any(is.na(model$H))
-        estQ <- any(is.na(model$Q))
-        if ((!estH) & (!estQ)) {
-          # If nothing to update then return model
-          return(model)
-        } else {
-          nparQ <- 0
-          # 1. Set seasonal noise
-          if (estQ) {
-            Q <- as.matrix(model$Q[, , 1])
-            T <- as.matrix(model$T[, , 1])
-            
-            # Update diagonal elements
-            naQd <- which(is.na(diag(Q)))
-            Q[naQd, naQd][lower.tri(Q[naQd, naQd])] <- 0
-            
-            # Check for off-diagonal elements and raise error if found.
-            naQnd <- which(upper.tri(Q[naQd, naQd]) & is.na(Q[naQd, naQd]))
-            if (length(naQnd) > 0) {
-              stop("NotImplmentedError: Unexpected off-diagonal element updating")
-            }
-            
-            if (ar1) {
-              i.ar1 <- nrow(Q)
-              naQd <- setdiff(naQd, i.ar1)
-            }
-            
-            if (sea.period >1){
-              #Identify elements corresponding to seasonal cases 
-              nparQ <- 1
-              na_sea_cases<-grep("^sea\\_trig.*LDLcases$",rownames(T))
-              diag(Q)[na_sea_cases] <- exp(0.5 * pars[nparQ])
-              #Identify elements corresponding to seasonal hospitalizations
-              nparQ <- nparQ+1
-              na_sea_hosp<-grep("^sea\\_trig.*LDLhosp$",rownames(T))
-              diag(Q)[na_sea_hosp] <- exp(0.5 * pars[nparQ])
-            }
-            
-            # 2. Set observation noise
-            H <- as.matrix(model$H[, , 1])
-            if (estH) {
-              naHd <- which(is.na(diag(H)))
-              H[naHd, naHd][lower.tri(H[naHd, naHd])] <- 0
-              nparQ<-nparQ+1
-              diag(H)[naHd] <- exp(0.5 * pars[nparQ])
-              model$H[naHd, naHd, 1] <- crossprod(H[naHd, naHd])
-            }
-            
-            # 3. Set slope noise
-            # Get index of slope
-            model$Q[naQd, naQd, 1] <- crossprod(Q[naQd, naQd])
-            i.slope <- grep("slope",rownames(T))
-            # Estimate slope if no signal to noise ratio specified.
-            if (is.null(q)) {
-              nparQ<-nparQ+1
-              Q.slope <- exp(0.5 * pars[nparQ])
-            } else {
-              Q.slope <- crossprod(H[naHd, naHd]) * q
-            }
-            model$Q[i.slope, i.slope, 1] <- Q.slope
-            
-            # 4. Set AR1 noise
-            if (ar1){
-              nparQ<-nparQ+1
-              i.ar1 <- nrow(Q)
-              Q[i.ar1, i.ar1] <- exp(0.5 * pars[nparQ])
-              model$Q[i.ar1, i.ar1, 1] <- Q[i.ar1, i.ar1]
-              
-              nparQ<-nparQ+1
-              T <- model$T[,,1]
-              model$T[nrow(T),ncol(T),1] <- pars[nparQ]
-            }
-          }
-        }
-        return(model)
-      }
+      # update = function(pars, model, q) {
+      #   "Update method for Kalman filter to implement the dynamic Gompertz curve
+      #  model.
+      #  A maximum of 3 parameters are used to set the observation noise
+      #  (1 parameter), the transition equation slope and seasonal noise. If q (signal
+      #   to noise ratio) is not null then the slope noise is set using this
+      #   ratio.
+      #  \\subsection{Parameters}{\\itemize{
+      #   \\item{\\code{pars} Vector of parameters.}
+      #   \\item{\\code{model} \\code{KFS} model object.}
+      #   \\item{\\code{q} The signal-to-noise ratio (ratio of slope to irregular
+      #    variance).}
+      # }}
+      # \\subsection{Return Value}{\\code{KFS} model object.}"
+      #   estH <- any(is.na(model$H))
+      #   estQ <- any(is.na(model$Q))
+      #   if ((!estH) & (!estQ)) {
+      #     # If nothing to update then return model
+      #     return(model)
+      #   } else {
+      #     nparQ <- 0
+      #     # 1. Set seasonal noise
+      #     if (estQ) {
+      #       Q <- as.matrix(model$Q[, , 1])
+      #       T <- as.matrix(model$T[, , 1])
+      #       
+      #       # Update diagonal elements
+      #       naQd <- which(is.na(diag(Q)))
+      #       Q[naQd, naQd][lower.tri(Q[naQd, naQd])] <- 0
+      #       
+      #       # Check for off-diagonal elements and raise error if found.
+      #       naQnd <- which(upper.tri(Q[naQd, naQd]) & is.na(Q[naQd, naQd]))
+      #       if (length(naQnd) > 0) {
+      #         stop("NotImplmentedError: Unexpected off-diagonal element updating")
+      #       }
+      #       
+      #       if (sea.period >1){
+      #         #Identify elements corresponding to seasonal cases 
+      #         nparQ <- 1
+      #         na_sea_cases<-grep("^sea\\_trig.*LDLcases$",rownames(T))
+      #         diag(Q)[na_sea_cases] <- exp(0.5 * pars[nparQ])
+      #         #Identify elements corresponding to seasonal hospitalizations
+      #         nparQ <- nparQ+1
+      #         na_sea_hosp<-grep("^sea\\_trig.*LDLhosp$",rownames(T))
+      #         diag(Q)[na_sea_hosp] <- exp(0.5 * pars[nparQ])
+      #       }
+      #       
+      #       # 2. Set observation noise
+      #       H <- as.matrix(model$H[, , 1])
+      #       if (estH) {
+      #         naHd <- which(is.na(diag(H)))
+      #         H[naHd, naHd][lower.tri(H[naHd, naHd])] <- 0
+      #         nparQ<-nparQ+1
+      #         diag(H)[naHd] <- exp(0.5 * pars[nparQ])
+      #         model$H[naHd, naHd, 1] <- crossprod(H[naHd, naHd])
+      #       }
+      #       
+      #       # 3. Set slope noise
+      #       # Get index of slope
+      #       model$Q[naQd, naQd, 1] <- crossprod(Q[naQd, naQd])
+      #       i.slope <- grep("slope",rownames(T))
+      #       # Estimate slope if no signal to noise ratio specified.
+      #       if (is.null(q)) {
+      #         nparQ<-nparQ+1
+      #         Q.slope <- exp(0.5 * pars[nparQ])
+      #       } else {
+      #         Q.slope <- crossprod(H[naHd, naHd]) * q
+      #       }
+      #       model$Q[i.slope, i.slope, 1] <- Q.slope
+      #       
+      #       # 4. Set AR1 noise
+      #       if (ar1){
+      #         nparQ<-nparQ+1
+      #         i.ar1 <- nrow(Q)
+      #         Q[i.ar1, i.ar1] <- exp(0.5 * pars[nparQ])
+      #         model$Q[i.ar1, i.ar1, 1] <- Q[i.ar1, i.ar1]
+      #         
+      #         nparQ<-nparQ+1
+      #         T <- model$T[,,1]
+      #         model$T[nrow(T),ncol(T),1] <- pars[nparQ]
+      #       }
+      #     }
+      #   }
+      #   return(model)
+      # }
 
       # Standard update function - edited to allow the targeting of the signal-to-noise ratio
       # Signal-to-noise ratio is defined as the variance of the trend component of order 'order'
@@ -391,7 +382,11 @@ SSModelLeadingIndicator <- setRefClass(
         cat("  - Estimation start date:", format(as.yearqtr(start))) 
         cat("\n")
         cat("  - Estimation end date:", format(as.yearqtr(end)))
-      }
+      } else if (resolution=="monthly"  || resolution=="yearly"){
+        cat("  - Estimation start date:", format(as.yearmon(start))) 
+        cat("\n")
+        cat("  - Estimation end date:", format(as.yearmon(end)))
+      } 
       cat("\n")
       cat("  - Model States and Standard Errors\n")
       base::print(out)
@@ -434,10 +429,15 @@ SSModelLeadingIndicator <- setRefClass(
       # Transform the data to calculate daily cases and log growth rates.
       eng_full <- add_daily_ldl(Y)
       eng_daily <- eng_full[, 3:4]
+      dates<-index(eng_daily)
+      reso<-get_time_resolution(dates)
+      if (reso!="daily"){
+        dates<-qtr2date(dates)
+      }
       
       # Plot daily new cases and admissions.
       if (take.log){
-        base_plot<-ggplot(log(eng_daily), aes(x = index(eng_daily)))+
+        base_plot<-ggplot(log(eng_daily), aes(x = dates))+
           labs(
             title = title,
             x = "Date",
@@ -445,7 +445,7 @@ SSModelLeadingIndicator <- setRefClass(
             color = "Legend"
           ) 
       } else {
-        base_plot<-ggplot(eng_daily, aes(x = index(eng_daily)))+
+        base_plot<-ggplot(eng_daily, aes(x = dates))+
           labs(
             title = title,
             x = "Date",

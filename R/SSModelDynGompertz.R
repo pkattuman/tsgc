@@ -677,7 +677,11 @@ SSModelDynamicGompertz <- setRefClass(
       cat("  - Estimation start date:", format(as.yearqtr(start))) 
       cat("\n")
       cat("  - Estimation end date:", format(as.yearqtr(end)))
-    }
+    } else if (resolution=="monthly"  || resolution=="yearly"){
+      cat("  - Estimation start date:", format(as.yearmon(start))) 
+      cat("\n")
+      cat("  - Estimation end date:", format(as.yearmon(end)))
+    } 
     cat("\n")
     if (reinit){
       cat("  - Reinitialization date:",format(as.Date(reinit.date, origin = "1970-01-01")))

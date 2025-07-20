@@ -199,10 +199,12 @@ FilterResultsLI <- setRefClass(
       #colnames(cases_forecasts) = c('forc','lwr','upr')
       
       #Save forecast dates
-      startforc = if (resolution=="daily"){
+      startforc = if (resolution=="daily"||resolution=="yearly"){
         end.date+1
       } else if (resolution=="quarterly"){
         end.date+0.25
+      } else if (resolution=="monthly"){
+        end.date+1/12
       }
       
       finds = seq_dates(startforc, length.out=n.ahead, resolution=resolution)
@@ -274,11 +276,15 @@ FilterResultsLI <- setRefClass(
       oldn<-attr(new.model, 'n')
       
       # Provide observed leading indicator data
-      future_rows<-min(n.ahead, n.lag)
       na_vals<-matrix(NA, ncol = ncol(gety(new.model)), nrow = n.ahead)
       
       new_index<-which.max(index(data_xts)==end.date)
-      true_leading<-data_xts[(new_index+1):(new_index+future_rows)]
+      remaining_data<-dim(data_xts)[1]-new_index
+      future_rows<-min(n.ahead, n.lag, remaining_data)
+      last_index<-new_index+future_rows
+      
+      true_leading<-data_xts[(new_index+1):last_index]
+      
       na_vals[1:future_rows,1] = as.vector(true_leading$LDLcases)
       
       #Supply the new data back to the new.model object
@@ -523,7 +529,7 @@ FilterResultsLI <- setRefClass(
       H <- matrixKFS(output, "H")[, , 1]
       Q_gamma <- matrixKFS(output, "Q")[2, 2, 1]
       Q_seasonal <- matrixKFS(output, "Q")[3, 3, 1]
-      cat("Summary of FilterResults Object\n")
+      cat("Summary of FilterResultsLI Object\n")
       cat("Model Details:\n")
       if (resolution=="daily"){
         cat("  - Estimation start date:", format(as.Date(start.date, origin = "1970-01-01"))) 
@@ -533,7 +539,11 @@ FilterResultsLI <- setRefClass(
         cat("  - Estimation start date:", format(as.yearqtr(start.date))) 
         cat("\n")
         cat("  - Estimation end date:", format(as.yearqtr(end.date)))
-      }
+      } else if (resolution=="monthly"  || resolution=="yearly"){
+        cat("  - Estimation start date:", format(as.yearmon(start.date))) 
+        cat("\n")
+        cat("  - Estimation end date:", format(as.yearmon(end.date)))
+      } 
       cat("\n")
       cat("  - Model States and Standard Errors\n")
       base::print(output)
@@ -633,9 +643,10 @@ FilterResultsLI <- setRefClass(
     forcout_sea<-.self$predict_all(n.ahead, sea.on = TRUE, return.all = FALSE)$y.hat
     old<-get_timeframe(data_xts, start.date, end.date)[,"LDLhosp"]
     
-    eng_full<-add_daily_ldl(Y)
+    eng_full<-add_daily_ldl(Y, LeadIndCol = LeadIndCol)
     eng_full<-eng_full[index(eng_full)>end.date,"LDLhosp"]
-    actual=eng_full[1:n.ahead]
+    
+    actual<-eng_full[1:min(n.ahead, dim(eng_full)[1])]
     
     # Show filtered level only when xpred_logical is both FALSE
     if (!any(xpred_logical)){
@@ -835,7 +846,13 @@ FilterResultsLI <- setRefClass(
     
     newdate<-seq_dates(end.date,resolution=resolution,length.out=2)[2]
     future_data<-get_timeframe(add_daily_ldl(Y,LeadIndCol = .self$LeadIndCol), newdate)
-    data_validation<-future_data[1:n.ahead, c("cAdmit", "newAdmit")]
+    if (n.ahead>dim(future_data)[1]){
+      stop("The number of entries in the holdout sample is shorter than n.ahead.
+           Please choose a smaller n.ahead, shorten the estimation period or 
+           provide more holdout data.")
+    } else {
+      data_validation<-future_data[1:n.ahead, c("cAdmit", "newAdmit")]
+    }
     
     newAdmit_validation<-data_validation[,c("newAdmit")]
     compare<-cbind(newAdmit_validation, sea[,1])

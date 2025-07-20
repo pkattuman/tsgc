@@ -432,8 +432,10 @@ cross_val<-function(y,est.end.date,n.ahead,all_lags,est.start.date=index(y)[1],
 get_time_resolution <- function(dates) {
   # Ensure dates are sorted
   dates <- sort(unique(dates))
-  
-  if (class(dates)=="yearqtr"){
+  date_diff<-diff(dates)  
+  if (!all.equal(min(date_diff),max(date_diff))){
+    stop("The dates are not separated by the same time resolution.")
+  } else if (class(dates)=="yearqtr"){
     return('quarterly')
   } else if (class(dates)=="yearmon"){
     if (min(diff(dates))==1){
@@ -441,36 +443,13 @@ get_time_resolution <- function(dates) {
     } else {
       return('monthly')
     }
+  } else if (class(dates)=="Date"){
+    if (min(diff(dates))==1){
+      return('daily')
+    }
   } else {
-    return('daily')
+    stop("Input 'dates' must be from classes 'Date', 'yearmon' or 'yearqtr'.")
   }
-  # 
-  # # Compute differences
-  # diffs <- diff(dates)
-  # 
-  # if (length(diffs) == 0) return(NA)
-  # 
-  # # Get median interval in days
-  # median_diff <- median(as.numeric(diffs), na.rm = TRUE)
-  # 
-  # # Classify based on typical calendar frequencies
-  # if (median_diff <= 1) {
-  #   return("daily")
-  # } else if (median_diff <= 2) {
-  #   return("business daily")
-  # } else if (median_diff <= 8) {
-  #   return("weekly")
-  # } else if (median_diff <= 15) {
-  #   return("biweekly")
-  # } else if (median_diff <= 32) {
-  #   return("monthly")
-  # } else if (median_diff <= 92) {
-  #   return("quarterly")
-  # } else if (median_diff <= 370) {
-  #   return("yearly")
-  # } else {
-  #   return("irregular or unknown")
-  # }
 }
 
 #' @title Change yearqtr object into date object 
