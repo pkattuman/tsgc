@@ -295,8 +295,7 @@ plot_log_forecast(res.reinit,
   Y = cumulative_cases,
   n.ahead = n.forecasts,
   plt.start.date = tail(res.reinit$index, 1) - plt.length, 
-  title = "Forecast of ln(g_t) after reinitialisation."
-)
+  title = "Forecast of ln(g_t) after reinitialisation.")
 
 plot_forecast(res.reinit,
   n.ahead = n.forecasts,
@@ -311,8 +310,7 @@ plot_holdout(res.reinit,
   n.ahead = n.forecasts,
   confidence.level = confidence.level,
   title="With reinitialization",
-  series.name = "cases"
-)
+  series.name = "cases")
 
 # -----------------------------
 # Holdout Evaluation Comparison
@@ -558,8 +556,8 @@ mod_wii<-SSModelDynamicGompertz$new(Y=wii, sea.period=4,
 res_wii<-estimate(mod_wii)
 
 plot_log_forecast(res_wii, Y=wii, n.ahead=n.forecasts, title="Log forecasts of Wii sales")
-plot_forecast(res_wii, n.ahead=n.forecasts, title="Wii sales")
-plot_holdout(res_wii, Y=wii, n.ahead=n.forecasts, title="Wii sales")
+plot_forecast(res_wii, n.ahead=n.forecasts, title="Wii sales", series.name = "sales (Million)")
+plot_holdout(res_wii, Y=wii, n.ahead=n.forecasts, title="Wii sales", series.name = "sales (Million)")
 
 # Extend to leading indicator
 # Gather all parameters in one centralised block for easy modification.
@@ -580,8 +578,8 @@ mod_switch<-SSModelLeadingIndicator$new(Y=y, sea.period=4, n.lag=n.lag,
 res_switch<-estimate(mod_switch)
 
 plot_log_forecast(res_switch, Y=y, n.ahead=n.forecasts, title="Log forecasts of switch sales")
-plot_forecast(res_switch, n.ahead=n.forecasts, title="Switch sales", series.name = "sales")
-plot_holdout(res_switch, Y=y, n.ahead=n.forecasts, title="Switch sales", series.name = "sales")
+plot_forecast(res_switch, n.ahead=n.forecasts, title="Switch sales", series.name = "sales (Million)")
+plot_holdout(res_switch, Y=y, n.ahead=n.forecasts, title="Switch sales", series.name = "sales (Million)")
 
 # -----------------------------
 # Monthly Example
@@ -594,7 +592,7 @@ n.forecasts      <- 4
 q                <- NULL
 confidence.level <- 0.68
 estimation.date.start <- as.yearmon(2016)
-estimation.date.end   <- as.yearmon(2021)
+estimation.date.end   <- as.yearmon(2019+1/12)
 
 # Get a glimpse of data by plotting its moving average series
 
@@ -607,8 +605,17 @@ plot(mod_500, title="Plus500 monthly downloads in France", series.name="Monthly 
 res_500<-estimate(mod_500)
 
 plot_log_forecast(res_500, Y=Plus500, n.ahead=n.forecasts, title="Log forecasts of Plus500 monthly downloads")
-plot_forecast(res_500, n.ahead=n.forecasts, title="Plus500 monthly downloads")
-plot_holdout(res_500, Y=Plus500, n.ahead=n.forecasts, title="Plus500 monthly downloads")
+plot_forecast(res_500, n.ahead=n.forecasts, title="Plus500 monthly downloads", series.name = "downloads")
+plot_holdout(res_500, Y=Plus500, n.ahead=n.forecasts, title="Plus500 monthly downloads", series.name = "downloads")
+
+#Extend to reinitialization
+estimation.date.end   <- as.yearmon(2021)
+mod_500_reinit<-SSModelDynamicGompertz$new(Y=Plus500, sea.period=0,
+                                    start.date=estimation.date.start, 
+                                    end.date=estimation.date.end, 
+                                    reinit.date=as.yearmon(2020))
+res_500_reinit<-estimate(mod_500_reinit)
+plot_log_forecast(res_500_reinit, Y=Plus500, n.ahead=n.forecasts, title="Log forecasts of Plus500 monthly downloads")
 
 # Extend to leading indicator
 # Gather all parameters in one centralised block for easy modification.
@@ -653,9 +660,11 @@ mod_3ds<-SSModelDynamicGompertz$new(Y=threeds_xts, sea.period=0,
                                    end.date=estimation.date.end)
 res_3ds<-estimate(mod_3ds)
 
-plot_log_forecast(res_3ds, Y=threeds_xts, n.ahead=2, title="Log Forecasts for upcoming annual EV sales in the US")
-plot_forecast(res_3ds, n.ahead=2, title="Forecasts for upcoming annual EV sales in the US")
-plot_holdout(res_3ds, Y=threeds_xts, n.ahead=2, title="Accuracy of predictions for upcoming annual EV sales in the US")
+plot_log_forecast(res_3ds, Y=threeds_xts, n.ahead=2, title="Annual global 3ds sales")
+plot_forecast(res_3ds, n.ahead=2, title="Annual global 3ds sales", series.name = "sales (in Million)")
+plot_holdout(res_3ds, Y=threeds_xts, n.ahead=2, 
+             title="Accuracy of predictions for Annual global 3ds sales", 
+             series.name = "sales (in Million)")
 
 # Leading Indicator Example
 n.lag<-as.yearmon(2011)-as.yearmon(2007)
@@ -668,4 +677,4 @@ res_lead<-estimate(mod_lead)
 
 plot_log_forecast(res_lead, Y=yearly_nintendo_xts, n.ahead=n.forecasts, title="Log forecasts of 3ds sales")
 plot_forecast(res_lead, n.ahead=n.forecasts, title="Annual global 3ds sales", series.name = "sales (in Million)")
-plot_holdout(res_lead, Y=yearly_nintendo_xts, n.ahead=n.forecasts, title="Annual global 3ds sales", series.name = "sales (in Million)")
+plot_holdout(res_lead, Y=yearly_nintendo_xts, n.ahead=n.forecasts, title="Accuracy of predictions for Annual global 3ds sales", series.name = "sales (in Million)")

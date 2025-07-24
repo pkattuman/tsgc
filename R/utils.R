@@ -109,10 +109,12 @@ add_daily_ldl <- function(data, LeadIndCol=1){
 #' @title Reinitialise a data frame by subtracting the `reinit.date` row from
 #' all columns
 #'
-#' @param dt Cumulated data series.
-#' @param reinit.date Reinitialisation date. E.g. \samp{'2021-05-12'}.
+#' @param dt Cumulated data series, belonging to the xts class.
+#' @param reinit.date Reinitialisation date, belonging to Date, yearmon or yearqtr classes. E.g. \samp{as.Date('2021-05-12')}.
 #'
 #' @returns The reinitialised data frame
+#' 
+#' @importFrom xts index
 #'
 #' @examples
 #' library(tsgc)
@@ -123,13 +125,14 @@ add_daily_ldl <- function(data, LeadIndCol=1){
 reinitialise_dataframe <- function(dt, reinit.date) {
   # Take cumulative dataframe and reinit from reinit.date as first date of data
   # 1. Get data frame including date before reinit.date
-  dt <- dt[index(dt) >= as.Date(reinit.date) - 1,]
+  first_ind<-which.max(index(dt) == reinit.date)
+  dt <- dt[(first_ind-1):length(dt),]
 
   # 2. Substract away the t-1 date data
   dt <- sweep(dt, 2, dt[1,])
 
   # 3. Keep only data from t onwards.
-  dt <- dt[index(dt) >= as.Date(reinit.date),]
+  dt <- dt[-1,]
   return(dt)
 }
 
