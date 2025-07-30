@@ -113,8 +113,6 @@ add_daily_ldl <- function(data, LeadIndCol=1){
 #' @param reinit.date Reinitialisation date, belonging to Date, yearmon or yearqtr classes. E.g. \samp{as.Date('2021-05-12')}.
 #'
 #' @returns The reinitialised data frame
-#' 
-#' @importFrom xts index
 #'
 #' @examples
 #' library(tsgc)

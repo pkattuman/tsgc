@@ -113,22 +113,30 @@ are defined in `fields` section.
   \subsection{Usage}{\code{SSModelDynGompertzReinit$new(y, q = 0.005,
   reinit.date = as.Date("2021-05-12"))}}}
 
-\item{\code{plot(title = NULL, series.name = "target variable", MA_period = 7)}}{Plots the lagged differences of the cumulated dataset \code{Y} in this 
-      \code{SSModelDynamicGompertz} object against time, which could represent 
-      daily cases.
-      \subsection{Parameters}{\itemize{
-        \item{\code{MA} A logical value indicating whether 7-day centered moving 
-        average should be plotted. Defaults to \code{TRUE}.
-        }
-        \item{\code{title} Title for forecast plot. Enter as text string. 
-        \code{NULL} (i.e. no title) by default.}
-        \item{\code{series.name} The name of the series the growth rate is being computed
-        for. E.g. \code{'cases'}. Default is `target variable`.}
+\item{\code{plot(
+  title = NULL,
+  series.name = "target variable",
+  date_break = NULL,
+  MA_period = 7
+)}}{Plots the lagged differences of the cumulated dataset \code{Y} in this 
+\code{SSModelDynamicGompertz} object against time, which could represent 
+daily cases.
+\subsection{Parameters}{\itemize{
+  \item{\code{title} Title for forecast plot. Enter as text string. 
+  \code{NULL} (i.e. no title) by default.}
+  \item{\code{series.name} The name of the series the growth rate is being computed
+  for. E.g. \code{'cases'}. Default is `target variable`.}
+  \item{\code{date_break} A character string (e.g. '60 days') specifying the interval 
+  between date labels, used in \code{scale_x_date} within 
+  \code{ggplot}. If \code{NULL} (default), a suitable interval is chosen 
+  automatically by \code{ggplot}.}
+  \item{\code{MA_period} Number of days used in centered moving 
+  average, to be plotted. Integer type. If moving average plot is not desired, 
+  enter 0 or 1. Defaults to 7.}
+  }
 }
-      }
-      \subsection{Return Value}{A plot of the lagged differences of the 
-      cumulated dataset \code{Y} against time.}
-      }
+\subsection{Return Value}{A plot of the lagged differences of the 
+cumulated dataset \code{Y} against time.}}
 
 \item{\code{print()}}{Provides a quick description of SSModelDynamicGompertz object, providing 
 model states and standard errors.}

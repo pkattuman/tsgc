@@ -728,19 +728,23 @@ SSModelDynamicGompertz <- setRefClass(
       cat("Use presample info:", use.presample.info)
     }
   },
-  plot =function(title=NULL, series.name="target variable", MA_period=7){
+  plot =function(title=NULL, series.name="target variable", date_break=NULL, MA_period=7){
     "Plots the lagged differences of the cumulated dataset \\code{Y} in this 
       \\code{SSModelDynamicGompertz} object against time, which could represent 
       daily cases.
       \\subsection{Parameters}{\\itemize{
-        \\item{\\code{MA} A logical value indicating whether 7-day centered moving 
-        average should be plotted. Defaults to \\code{TRUE}.
-        }
         \\item{\\code{title} Title for forecast plot. Enter as text string. 
         \\code{NULL} (i.e. no title) by default.}
         \\item{\\code{series.name} The name of the series the growth rate is being computed
         for. E.g. \\code{'cases'}. Default is `target variable`.}
-}
+        \\item{\\code{date_break} A character string (e.g. '60 days') specifying the interval 
+        between date labels, used in \\code{scale_x_date} within 
+        \\code{ggplot}. If \\code{NULL} (default), a suitable interval is chosen 
+        automatically by \\code{ggplot}.}
+        \\item{\\code{MA_period} Number of days used in centered moving 
+        average, to be plotted. Integer type. If moving average plot is not desired, 
+        enter 0 or 1. Defaults to 7.}
+        }
       }
       \\subsection{Return Value}{A plot of the lagged differences of the 
       cumulated dataset \\code{Y} against time.}
@@ -790,7 +794,6 @@ SSModelDynamicGompertz <- setRefClass(
     geom_line(aes(y = New.Cases, color = "New Cases"), linewidth = 0.1) +
     scale_y_continuous(n.breaks = 10) +
     labs(x = "Date", y = paste("New", series.name), title = title)+
-    scale_x_date(date_breaks = "60 days") +
     theme_light(base_size = 12) +
     theme(
       legend.position = "inside",
@@ -800,6 +803,10 @@ SSModelDynamicGompertz <- setRefClass(
       axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
       plot.title = element_text(face = "bold")
     )
+  
+  if (!is.null(date_break)) {
+    data_plot <- data_plot + scale_x_date(date_breaks = date_break)
+  }
   
   # Conditionally add Centered 7-day MA line
   if (MA_period>1) {

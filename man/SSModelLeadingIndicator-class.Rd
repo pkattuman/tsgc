@@ -69,21 +69,34 @@ fields laid out at the beginning of the documentation.}
   title = NULL,
   series.name.lead = "Leading Indicator",
   series.name.target = "Target Variable",
+  date_break = NULL,
   take.log = TRUE
 )}}{Plots the lagged differences of the cumulated dataset \code{Y} in this 
 \code{SSModelLinearIndicator} object against time, which could represent 
 daily cases.
 \subsection{Parameters}{\itemize{
-  \item{\code{title} Title for forecast plot. Enter as text string. 
+  \item{\code{title} Title for forecast plot. Enter as character string. 
   \code{NULL} (i.e. no title) by default.}
-  \item{\code{series.name} The name of the series the growth rate is being computed
-  for. E.g. \code{'cases'}. Default is `target variable`.}
+  \item{\code{series.name.lead} The name of the leading indicator series 
+  for. E.g. \code{'cases'}. Enter as character string. Default is `Leading Indicator`.}
+  \item{\code{series.name.target} The name of the target variable series 
+  for. E.g. \code{'hospitalizations'}. Enter as character string. Default is `Target Variable`.}
+  \item{\code{date_break} A character string (e.g. '60 days') specifying the interval 
+  between date labels, used in \code{scale_x_date} within 
+  \code{ggplot}. If \code{NULL} (default), a suitable interval is chosen 
+  automatically by \code{ggplot}.}
   \item{\code{take.log} A logical value indicating whether to return 
   take log of the lagged differences. Defaults to \code{TRUE}.}
   }
 }
 \subsection{Return Value}{A plot of the lagged differences of the 
 cumulated dataset \code{Y} against time.}}
+
+\item{\code{print()}}{Provides a quick description of SSModelDynamicGompertz object, providing 
+model states and standard errors.}
+
+\item{\code{summary()}}{Supplies details of the SSModelLeadingIndicator object, such as estimated 
+parameter values, start and end dates of estimation.}
 }}
 
 \examples{

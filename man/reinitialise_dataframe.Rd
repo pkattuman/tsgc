@@ -8,9 +8,9 @@ all columns}
 reinitialise_dataframe(dt, reinit.date)
 }
 \arguments{
-\item{dt}{Cumulated data series.}
+\item{dt}{Cumulated data series, belonging to the xts class.}
 
-\item{reinit.date}{Reinitialisation date. E.g. \samp{'2021-05-12'}.}
+\item{reinit.date}{Reinitialisation date, belonging to Date, yearmon or yearqtr classes. E.g. \samp{as.Date('2021-05-12')}.}
 }
 \value{
 The reinitialised data frame

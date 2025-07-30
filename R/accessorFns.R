@@ -220,11 +220,12 @@ print.SSModelLeadingIndicator <- function(model) {
 #' 
 #' @export
 plot.SSModelLeadingIndicator <- function(model,title=NULL, series.name.lead="Leading Indicator", 
-                                         series.name.target="Target Variable",take.log=TRUE) {
+                                         series.name.target="Target Variable",
+                                         date_break=NULL, take.log=TRUE) {
   # Call the object's plot() method if it exists
   if (!is.null(model$plot) && is.function(model$plot)) {
     model$plot(title, series.name.lead, 
-               series.name.target,take.log)
+               series.name.target,date_break,take.log)
   } else {
     stop("The object does not have a valid 'plot' method.")
   }
@@ -318,10 +319,11 @@ summary.SSModelDynamicGompertz <- function(model) {
 #' 
 #' @export
 plot.SSModelDynamicGompertz <- function(model,title=NULL, 
-                                        series.name="target variable", MA_period=7) {
+                                        series.name="target variable", 
+                                        date_break=NULL, MA_period=7) {
   # Call the object's plot() method if it exists
   if (!is.null(model$plot) && is.function(model$plot)) {
-    model$plot(title, series.name, MA_period)
+    model$plot(title, series.name, date_break, MA_period)
   } else {
     stop("The object does not have a valid 'plot' method.")
   }

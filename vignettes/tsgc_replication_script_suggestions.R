@@ -333,8 +333,7 @@ eng <- tsgc::england[, 1:2]
 # Plot log daily new cases and admissions by calling the plot function.
 mod2<-SSModelLeadingIndicator$new(eng, n.lag=5) #Choose any n.lag if only plotting is needed
 plot(mod2,title="COVID Daily Cases and Hospitalizations in England",
-          series.name.lead="Cases", 
-          series.name.target="Hospitalizations",
+          series.name.lead="Cases", series.name.target="Hospitalizations",
           take.log=TRUE)
 
 # Define estimation parameters for the leading indicator analysis.
@@ -547,7 +546,8 @@ estimation.date.end   <- as.yearqtr("2010 Q3")
 
 # Get a glimpse of data by plotting its moving average series
 mod1<-SSModelDynamicGompertz$new(Y=wii)
-plot(mod1, title="Wii sales by quarter", series.name="Sales (Million)", MA_period=4)
+plot(mod1, title="Wii sales by quarter", series.name="Sales (Million)", 
+     MA_period=4, date_break = "1 year")
 
 # Model Estimation 
 mod_wii<-SSModelDynamicGompertz$new(Y=wii, sea.period=4,

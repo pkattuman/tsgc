@@ -9,6 +9,7 @@
   title = NULL,
   series.name.lead = "Leading Indicator",
   series.name.target = "Target Variable",
+  date_break = "60 days",
   take.log = TRUE
 )
 }

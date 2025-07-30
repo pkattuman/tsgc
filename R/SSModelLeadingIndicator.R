@@ -351,6 +351,8 @@ SSModelLeadingIndicator <- setRefClass(
         end.date=tail(index(data_ldl),1))
       return(results)},
     summary = function() {
+      "Supplies details of the SSModelLeadingIndicator object, such as estimated 
+      parameter values, start and end dates of estimation."
       result<-.self$estimate()
       out <- output(result)
       # q<-.self$q
@@ -392,6 +394,9 @@ SSModelLeadingIndicator <- setRefClass(
       base::print(out)
     },
     print = function() {
+      "Provides a quick description of SSModelDynamicGompertz object, providing 
+      model states and standard errors."
+      
       out <- output(.self$estimate()) #KFS object
       # if(is.null(.self$q)){
       #   qest <- matrixKFS(out,"Q")[2, 2, 1]/matrixKFS(out,"H")[, , 1]
@@ -411,15 +416,22 @@ SSModelLeadingIndicator <- setRefClass(
                  "No","Yes"),"\n")
     },
     plot=function(title=NULL, series.name.lead="Leading Indicator", 
-                   series.name.target="Target Variable",take.log=TRUE){
+                  series.name.target="Target Variable",
+                  date_break=NULL, take.log=TRUE){
       "Plots the lagged differences of the cumulated dataset \\code{Y} in this 
       \\code{SSModelLinearIndicator} object against time, which could represent 
       daily cases.
       \\subsection{Parameters}{\\itemize{
-        \\item{\\code{title} Title for forecast plot. Enter as text string. 
+        \\item{\\code{title} Title for forecast plot. Enter as character string. 
         \\code{NULL} (i.e. no title) by default.}
-        \\item{\\code{series.name} The name of the series the growth rate is being computed
-        for. E.g. \\code{'cases'}. Default is `target variable`.}
+        \\item{\\code{series.name.lead} The name of the leading indicator series 
+        for. E.g. \\code{'cases'}. Enter as character string. Default is `Leading Indicator`.}
+        \\item{\\code{series.name.target} The name of the target variable series 
+        for. E.g. \\code{'hospitalizations'}. Enter as character string. Default is `Target Variable`.}
+        \\item{\\code{date_break} A character string (e.g. '60 days') specifying the interval 
+        between date labels, used in \\code{scale_x_date} within 
+        \\code{ggplot}. If \\code{NULL} (default), a suitable interval is chosen 
+        automatically by \\code{ggplot}.}
         \\item{\\code{take.log} A logical value indicating whether to return 
         take log of the lagged differences. Defaults to \\code{TRUE}.}
         }
@@ -468,9 +480,12 @@ SSModelLeadingIndicator <- setRefClass(
           axis.title.x = element_text(size = rel(1), margin = margin(t = 10)),
           plot.title = element_text(margin = margin(b = 5), face = "bold"),
           plot.caption = element_text(size = rel(1))
-        ) +
-        scale_x_date(labels = scales::date_format("%d %b %y"))
-      
+        ) 
+      if (!is.null(date_break)) {
+        data_plot <- data_plot + scale_x_date(date_breaks = date_break, labels = scales::date_format("%d %b %y"))
+      } else {
+        data_plot <- data_plot + scale_x_date(labels = scales::date_format("%d %b %y"))
+      }
       data_plot
     }
   )
