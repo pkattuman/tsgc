@@ -242,7 +242,9 @@ write_results <- function(res, res.dir, n.ahead, confidence.level=0.68) {
     row.names = index(g.y.t.t),
     file = file.path(res.dir, "g_y_filtered.csv")
   )
-
+  
+  message("Saved results for: ", substitute(res_free))
+  
 }
 
 #' @title Calculate reproduction number estimates and credible intervals
