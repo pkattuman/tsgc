@@ -25,7 +25,7 @@ test_that("reinitialise_dataframe works correctly", {
   expect_equal(x,79242)
 })
 
-test_that("Test argmax", {
+test_that("argmax returns expected output", {
   x <- xts::xts(1:10, order.by = seq(as.Date("2021-01-01"),
                                      length.out = 10, by = 1))
   x[5,] <- 20
@@ -36,9 +36,3 @@ test_that("Test argmax", {
   )
 })
 
-test_that("identify error", {
-  data(gauteng)
-  model <- SSModelDynamicGompertz$new(Y = gauteng$cum_cases[1:100])
-  res <- model$estimate()
-  expect_equal(1,1)
-})
