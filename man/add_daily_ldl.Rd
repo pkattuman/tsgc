@@ -8,12 +8,12 @@ cumulated dataset}
 add_daily_ldl(data, LeadIndCol = 1)
 }
 \arguments{
-\item{data}{Cumulated data series in xts format with date index and columns:
+\item{data}{Cumulated data series in xts format with date index and 2 columns:
 leading indicator and target variable. Can specify which column is leading
 indicator by \code{LeadIndCol} parameter.}
 
 \item{LeadIndCol}{Column number of \code{data} that contains the leading
-indicator}
+indicator. An integer that can only take values 1 (by default) or 2.}
 }
 \value{
 A data frame with original cumulative variable, successive increments
