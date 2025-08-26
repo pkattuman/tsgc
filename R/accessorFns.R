@@ -26,6 +26,9 @@
 #'
 #' @export
 supply_xpred.new<-function(object, new.xts, idx=NULL){
+  if (!is.xts(new.xts)){
+    stop("new.xts is not an xts object.")
+  }
   if (class(object)=="FilterResultsLI"){
     if (idx==1){
       object$xpred1.new<-new.xts

@@ -8,7 +8,7 @@
   model,
   title = NULL,
   series.name = "target variable",
-  date_break = "60 days",
+  date_break = NULL,
   MA_period = 7
 )
 }

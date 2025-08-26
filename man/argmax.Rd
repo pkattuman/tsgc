@@ -7,7 +7,7 @@
 argmax(x, decreasing = TRUE)
 }
 \arguments{
-\item{x}{Object to have its maximum found}
+\item{x}{Object to have its maximum found, usually an xts object.}
 
 \item{decreasing}{Logical value indicating whether \code{x} should be
 ordered in decreasing order. Default is \code{TRUE}. Setting this to
@@ -17,7 +17,7 @@ ordered in decreasing order. Default is \code{TRUE}. Setting this to
 The maximum value and its index.
 }
 \description{
-Something similar to Python's argmax.
+Similar to Python's argmax function.
 }
 \examples{
 library(tsgc)
