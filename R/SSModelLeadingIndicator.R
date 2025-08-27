@@ -471,8 +471,6 @@ SSModelLeadingIndicator <- setRefClass(
         geom_line(aes(y = newAdmit, color = series.name.target), lwd = 0.85) +
         scale_color_manual(values = c("red", "blue"))+
         theme(
-          legend.position = "inside",
-          legend.position.inside = c(0.2, 0.85),
           legend.title = element_text(size = 5),
           legend.text = element_text(size = 10),
           axis.text.x = element_text(angle = 45, hjust = 1, size = 10),

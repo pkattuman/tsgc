@@ -3,7 +3,7 @@ library(KFAS)
 test_that("tsgc gives same output as KFAS", {
   data(england, package = 'tsgc')
   dat <- england$cum_cases[1:100]
-  dat.ldl <- na.omit(df2ldl(dat))
+  dat.ldl <- df2ldl(dat)
   
   tsgc.model <- SSModelDynamicGompertz$new(Y = dat,
                                        q = NULL,
@@ -66,7 +66,7 @@ test_that("tsgc gives same output as KFAS for fixed q", {
   
   data(england, package = 'tsgc')
   dat <- england$cum_cases[1:100]
-  dat.ldl <- na.omit(df2ldl(dat))
+  dat.ldl <- df2ldl(dat)
   
   tsgc.model <- SSModelDynamicGompertz$new(Y = dat,
                                            q = 0.005,
@@ -96,7 +96,7 @@ test_that({"tsgc summary method functions"}, {
   tsgc.model <- SSModelDynamicGompertz$new(Y = dat,
                                            q = q.choose,
                                            sea.period = 0)
-  tsgc.model$summary()
+  expect_no_error(expect_no_warning(tsgc.model$summary()))
 })
 
 test_that({"tsgc print method functions"}, {
@@ -108,7 +108,7 @@ test_that({"tsgc print method functions"}, {
   tsgc.model <- SSModelDynamicGompertz$new(Y = dat,
                                            q = q.choose,
                                            sea.period = 0)
-  tsgc.model$print()
+  expect_no_error(expect_no_warning(tsgc.model$print()))
 })
 
 test_that({"tsgc plot method functions"}, {
@@ -120,7 +120,7 @@ test_that({"tsgc plot method functions"}, {
   tsgc.model <- SSModelDynamicGompertz$new(Y = dat,
                                            q = q.choose,
                                            sea.period = 0)
-  suppressWarnings(tsgc.model$plot())
+  expect_no_error(suppressWarnings(tsgc.model$plot()))
 })
 
 test_that({"Model with seasonal has expected number of seasonal components"},{
@@ -415,11 +415,9 @@ test_that("Reinitialised model with xpred and seasonal uses prior information co
 )
 
 test_that("Vanilla AR(1) Gompertz curve gives same output as KFAS", {
-  # Simulate cumulative cases data set
-  set.seed(1150)
-  n <- 30
-  daily_cases <- rpois(n, lambda = 1000)
-  cumulative_cases <- cumsum(daily_cases)
+  data('england', package = 'tsgc')
+  daily_cases <- diff(england$cum_cases)[2:31]
+  cumulative_cases <- england$cum_cases[2:31] #cumsum(daily_cases)
   
   # Create ldl series
   ldl_cases <- log(daily_cases/lag(cumulative_cases))
