@@ -799,8 +799,6 @@ SSModelDynamicGompertz <- setRefClass(
     labs(x = "Date", y = paste("New", series.name), title = title)+
     theme_light(base_size = 12) +
     theme(
-      legend.position = "inside",
-      legend.position.inside = c(0.2, 0.85),
       legend.title = element_text(size = 5),
       legend.text = element_text(size = 10),
       axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
