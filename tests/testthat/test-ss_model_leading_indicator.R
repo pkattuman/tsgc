@@ -1,4 +1,5 @@
 library(KFAS)
+library(xts)
 
 test_that("tsgc produces same LI output as KFAS", {
   data(ukitaly, package = 'tsgc')
