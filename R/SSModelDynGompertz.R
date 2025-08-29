@@ -146,6 +146,15 @@ SSModelDynamicGompertz <- setRefClass(
     if (!is.numeric(sea.period) || sea.period==1 || sea.period<0){
       stop("sea.period must be a non-negative integer that is not 1.")
     } 
+    if (!is.null(original.results) && class(original.results)!="FilterResults"){
+      stop("original.results must be NULL or an object of class FilterResults.")
+    }
+    if (!is.null(xpred) && !is.xts(xpred)){
+      stop("xpred must be NULL or an xts object.")
+    } 
+    if (!is.null(q) || q<0){
+      stop("q must be NULL or a non-negative number.")
+    } 
     Y <<- get_timeframe(Y,start.date,end.date)
     q <<- q
     sea.period <<- sea.period

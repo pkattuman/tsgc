@@ -300,13 +300,27 @@ plot_holdout <- function(res,Y, n.ahead=14,confidence.level = 0.68,
 #' @examples
 #' library(tsgc)
 #' data(gauteng,package="tsgc")
-#' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
-#' n.ahead=7
-#'
-#'
+#' end.date<- as.Date("2020-07-20")
+#' 
+#' # Model 1: The signal-to-noise ratio is a free parameter
+#' model <- SSModelDynamicGompertz$new(Y = gauteng, end.date=end.date)
+#' res <- estimate(model)
+#' 
+#' # Model 2: The signal-to-noise ratio is fixed
+#' model_q <- SSModelDynamicGompertz$new(Y = gauteng, end.date=end.date, q=0.005)
+#' res_q <- estimate(model_q)
+#' 
+#' # Compare forecast
+#' plot_compare_forecast(list(res,res_q), n.ahead=7)
+#' 
 #' @export
 plot_compare_forecast <- function(results,  n.ahead = 14, sea.on = TRUE, actual = NULL,
                                   title = "Comparison of forecasts") {
+  for (i in results){
+   if (class(i)!="FilterResults" && class(i)!="FilterResultsLI"){
+     stop("All elements in results list must be of the class FilterResults or FilterResultsLI.")
+   }
+  }
   
   # Automatically get object names as labels
   labels <- sapply(substitute(results)[-1], deparse)

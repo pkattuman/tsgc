@@ -271,7 +271,7 @@ SSModelLeadingIndicator <- setRefClass(
       out <- output(result)
       # q<-.self$q
       # if(is.null(q)){
-      #   qest <- matrixKFS(out,"Q")[2, 2, 1]/matrixKFS(out,"H")[, , 1]
+      #   qest <- matrixKFS(out,"Q")[3, 3, 1]/matrixKFS(out,"H")[2, 2, 1]
       # }
       start<-result$start.date
       end<-result$end.date
@@ -282,8 +282,8 @@ SSModelLeadingIndicator <- setRefClass(
       cat("--------------------------------------\n")
       cat("Cumulated Variable:\n")
       base::print(head(.self$Y))
-      # cat("Signal-to-Noise Ratio (q):", 
-      #     ifelse(is.null(q), paste(signif(qest,3), "(estimated)"), 
+      # cat("Signal-to-Noise Ratio (q):",
+      #     ifelse(is.null(q), paste(signif(qest,3), "(estimated)"),
       #            paste(q, ("(user specified)"))), "\n")
       cat("Model Details:\n")
       cat("  - Model Type: Leading Indicator Model")

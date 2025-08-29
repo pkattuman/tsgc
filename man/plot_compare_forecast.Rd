@@ -39,8 +39,17 @@ forecast intervals are based on the prediction intervals for \eqn{\ln(g_t)}.
 \examples{
 library(tsgc)
 data(gauteng,package="tsgc")
-idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
-n.ahead=7
+end.date<- as.Date("2020-07-20")
 
+# Model 1: The signal-to-noise ratio is a free parameter
+model <- SSModelDynamicGompertz$new(Y = gauteng, end.date=end.date)
+res <- estimate(model)
+
+# Model 2: The signal-to-noise ratio is fixed
+model_q <- SSModelDynamicGompertz$new(Y = gauteng, end.date=end.date, q=0.005)
+res_q <- estimate(model_q)
+
+# Compare forecast
+plot_compare_forecast(list(res,res_q), n.ahead=7)
 
 }
