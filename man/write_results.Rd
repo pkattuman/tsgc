@@ -4,14 +4,17 @@
 \alias{write_results}
 \title{Write a selection of relevant results to disc}
 \usage{
-write_results(res, res.dir, n.ahead, confidence.level = 0.68)
+write_results(res, res.dir, n.ahead, prefix = "", confidence.level = 0.68)
 }
 \arguments{
-\item{res}{Results object estimated using the \samp{estimate()} method.}
+\item{res}{Results object of class \code{FilterResults} or \code{FilterResultsLI},
+obtained from \samp{estimate()} method.}
 
-\item{res.dir}{File path to save the results to.}
+\item{res.dir}{File path to save the results to. A character string.}
 
-\item{n.ahead}{Number of periods ahead to forecast.}
+\item{n.ahead}{Number of periods ahead to forecast. A positive integer.}
+
+\item{prefix}{The prefix to be added to the file names generated. A character string.}
 
 \item{confidence.level}{Confidence level to use for the confidence interval
 on the forecasts \eqn{\ln(g_t)}.}

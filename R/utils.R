@@ -168,9 +168,11 @@ argmax <- function(x, decreasing=TRUE) {
 #' \eqn{\delta} and \eqn{\gamma}; filtered estimates of \eqn{g_y} and the
 #' confidence intervals for these estimates.
 #'
-#' @param res Results object estimated using the \samp{estimate()} method.
-#' @param res.dir File path to save the results to.
-#' @param n.ahead Number of periods ahead to forecast.
+#' @param res Results object of class \code{FilterResults} or \code{FilterResultsLI}, 
+#' obtained from \samp{estimate()} method.
+#' @param res.dir File path to save the results to. A character string.
+#' @param n.ahead Number of periods ahead to forecast. A positive integer.
+#' @param prefix The prefix to be added to the file names generated. A character string. 
 #' @param confidence.level Confidence level to use for the confidence interval
 #' on the forecasts \eqn{\ln(g_t)}.
 #' 
@@ -196,19 +198,20 @@ argmax <- function(x, decreasing=TRUE) {
 #' )
 #'
 #' @export
-write_results <- function(res, res.dir, n.ahead, confidence.level=0.68) {
+write_results <- function(res, res.dir, n.ahead, prefix="", confidence.level=0.68) {
+  if (class(res)!="FilterResults" && class(res)!="FilterResultsLI"){
+    stop("res must be a FilterResults or FilterResultsLI object.")
+  }
   # 1. New Cases - Delta Y
     y.hat.diff <- res$predict_level(
       n.ahead = n.ahead,
       confidence.level= confidence.level,
-      sea.on = TRUE
-    )
+      sea.on = TRUE)
   
   write.csv(
     y.hat.diff,
     row.names = index(y.hat.diff),
-    file = file.path(res.dir, "y-forecast.csv")
-  )
+    file = file.path(res.dir, paste(prefix,"cases_fcst.csv", sep="")))
   
   # 2. Filtered slope / level
   y.hat.all <- res$predict_all(n.ahead, return.all = TRUE)
@@ -227,17 +230,16 @@ write_results <- function(res, res.dir, n.ahead, confidence.level=0.68) {
   write.csv(
     gamma,
     row.names = index(filtered.slope),
-    file = file.path(res.dir, "gamma_filtered.csv")
+    file = file.path(res.dir, paste(prefix, "trend_slope_filt.csv", sep=""))
   )
   write.csv(
     delta,
     row.names = index(filtered.level),
-    file = file.path(res.dir, "delta_filtered.csv")
+    file = file.path(res.dir, paste(prefix, "log_gr_level_filt.csv", sep=""))
   )
 
   # 3. Filtered growth rate of new cases (g_{y}) - CI from standard error on
-  # slope component of
-  # state covariance matrix.
+  # slope component of state covariance matrix.
   g.y.t.t <- exp(filtered.level) + filtered.slope
   ci <- qnorm((1 - confidence.level) / 2) * gamma.std.err %o% c(1, -1)
   ci_bounds <- as.vector(g.y.t.t) + ci
@@ -248,10 +250,9 @@ write_results <- function(res, res.dir, n.ahead, confidence.level=0.68) {
   write.csv(
     gy.ci,
     row.names = index(g.y.t.t),
-    file = file.path(res.dir, "g_y_filtered.csv")
-  )
+    file = file.path(res.dir, paste(prefix, "cases_gr.csv", sep="")))
   
-  message("Saved results for: ", substitute(res_free))
+  message("Saved results for: ", substitute(res))
   
 }
 

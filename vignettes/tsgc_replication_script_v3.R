@@ -49,7 +49,7 @@ theme_set(ggthemes::theme_economist_white(gray_bg = FALSE, base_size = 16))
 options(scipen = 7)  # fewer scientific notations
 
 # ---- Project Paths  ----
-setwd("C:/Users/u2001328/OneDrive - University of Warwick/Documents/CAM MATH/Time series resesarch/vanillatsgc/tsgc_edited/")
+setwd("C:/Users/u2001328/OneDrive - University of Warwick/Documents/CAM MATH/Time series resesarch/vanillatsgc/tsgc_edited/tsgc")
 # Ensure your working directory is the project root (where .Rproj or .here lives).
 #base_path   <- here::here()
 base_path   <- getwd()
@@ -465,7 +465,7 @@ do_plot(
 )
 
 if (SAVE_TABLES) {
-  tsgc::write_results(res = res_eng, res.dir = tables_dir, n.ahead = n.forecasts, confidence.level = CONF_LEVEL)
+  tsgc::write_results(res = res_eng, res.dir = tables_dir, prefix="enghosp_", n.ahead = n.forecasts, confidence.level = CONF_LEVEL)
   message("Saved results for: eng_hosp_lead")
 }
 
