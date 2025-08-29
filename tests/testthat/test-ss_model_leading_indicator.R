@@ -1,6 +1,7 @@
 library(KFAS)
 library(xts)
 library(stats)
+library(timetk)
 library(zoo)
 
 test_that("tsgc produces same LI output as KFAS", {
