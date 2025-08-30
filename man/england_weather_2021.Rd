@@ -5,7 +5,7 @@
 \alias{england_weather_2021}
 \title{Daily Weather data of England in 2021.}
 \format{
-An object of class \code{"xts"};
+An object of class \code{"xts"} with columns:
 \describe{
 \item{temperature_C}{Daily mean air temperature in degree Celsius (C) at 2 metres}
 \item{max_temp_C}{Daily maximum temperature in degree Celsius (C) at 2 metres}

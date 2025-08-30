@@ -51,16 +51,16 @@
 #' @examples
 #' library(tsgc)
 #' data(gauteng,package="tsgc")
-#' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
 #'
 #' # Specify a model
-#' model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+#' model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("2020-07-20"))
 #' # Estimate a specified model
 #' res <- estimate(model)
 #'
 #' # Plot forecast of new cases 7 days ahead
-#' plot_forecast(res, n.ahead=7, confidence.level = 0.68, date_format = "%Y-%m-%d",
-#' title = "Forecast new cases", plt.start.date = as.Date("2020-07-13"),series.name="cases")
+#' plot_forecast(res, n.ahead=7, confidence.level = 0.68, 
+#' title = "Forecast new cases", plt.start.date = as.Date("2020-07-13"),
+#' series.name="cases")
 #'
 #' @export
 plot_forecast <- function(res,n.ahead=7, confidence.level = 0.68, 
@@ -97,18 +97,15 @@ plot_forecast <- function(res,n.ahead=7, confidence.level = 0.68,
 #' @examples
 #' library(tsgc)
 #' data(gauteng,package="tsgc")
-#' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
-#' idx.eval <- (zoo::index(gauteng) >= as.Date("2020-07-20")) &
-#'      zoo::index(gauteng) <= as.Date("2020-07-27")
-#'
+#' 
 #' # Specify a model
-#' model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+#' model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("2020-07-20"))
 #' # Estimate a specified model
 #' res <- estimate(model)
 #'
 #' # Plot forecast and realised log growth rate of cumulative cases
 #' plot_log_forecast(res, Y=gauteng, n.ahead = 7,
-#'   title = "Forecast ln(g)", plt.start.date = as.Date("2020-07-13"))
+#'   title = "Forecast ln(g_t)", plt.start.date = as.Date("2020-07-13"))
 #'
 #' @export
 plot_log_forecast <- function(res,Y, n.ahead = 14,
@@ -142,10 +139,9 @@ plot_log_forecast <- function(res,Y, n.ahead = 14,
 #' @examples
 #' library(tsgc)
 #' data(gauteng,package="tsgc")
-#' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
-#'
+#' 
 #' # Specify a model
-#' model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+#' model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("2020-07-20"))
 #' # Estimate a specified model
 #' res <- model$estimate()
 #'
@@ -191,10 +187,9 @@ plot_gy_components <- function(res,plt.start.date = NULL,
 #' @examples
 #' library(tsgc)
 #' data(gauteng,package="tsgc")
-#' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
 #'
 #' # Specify a model
-#' model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+#' model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("2020-07-20"))
 #' # Estimate a specified model
 #' res <- model$estimate()
 #'
@@ -254,11 +249,10 @@ plot_gy_ci <- function(res,plt.start.date = NULL, smoothed = FALSE,
 #' @examples
 #' library(tsgc)
 #' data(gauteng,package="tsgc")
-#' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
 #' n.ahead=7
 #'
 #' # Exapmle 1: Specify a Dynamic Gompertz model
-#' model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+#' model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("2020-07-20"))
 #' # Estimate a specified model
 #' res <- model$estimate()
 #'

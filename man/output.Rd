@@ -15,3 +15,15 @@ The fitted KFS model
 \description{
 Accessor method to access the fitted KFS model from \code{FilterResults}
 }
+\examples{
+library(tsgc)
+data(gauteng,package="tsgc")
+# Specify a model
+model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("2020-07-20"))
+# Estimate a specified model
+res <- estimate(model)
+
+# Return KFS object in output of res
+output(res)
+
+}

@@ -189,13 +189,12 @@ argmax <- function(x, decreasing=TRUE) {
 #'
 #' res.dir <- tempdir()
 #' data(gauteng,package="tsgc")
-#' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-06")
-#' res <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)$estimate()
+#' res <- estimate(SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, 
+#' end.date=as.Date("2020-07-06")))
 #'
 #' tsgc::write_results(
-#' res=res, res.dir = res.dir, Y = gauteng[idx.est], n.ahead = 14,
-#' confidence.level = 0.68
-#' )
+#' res=res, res.dir = res.dir, n.ahead = 14,
+#' confidence.level = 0.68)
 #'
 #' @export
 write_results <- function(res, res.dir, n.ahead, prefix="", confidence.level=0.68) {
@@ -502,6 +501,13 @@ get_time_resolution <- function(dates) {
 #' @returns A vector of transformed dates
 #' 
 #' @importFrom zoo as.yearmon
+#' @examples
+#' library(xts)
+#' my.date=yearqtr(2024.25)
+#' qtr2date(my.date)
+#' 
+#' my.date2=yearmon(c(2024.5,2024.8))
+#' qtr2date(my.date2)
 #'
 #' @export
 qtr2date<-function(dates){
@@ -525,6 +531,16 @@ qtr2date<-function(dates){
 #' @importFrom zoo as.yearmon
 #' 
 #' @returns A vector of dates.
+#' @examples
+#' #Daily frequency
+#' seq_dates(as.Date("2024-01-05"), "daily", length.out=14)
+#' 
+#' #Quarterly frequency
+#' seq_dates(yearqtr(2020), "quarterly", length.out=12)
+#' seq_dates(yearqtr(2020), "quarterly", to=yearqtr(2022))
+#' 
+#' #Monthly frequency
+#' seq_dates(yearmon(2020), "monthly", length.out=12)
 #'
 #' @export
 seq_dates<-function(from, resolution, to=NA, length.out=NA){

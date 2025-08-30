@@ -20,7 +20,7 @@
 #'
 #' @usage data(gauteng)
 #'
-#' @format An object of class `"xts"`;
+#' @format An object of class `"xts"` with columns:
 #' \describe{
 #'   \item{cum_cases}{Cumulative cases of Covid-19 from 10th March 2020}
 #' }
@@ -70,7 +70,7 @@
 #'
 #' @usage data(ukitaly)
 #'
-#' @format An object of class `"xts"` with columns
+#' @format An object of class `"xts"` with columns:
 #' \describe{
 #'   \item{UK}{Cumulative cases of Covid-19 in the UK}
 #'   \item{Italy}{Cumulative cases of Covid-19 in Italy}
@@ -92,7 +92,7 @@
 #'
 #' @usage data(gauteng_weather_2021)
 #'
-#' @format An object of class `"xts"`;
+#' @format An object of class `"xts"` with columns:
 #' \describe{
 #'   \item{TempC}{Mean air temperature in degree Celsius at 2 meters}
 #'   \item{TempC_max}{Maximum Temperature in degree Celsius at 2 meters}
@@ -114,7 +114,7 @@
 #'
 #' @usage data(england_weather_2021)
 #'
-#' @format An object of class `"xts"`;
+#' @format An object of class `"xts"` with columns:
 #' \describe{
 #'   \item{temperature_C}{Daily mean air temperature in degree Celsius (C) at 2 metres}
 #'   \item{max_temp_C}{Daily maximum temperature in degree Celsius (C) at 2 metres}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/accessorFns.R
 \name{plot.SSModelLeadingIndicator}
 \alias{plot.SSModelLeadingIndicator}
-\title{Calling plot method for classes in tsgc}
+\title{Calling plot method for \code{SSModelLeadingIndicator} class}
 \usage{
 \method{plot}{SSModelLeadingIndicator}(
   model,

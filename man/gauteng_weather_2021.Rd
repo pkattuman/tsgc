@@ -5,7 +5,7 @@
 \alias{gauteng_weather_2021}
 \title{Daily weather data of the South African province of Gauteng in 2021}
 \format{
-An object of class \code{"xts"};
+An object of class \code{"xts"} with columns:
 \describe{
 \item{TempC}{Mean air temperature in degree Celsius at 2 meters}
 \item{TempC_max}{Maximum Temperature in degree Celsius at 2 meters}

@@ -16,9 +16,8 @@ from a fitted \code{SSModel} object which has had the Kalman filter applied to i
 \examples{
 library(tsgc)
 data(gauteng,package="tsgc")
-idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
 # Specify a model
-model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("2020-07-20"))
 # Estimate a specified model
 res <- estimate(model)
 

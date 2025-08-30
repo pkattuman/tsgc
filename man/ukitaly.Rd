@@ -5,7 +5,7 @@
 \alias{ukitaly}
 \title{Cumulative daily cases of Covid-19 in Italy and UK, before 14 Dec 2020.}
 \format{
-An object of class \code{"xts"} with columns
+An object of class \code{"xts"} with columns:
 \describe{
 \item{UK}{Cumulative cases of Covid-19 in the UK}
 \item{Italy}{Cumulative cases of Covid-19 in Italy}

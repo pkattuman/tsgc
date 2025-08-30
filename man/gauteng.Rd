@@ -5,7 +5,7 @@
 \alias{gauteng}
 \title{Cumulative daily cases of Covid-19 in the South African province of Gauteng.}
 \format{
-An object of class \code{"xts"};
+An object of class \code{"xts"} with columns:
 \describe{
 \item{cum_cases}{Cumulative cases of Covid-19 from 10th March 2020}
 }

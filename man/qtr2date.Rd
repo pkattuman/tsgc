@@ -17,3 +17,12 @@ This function changes the yearqtr or yearmon object into a date object,
 e.g. the first day of the quarter/month, in order to make plotting these dates
 possible in ggplot.
 }
+\examples{
+library(xts)
+my.date=yearqtr(2024.25)
+qtr2date(my.date)
+
+my.date2=yearmon(c(2024.5,2024.8))
+qtr2date(my.date2)
+
+}

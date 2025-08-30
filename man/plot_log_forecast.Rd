@@ -40,17 +40,14 @@ log cumulative growth rate out of the estimation sample.
 \examples{
 library(tsgc)
 data(gauteng,package="tsgc")
-idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
-idx.eval <- (zoo::index(gauteng) >= as.Date("2020-07-20")) &
-     zoo::index(gauteng) <= as.Date("2020-07-27")
 
 # Specify a model
-model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("2020-07-20"))
 # Estimate a specified model
 res <- estimate(model)
 
 # Plot forecast and realised log growth rate of cumulative cases
 plot_log_forecast(res, Y=gauteng, n.ahead = 7,
-  title = "Forecast ln(g)", plt.start.date = as.Date("2020-07-13"))
+  title = "Forecast ln(g_t)", plt.start.date = as.Date("2020-07-13"))
 
 }

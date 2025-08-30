@@ -15,13 +15,18 @@ Accessor method to access prediction y.hat in \code{SSModel} object
 \examples{
 library(tsgc)
 data(gauteng,package="tsgc")
-idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
+
 # Specify a model
-model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, 
+                                    end.date=as.Date("2020-07-20"))
+
 # Estimate a specified model
 res <- estimate(model)
 
-#Get prediction
-gety.hat(res$predict.all(n.ahead=7))
+# Get object from predict.all
+all_predictions<-res$predict_all(n.ahead=7)
+
+# Get prediction
+gety.hat(all_predictions)
 
 }

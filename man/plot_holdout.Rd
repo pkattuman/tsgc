@@ -53,11 +53,10 @@ sample.
 \examples{
 library(tsgc)
 data(gauteng,package="tsgc")
-idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
 n.ahead=7
 
 # Exapmle 1: Specify a Dynamic Gompertz model
-model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("2020-07-20"))
 # Estimate a specified model
 res <- model$estimate()
 

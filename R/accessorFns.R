@@ -24,6 +24,33 @@
 #' @param idx The series number (must be integers 1 or 2) for which exogenous variables are supplied. 
 #' Only applicable for FilterResultsLI object. Defaults to NULL.
 #'
+#' @examples
+#' #FilterResults example
+#' #Load Gauteng weather 
+#' data(gauteng_weather_2021, package = "tsgc")
+#' gauteng_weather<-gauteng_weather_2021[,c(1,3)]
+#' 
+#' # Set up model and estimate it
+#' model_weather <- SSModelDynamicGompertz$new(Y = cumulative_cases, xpred=gauteng_weather,
+#'                                             start.date=as.Date("2021-02-01"), 
+#'                                            end.date=as.Date("2021-04-19"))
+#' res_weather <- estimate(model_weather)
+#' summary(res_weather)
+#' 
+#' # Feed future weather data into the results object. Subsetting of gauteng_weather 
+#' #is done inside the function.
+#' supply_xpred.new(res_weather,gauteng_weather)
+#' 
+#' #FilterResultsLI example
+#' xpred1<-xpred2<-england_weather_2021[,1:4]
+#' mod<-SSModelLeadingIndicator$new(eng, n.lag=4, xpred1=xpred1, xpred2=xpred2, 
+#'                                 start.date = as.Date("2021-04-30"), 
+#'                                 end.date = as.Date("2021-07-24"))
+#' res_lead.x<-estimate(mod)
+#'
+#' supply_xpred.new(res_lead.x,england_weather_2021[,1:4],idx=1)
+#' supply_xpred.new(res_lead.x,england_weather_2021[,1:4],idx=2)
+#' 
 #' @export
 supply_xpred.new<-function(object, new.xts, idx=NULL){
   if (!is.xts(new.xts)){
@@ -54,6 +81,17 @@ supply_xpred.new<-function(object, new.xts, idx=NULL){
 #' @param object FilterResults object
 #' 
 #' @returns The fitted KFS model
+#' 
+#'@examples
+#' library(tsgc)
+#' data(gauteng,package="tsgc")
+#' # Specify a model
+#' model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("2020-07-20"))
+#' # Estimate a specified model
+#' res <- estimate(model)
+#' 
+#' # Return KFS object in output of res
+#' output(res)
 #'
 #' @export
 output<-function(object){
@@ -203,14 +241,19 @@ gety<-function(object){
 #' @examples
 #' library(tsgc)
 #' data(gauteng,package="tsgc")
-#' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
+#' 
 #' # Specify a model
-#' model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+#' model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, 
+#'                                     end.date=as.Date("2020-07-20"))
+#' 
 #' # Estimate a specified model
 #' res <- estimate(model)
 #' 
-#' #Get prediction
-#' gety.hat(res$predict.all(n.ahead=7))
+#' # Get object from predict.all
+#' all_predictions<-res$predict_all(n.ahead=7)
+#' 
+#' # Get prediction
+#' gety.hat(all_predictions)
 #' 
 #' @export
 gety.hat<-function(object){
@@ -228,9 +271,8 @@ gety.hat<-function(object){
 #' @examples
 #' library(tsgc)
 #' data(gauteng,package="tsgc")
-#' idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
 #' # Specify a model
-#' model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+#' model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("2020-07-20"))
 #' # Estimate a specified model
 #' res <- estimate(model)
 #' 
@@ -280,7 +322,7 @@ print.SSModelLeadingIndicator <- function(model) {
   }
 }
 
-#' @title Calling plot method for classes in tsgc
+#' @title Calling plot method for `SSModelLeadingIndicator` class
 #'
 #' @description Accessor method to call the plot method of an object of 
 #' `SSModelLeadingIndicator` class

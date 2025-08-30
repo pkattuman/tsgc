@@ -48,15 +48,15 @@ intervals for \eqn{\ln(g_t)}.
 \examples{
 library(tsgc)
 data(gauteng,package="tsgc")
-idx.est <- zoo::index(gauteng) <= as.Date("2020-07-20")
 
 # Specify a model
-model <- SSModelDynamicGompertz$new(Y = gauteng[idx.est], q = 0.005)
+model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("2020-07-20"))
 # Estimate a specified model
 res <- estimate(model)
 
 # Plot forecast of new cases 7 days ahead
-plot_forecast(res, n.ahead=7, confidence.level = 0.68, date_format = "\%Y-\%m-\%d",
-title = "Forecast new cases", plt.start.date = as.Date("2020-07-13"),series.name="cases")
+plot_forecast(res, n.ahead=7, confidence.level = 0.68, 
+title = "Forecast new cases", plt.start.date = as.Date("2020-07-13"),
+series.name="cases")
 
 }
