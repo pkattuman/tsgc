@@ -22,6 +22,6 @@ model <- SSModelDynamicGompertz$new(Y = gauteng, q = 0.005, end.date=as.Date("20
 res <- estimate(model)
 
 #Return alphahat
-alphahat(modelKFS(output(res)))
+alphahat(output(res))
 
 }

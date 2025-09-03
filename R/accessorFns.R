@@ -277,7 +277,7 @@ gety.hat<-function(object){
 #' res <- estimate(model)
 #' 
 #' #Return alphahat
-#' alphahat(modelKFS(output(res)))
+#' alphahat(output(res))
 #'
 #' @export
 alphahat<-function(object){
