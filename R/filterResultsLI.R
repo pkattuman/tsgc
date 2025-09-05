@@ -20,9 +20,9 @@ setOldClass("KFS")
 #' indicator, inherited from the estimated \code{SSModelLeadingIndicator} model.
 #' @field xpred_logical Vector of length 2 with logical values, indicating whether
 #' there are exogenous predictors for leading series and target series. 
-#' @field xpred1.new An xts object containing the values of exogenous variables for 
+#' @field xpred_lead.new An xts object containing the values of exogenous variables for 
 #' the leading indicator over the prediction time frame.
-#' @field xpred2.new An xts object containing the values of exogenous variables for 
+#' @field xpred_targ.new An xts object containing the values of exogenous variables for 
 #' the target variable over the prediction time frame.
 #' @field resolution A character object showing the time resolution of the data 
 #' in \code{data_xts}. Options are "daily", "monthly, "quarterly" and "yearly".
@@ -102,8 +102,8 @@ FilterResultsLI <- setRefClass(
     n.lag="numeric",
     sea.period="numeric",
     LeadIndCol="numeric",
-    xpred1.new="ANY",
-    xpred2.new="ANY",
+    xpred_lead.new="ANY",
+    xpred_targ.new="ANY",
     xpred_logical="logical",
     resolution="character",
     start.date="ANY",
@@ -111,7 +111,7 @@ FilterResultsLI <- setRefClass(
   methods = list(
     initialize = function(data_xts, output,n.lag,sea.period,LeadIndCol,
                           xpred_logical, start.date, end.date, 
-                          xpred1.new=NULL, xpred2.new=NULL, resolution="daily")
+                          xpred_lead.new=NULL, xpred_targ.new=NULL, resolution="daily")
     {
       "Create an instance of the \\code{FilterResultsLI} class with fields defined
       earlier in the fields section."
@@ -122,8 +122,8 @@ FilterResultsLI <- setRefClass(
       LeadIndCol<<-LeadIndCol
       start.date<<-start.date
       end.date<<-end.date
-      xpred1.new<<-xpred1.new
-      xpred2.new<<-xpred2.new
+      xpred_lead.new<<-xpred_lead.new
+      xpred_targ.new<<-xpred_targ.new
       xpred_logical<<-xpred_logical
       resolution<<-get_time_resolution(index(data_xts))
     },
@@ -168,8 +168,8 @@ FilterResultsLI <- setRefClass(
         as.data.frame()
       colnames(forecasts) = c('Admissions','Cases')
       
-      last_cases<-as.vector(get_timeframe(data_xts, end.date)[1,]$cCases)
-      last_admit<-as.vector(get_timeframe(data_xts, end.date)[1,]$cAdmit)
+      last_cases<-as.vector(get_timeframe(data_xts, end.date)[1,]$cLead)
+      last_admit<-as.vector(get_timeframe(data_xts, end.date)[1,]$cTarg)
       
       # Compute forecasts as per (7) in Andrew's Time Series Models for Epidemics paper
       # Confidence intervals computed as per Harvey, Kattuman and Thamotheram 2021 NIESR paper
@@ -180,14 +180,14 @@ FilterResultsLI <- setRefClass(
       #forecasts$Cases.upr[1] = last_cases*exp(forcout$LDLcases[1,3])
       #forecasts$Cases.upr[2:n.ahead] = last_cases*exp(forcout$LDLcases[2:n.ahead,3])*cumprod(1+exp(forcout$LDLcases[1:(n.ahead-1),3]))
       
-      forecasts$Admissions[1] = last_admit*exp(forcout$LDLhosp[1,1])
-      forecasts$Admissions[2:n.ahead] = last_admit*exp(forcout$LDLhosp[2:n.ahead,1])*cumprod(1+exp(forcout$LDLhosp[1:(n.ahead-1),1]))
+      forecasts$Admissions[1] = last_admit*exp(forcout$LDLtarg[1,1])
+      forecasts$Admissions[2:n.ahead] = last_admit*exp(forcout$LDLtarg[2:n.ahead,1])*cumprod(1+exp(forcout$LDLtarg[1:(n.ahead-1),1]))
       
-      forecasts$Admissions.lwr[1] = last_admit*exp(forcout$LDLhosp[1,2])
-      forecasts$Admissions.lwr[2:n.ahead] = last_admit*exp(forcout$LDLhosp[2:n.ahead,2])*cumprod(1+exp(forcout$LDLhosp[1:(n.ahead-1),2]))
+      forecasts$Admissions.lwr[1] = last_admit*exp(forcout$LDLtarg[1,2])
+      forecasts$Admissions.lwr[2:n.ahead] = last_admit*exp(forcout$LDLtarg[2:n.ahead,2])*cumprod(1+exp(forcout$LDLtarg[1:(n.ahead-1),2]))
       
-      forecasts$Admissions.upr[1] = last_admit*exp(forcout$LDLhosp[1,3])
-      forecasts$Admissions.upr[2:n.ahead] = last_admit*exp(forcout$LDLhosp[2:n.ahead,3])*cumprod(1+exp(forcout$LDLhosp[1:(n.ahead-1),3]))
+      forecasts$Admissions.upr[1] = last_admit*exp(forcout$LDLtarg[1,3])
+      forecasts$Admissions.upr[2:n.ahead] = last_admit*exp(forcout$LDLtarg[2:n.ahead,3])*cumprod(1+exp(forcout$LDLtarg[1:(n.ahead-1),3]))
       
       # Round forecasts to nearest whole number
       forecasts = round(forecasts,2)
@@ -286,7 +286,7 @@ FilterResultsLI <- setRefClass(
       
       true_leading<-data_xts[(new_index+1):last_index]
       
-      na_vals[1:future_rows,1] = as.vector(true_leading$LDLcases)
+      na_vals[1:future_rows,1] = as.vector(true_leading$LDLlead)
       
       #Supply the new data back to the new.model object
       new.model$y <- rbind(gety(new.model),na_vals) %>% as.ts()
@@ -295,24 +295,24 @@ FilterResultsLI <- setRefClass(
         newZ<-array(new.model$Z[,,dim(new.model$Z)[3]], 
                     dim = c(dim(new.model$Z)[1], dim(new.model$Z)[2], n.ahead))
         if (xpred_logical[1]){
-          if (is.xts(xpred1.new)){
+          if (is.xts(xpred_lead.new)){
             new_index<-which.max(index(data_xts)==end.date)
-            xpred1.new.subset<-lag(xpred1.new,n.lag)[(new_index+1):(new_index+n.ahead)]
-            d1<-dim(xpred1.new.subset)[2]
-            newZ[1,1:d1,]<-t(xpred1.new.subset)
+            xpred_lead.new.subset<-lag(xpred_lead.new,n.lag)[(new_index+1):(new_index+n.ahead)]
+            d1<-dim(xpred_lead.new.subset)[2]
+            newZ[1,1:d1,]<-t(xpred_lead.new.subset)
           } else {
-            stop("xpred1.new not provided.")
+            stop("xpred_lead.new not provided.")
           }
         }
         if (xpred_logical[2]){
-          if (is.xts(xpred2.new)){
+          if (is.xts(xpred_targ.new)){
             new_index<-which.max(index(data_xts)==end.date)
-            xpred2.new.subset<-xpred2.new[(new_index+1):(new_index+n.ahead)]
-            d2<-dim(xpred2.new.subset)[2]
+            xpred_targ.new.subset<-xpred_targ.new[(new_index+1):(new_index+n.ahead)]
+            d2<-dim(xpred_targ.new.subset)[2]
             if (!xpred_logical[1]){d1=0}
-            newZ[2,(d1+1):(d1+d2),]<-t(xpred2.new.subset)
+            newZ[2,(d1+1):(d1+d2),]<-t(xpred_targ.new.subset)
           } else {
-            stop("xpred2.new not provided.")
+            stop("xpred_targ.new not provided.")
           }
         }
         new.model$Z <- abind::abind(new.model$Z,newZ,along = 3)
@@ -322,37 +322,37 @@ FilterResultsLI <- setRefClass(
         newdata <- if (sea.period<2 && !xpred_logical[1] && xpred_logical[2]){
           SSModel(na_vals ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,Qf[2,2]),2,2),type = 'common')+
                               SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1)+
-                              SSMregression(~xpred2.new.subset, type="distinct", index=2),
+                              SSMregression(~xpred_targ.new.subset, type="distinct", index=2),
                             H = Hf)
         } else if (sea.period<2 && xpred_logical[1] && !xpred_logical[2]){
           SSModel(na_vals ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,Qf[2,2]),2,2),type = 'common')+
                     SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1)+
-                    SSMregression(~xpred1.new.subset, type="distinct", index=1),
+                    SSMregression(~xpred_lead.new.subset, type="distinct", index=1),
                   H = Hf)
         } else if (sea.period<2 && xpred_logical[1] && xpred_logical[2]) {
           SSModel(na_vals ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,Qf[2,2]),2,2),type = 'common')+
                     SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1)+
-                    SSMregression(~xpred1.new.subset, type="distinct", index=1)+
-                    SSMregression(~xpred2.new.subset, type="distinct", index=2),
+                    SSMregression(~xpred_lead.new.subset, type="distinct", index=1)+
+                    SSMregression(~xpred_targ.new.subset, type="distinct", index=2),
                   H = Hf)
         } else if (sea.period>=2 && !xpred_logical[1] && xpred_logical[2]) {
           SSModel(na_vals ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,Qf[2,2]),2,2),type = 'common')+
                     SSMseasonal(sea.period, Q = matrix(c(0,0,0,0),2,2), sea.type='trigonometric', type='distinct')+
                     SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1)+
-                    SSMregression(~xpred2.new.subset, type="distinct", index=2),
+                    SSMregression(~xpred_targ.new.subset, type="distinct", index=2),
                   H = Hf)
         } else if (sea.period>=2 && xpred_logical[1] && !xpred_logical[2]) {
           SSModel(na_vals ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,Qf[2,2]),2,2),type = 'common')+
                     SSMseasonal(sea.period,Q = matrix(c(0,0,0,0),2,2), sea.type='trigonometric', type='distinct')+
                     SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1)+
-                    SSMregression(~xpred1.new.subset, type="distinct", index=1),
+                    SSMregression(~xpred_lead.new.subset, type="distinct", index=1),
                   H = Hf)
         } else {
           SSModel(na_vals ~ SSMtrend(degree = 2, Q = matrix(c(0,0,0,Qf[2,2]),2,2),type = 'common')+
                     SSMseasonal(sea.period,Q = matrix(c(0,0,0,0),2,2), sea.type='trigonometric', type='distinct')+
                     SSMtrend(degree = 1, Q = matrix(Qf[3,3]),index=1)+
-                    SSMregression(~xpred1.new.subset, type="distinct", index=1)+
-                    SSMregression(~xpred2.new.subset, type="distinct", index=2),
+                    SSMregression(~xpred_lead.new.subset, type="distinct", index=1)+
+                    SSMregression(~xpred_targ.new.subset, type="distinct", index=2),
                   H = Hf)
         }
         
@@ -413,7 +413,7 @@ FilterResultsLI <- setRefClass(
                          resolution=resolution)
 
       y.hat <- xts::xts(
-        c(y.t.t[2,], y.hat.kfas$LDLhosp[, 1] %>% as.matrix()),
+        c(y.t.t[2,], y.hat.kfas$LDLtarg[, 1] %>% as.matrix()),
         order.by = dates)
 
       i.level <- grep("level", colnames(att(model_output)))[1]
@@ -580,7 +580,7 @@ FilterResultsLI <- setRefClass(
         #smAdmit = smadmit %>% xts(index(data_xts[(n.lag+1):(length(lcadmit)),])+1)
         
         #Plot forecast graph
-        df_plot<-get_timeframe(data_xts, start.date, end.date)$newAdmit
+        df_plot<-get_timeframe(data_xts, start.date, end.date)$newTarg
         #df_plot$Smooth<-smAdmit
         df_plot$Forecast<-sea[,1]
         #df_plot$ForecastTrend<-fadmits$forc
@@ -608,7 +608,7 @@ FilterResultsLI <- setRefClass(
         ci_plot$Date <- dates2
         
         p2<-ggplot2::ggplot(data = df_plot, aes(x = Date)) +
-          ggplot2::geom_line(aes(y = newAdmit, color = "Data"), lwd = 0.85) +
+          ggplot2::geom_line(aes(y = newTarg, color = "Data"), lwd = 0.85) +
           #ggplot2::geom_line(aes(y = Smooth, color = "Smoothed\ndata"),lwd=0.85)+
           ggplot2::geom_line(aes(y = Forecast, color = "Forecast"), lwd = 0.85) +
           # ggplot2::geom_line(
@@ -642,17 +642,17 @@ FilterResultsLI <- setRefClass(
       out of the estimation sample. For more details, see \\link{plot_log_forecast}."
     
     forcout_sea<-.self$predict_all(n.ahead, sea.on = TRUE, return.all = FALSE)$y.hat
-    old<-get_timeframe(data_xts, start.date, end.date)[,"LDLhosp"]
+    old<-get_timeframe(data_xts, start.date, end.date)[,"LDLtarg"]
     
     eng_full<-add_daily_ldl(Y, LeadIndCol = LeadIndCol)
-    eng_full<-eng_full[index(eng_full)>end.date,"LDLhosp"]
+    eng_full<-eng_full[index(eng_full)>end.date,"LDLtarg"]
     
     actual<-eng_full[1:min(n.ahead, dim(eng_full)[1])]
     
     # Show filtered level only when xpred_logical is both FALSE
     if (!any(xpred_logical)){
       forcout<-.self$predict_all(n.ahead, sea.on = FALSE, return.all = FALSE)$y.hat
-      smldlh = predict(output$model,states='trend')$LDLhosp
+      smldlh = predict(output$model,states='trend')$LDLtarg
       
       dates_filtered <- seq_dates(from = start.date, length.out = length(smldlh), resolution=resolution)
       
@@ -852,11 +852,11 @@ FilterResultsLI <- setRefClass(
            Please choose a smaller n.ahead, shorten the estimation period or 
            provide more holdout data.")
     } else {
-      data_validation<-future_data[1:n.ahead, c("cAdmit", "newAdmit")]
+      data_validation<-future_data[1:n.ahead, c("cTarg", "newTarg")]
     }
     
-    newAdmit_validation<-data_validation[,c("newAdmit")]
-    compare<-cbind(newAdmit_validation, sea[,1])
+    newTarg_validation<-data_validation[,c("newTarg")]
+    compare<-cbind(newTarg_validation, sea[,1])
     names(compare)<-c("Actual", "Forecast")
     
     # mape.trend <- 100*(abs(compare$Actual - compare$ForecastTrend)/
@@ -924,8 +924,8 @@ FilterResultsLI <- setRefClass(
       idx.dates <- (index(Y) >=end.date)
       data_validation<-na.omit(add_daily_ldl(Y[idx.dates], LeadIndCol = LeadIndCol))[1:n.ahead]
       
-      newAdmit_validation<-data_validation[,c("newAdmit")]
-      compare<-cbind(newAdmit_validation, sea[,1]) #fadmits[,1]
+      newTarg_validation<-data_validation[,c("newTarg")]
+      compare<-cbind(newTarg_validation, sea[,1]) #fadmits[,1]
       names(compare)<-c("Actual", "Forecast")
       
       # mape.trend <- 100*(abs(compare$Actual - compare$ForecastTrend)/

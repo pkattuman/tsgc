@@ -20,15 +20,15 @@ test_that("tsgc produces same LI output as KFAS", {
   
   y<-add_daily_ldl(ukitaly, LeadIndCol=1)
   
-  y$newCases = stats::lag(y$newCases,n.lag)
-  y$LDLcases = stats::lag(y$LDLcases,n.lag)
-  y$cCases = stats::lag(y$cCases,n.lag)
+  y$newLead = stats::lag(y$newLead,n.lag)
+  y$LDLlead = stats::lag(y$LDLlead,n.lag)
+  y$cLead = stats::lag(y$cLead,n.lag)
   
   y[is.infinite(y)] <- NA
   
   y <- get_timeframe(na.omit(y),est.start)
   
-  data_ldl <- get_timeframe(y, est.start, est.end)[,c("LDLcases","LDLhosp")]
+  data_ldl <- get_timeframe(y, est.start, est.end)[,c("LDLlead","LDLtarg")]
   
   data_mat <- as.matrix(data_ldl)
   
@@ -86,15 +86,15 @@ test_that("tsgc produces same LI output as KFAS with fixed q", {
   
   y<-add_daily_ldl(ukitaly, LeadIndCol=1)
   
-  y$newCases = stats::lag(y$newCases,n.lag)
-  y$LDLcases = stats::lag(y$LDLcases,n.lag)
-  y$cCases = stats::lag(y$cCases,n.lag)
+  y$newLead = stats::lag(y$newLead,n.lag)
+  y$LDLlead = stats::lag(y$LDLlead,n.lag)
+  y$cLead = stats::lag(y$cLead,n.lag)
   
   y[is.infinite(y)] <- NA
   
   y <- get_timeframe(na.omit(y),est.start)
   
-  data_ldl <- get_timeframe(y, est.start, est.end)[,c("LDLcases","LDLhosp")]
+  data_ldl <- get_timeframe(y, est.start, est.end)[,c("LDLlead","LDLtarg")]
   
   data_mat <- as.matrix(data_ldl)
   
@@ -174,7 +174,7 @@ test_that("Leading indicator model + seasonal has correct number of elements", {
   expect_equal(ncol(res$output$alphahat), 3 + 2*(sea-1))
 })
 
-test_that("LI model + xpred1 + seasonal has correct number of elements", {
+test_that("LI model + xpred_lead + seasonal has correct number of elements", {
   eng <- tsgc::england[, 1:2]
   
   est.start.eng <- as.Date("2021-04-30")
@@ -185,12 +185,12 @@ test_that("LI model + xpred1 + seasonal has correct number of elements", {
   
   mod <- SSModelLeadingIndicator$new(eng, n.lag = 5, start.date = est.start.eng, 
                                      end.date = est.end.eng, sea.period = sea,
-                                     xpred1 = xp)
+                                     xpred_lead = xp)
   res <- mod$estimate()
   expect_equal(ncol(res$output$alphahat),3 + 2*(sea-1) + ncol(xp))
 })
 
-test_that("LI model + xpred2 has correct number of elements", {
+test_that("LI model + xpred_targ has correct number of elements", {
   eng <- tsgc::england[, 1:2]
   
   est.start.eng <- as.Date("2021-04-30")
@@ -201,12 +201,12 @@ test_that("LI model + xpred2 has correct number of elements", {
   
   mod <- SSModelLeadingIndicator$new(eng, n.lag = 5, start.date = est.start.eng, 
                                      end.date = est.end.eng, sea.period = sea,
-                                     xpred2 = xp)
+                                     xpred_targ = xp)
   res <- mod$estimate()
   expect_equal(ncol(res$output$alphahat),3 + ncol(xp))
 })
 
-test_that("LI + xpred1 + xpred2 + seasonal has correct number of elements", {
+test_that("LI + xpred_lead + xpred_targ + seasonal has correct number of elements", {
   eng <- tsgc::england[, 1:2]
   
   est.start.eng <- as.Date("2021-04-30")
@@ -217,7 +217,7 @@ test_that("LI + xpred1 + xpred2 + seasonal has correct number of elements", {
   
   mod <- SSModelLeadingIndicator$new(eng, n.lag = 5, start.date = est.start.eng, 
                                      end.date = est.end.eng, sea.period = sea,
-                                     xpred1 = xp, xpred2 = xp)
+                                     xpred_lead = xp, xpred_targ = xp)
   res <- mod$estimate()
   expect_equal(ncol(res$output$alphahat),3 + 2*(sea-1) + 2*ncol(xp))
 })
