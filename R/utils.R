@@ -89,6 +89,7 @@ get_timeframe<-function(df, start.date, end.date=NULL){
 #' add_daily_ldl(england[,c("cum_cases","cum_admissions")],LeadIndCol=1)
 #'
 #' @importFrom xts lag.xts
+#' @importFrom xts is.xts
 #'
 #' @export
 add_daily_ldl <- function(data, LeadIndCol=1){

@@ -26,11 +26,11 @@ effect with daily data, this would be 7. Not required if
 
 \item{\code{n.lag}}{Number of days/months/quarters/years to lag the leading indicator.}
 
-\item{\code{xpred1}}{An xts object containing the values of exogenous variables for
+\item{\code{xpred_lead}}{An xts object containing the values of exogenous variables for
 the leading indicator. Dataset must contain values for all dates in the
 estimation time frame.}
 
-\item{\code{xpred2}}{An xts object containing the values of exogenous variables for
+\item{\code{xpred_targ}}{An xts object containing the values of exogenous variables for
 the target variable. Dataset must contain values for all dates in the
 estimation time frame.}
 
@@ -58,8 +58,8 @@ model.}}
   sea.period = 7,
   q = NULL,
   LeadIndCol = 1,
-  xpred1 = NULL,
-  xpred2 = NULL,
+  xpred_lead = NULL,
+  xpred_targ = NULL,
   start.date = index(Y)[1],
   end.date = tail(index(Y), 1)
 )}}{Create an instance of the \code{SSModelLeadingIndicator} class with the 

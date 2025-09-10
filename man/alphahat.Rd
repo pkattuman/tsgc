@@ -2,7 +2,7 @@
 % Please edit documentation in R/accessorFns.R
 \name{alphahat}
 \alias{alphahat}
-\title{Extract alphahat in SSModel}
+\title{Extract alphahat in KFS object}
 \usage{
 alphahat(object)
 }

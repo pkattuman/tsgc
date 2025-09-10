@@ -33,10 +33,10 @@ indicator, inherited from the estimated \code{SSModelLeadingIndicator} model.}
 \item{\code{xpred_logical}}{Vector of length 2 with logical values, indicating whether
 there are exogenous predictors for leading series and target series.}
 
-\item{\code{xpred1.new}}{An xts object containing the values of exogenous variables for
+\item{\code{xpred_lead.new}}{An xts object containing the values of exogenous variables for
 the leading indicator over the prediction time frame.}
 
-\item{\code{xpred2.new}}{An xts object containing the values of exogenous variables for
+\item{\code{xpred_targ.new}}{An xts object containing the values of exogenous variables for
 the target variable over the prediction time frame.}
 
 \item{\code{resolution}}{A character object showing the time resolution of the data
@@ -88,8 +88,8 @@ variable (\eqn{Y}). Computed as
   xpred_logical,
   start.date,
   end.date,
-  xpred1.new = NULL,
-  xpred2.new = NULL,
+  xpred_lead.new = NULL,
+  xpred_targ.new = NULL,
   resolution = "daily"
 )}}{Create an instance of the \code{FilterResultsLI} class with fields defined
 earlier in the fields section.}
