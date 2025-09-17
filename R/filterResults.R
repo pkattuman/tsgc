@@ -373,7 +373,8 @@ FilterResults <- setRefClass(
         } else {
           y.hat.kfas <- predict(
             output$model, interval = 'confidence',
-            n.ahead = n.ahead, level = 0.68, states = 'level')
+            n.ahead = n.ahead, level = 0.68, states = c("level","regression",
+                                                        "custom"))
         }
         
         # Assumes time invariant Z.t
