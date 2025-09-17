@@ -348,11 +348,11 @@ FilterResults <- setRefClass(
           }
           if (sea.on == TRUE) {
             y.hat.kfas <- predict(
-              output$model, interval = 'prediction',
+              output$model, interval = 'confidence',
               newdata = newdata, level = 0.68, states = 'all')
           } else {
             y.hat.kfas <- predict(
-              output$model, interval = 'prediction',
+              output$model, interval = 'confidence',
               newdata = newdata, level = 0.68, states = 'level')
           }
           
@@ -367,11 +367,11 @@ FilterResults <- setRefClass(
         
         if (sea.on == TRUE) {
           y.hat.kfas <- predict(
-            output$model, interval = 'prediction',
+            output$model, interval = 'confidence',
             n.ahead = n.ahead, level = 0.68, states = 'all')
         } else {
           y.hat.kfas <- predict(
-            output$model, interval = 'prediction',
+            output$model, interval = 'confidence',
             n.ahead = n.ahead, level = 0.68, states = 'level')
         }
         

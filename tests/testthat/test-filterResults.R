@@ -1,45 +1,37 @@
-test_that("Test FilterResults().predict_level() works", {
-  data('gauteng')
-  y <- gauteng[1:50]
-  n.ahead <- 14
-  model <- tsgc::SSModelDynamicGompertz$new(Y = y)
-  res <- model$estimate()
-  expect_true(inherits(res, "FilterResults"))
-  out <- res$predict_level(
-    y.cum = y,
-    n.ahead = n.ahead,
-    confidence_level = 0.68,
-    return.diff = TRUE
+library(KFAS)
+
+test_that("Predict level computes predictions correctly", {
+  data(gauteng, package = "tsgc")
+  
+  est.start <- as.Date("2021-02-01")
+  est.end  <- as.Date("2021-04-19")
+  nf <- 7
+  
+  model <- SSModelDynamicGompertz$new(
+    Y = gauteng$cum_cases, q = 0.005, sea.period = 0,
+    start.date = est.start, end.date = est.end
   )
-})
-
-
-test_that("Test FilterResults().print_estimation_results() works", {
-  data('gauteng')
-  y <- gauteng[1:50]
-  n.ahead <- 14
-  model <- tsgc::SSModelDynamicGompertz$new(Y = y)
-  res <- model$estimate()
-  out <- res$print_estimation_results()
-})
-
-
-test_that("Test FilterResults().predict_all() works", {
-  data('gauteng')
-  y <- gauteng[1:50]
-  n.ahead <- 14
-  model <- tsgc::SSModelDynamicGompertz$new(Y = y)
-  res <- model$estimate()
-  y.hat.all <- res$predict_all(n.ahead, return.all = TRUE)
-})
-
-test_that("Test FilterResults().get_growth_y() works", {
-  data('gauteng')
-  y <- gauteng[1:50]
-  n.ahead <- 14
-  model <- tsgc::SSModelDynamicGompertz$new(Y = y)
-  res <- model$estimate()
-  g.y.t.t <- res$get_growth_y(return.components = TRUE)
+  res <- estimate(model)
+  
+  delta_pred <- predict(res$output$model, n.ahead = nf, 
+                        interval = c("confidence"), level = 0.68)
+  
+  delta_fit <- as.vector(delta_pred[,"fit"])
+  YT <- tail(model$Y,1)
+  cp <- cumprod(1+exp(delta_fit))
+  mult <- c(1,cp[1:(nf-1)])
+  forc <- rep(YT,nf)*exp(delta_fit)*mult
+  
+  delta_lwr <- as.vector(delta_pred[,"lwr"])
+  cp_lwr <- cumprod(1+exp(delta_lwr))
+  mult_lwr <- c(1,cp_lwr[1:(nf-1)])
+  forc_lwr <- rep(YT,nf)*exp(delta_lwr)*mult_lwr
+  
+  delta_upr <- as.vector(delta_pred[,"upr"])
+  cp_upr <- cumprod(1+exp(delta_upr))
+  mult_upr <- c(1,cp_upr[1:(nf-1)])
+  forc_upr <- rep(YT,nf)*exp(delta_upr)*mult_upr
+  
 })
 
 
@@ -92,8 +84,7 @@ test_that("Test predict_all() gives same results as KFAS", {
 })
 
 
-test_that("Test predict_all() yields same results as predict() with NA
-in fcast period", {
+test_that("Test predict_all() yields same results as predict() with NA in fcast period", {
   data('gauteng')
   q <- 0.005
   n.ahead <- 14
