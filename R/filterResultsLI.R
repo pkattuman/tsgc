@@ -850,8 +850,10 @@ FilterResultsLI <- setRefClass(
     
     # mape.trend <- 100*(abs(compare$Actual - compare$ForecastTrend)/
     #                      compare$Actual) %>% mean %>% round(4)
-    mape.sea <- 100*(abs(compare$Actual - compare$Forecast)/compare$Actual) %>%
-      mean %>% round(4)
+    mape.sea <- mean(100*(abs(compare$Actual - compare$Forecast)/compare$Actual)) %>% round(2)
+    smape<-mean(100*(abs(compare$Actual - compare$Forecast)/(compare$Actual+compare$Forecast))) %>% round(2)
+    mae<-abs(compare$Actual - compare$Forecast) %>% mean %>% signif(digits=3)
+    rmse<-sqrt(mean((compare$Actual - compare$Forecast)^2)) %>% signif(digits=3)
     
     ci<-sea[,-1]
     colnames(ci) <- c('lower', 'upper')
@@ -884,7 +886,7 @@ FilterResultsLI <- setRefClass(
       ggplot2::geom_ribbon(data = ci_plot, aes(x = Date, ymin = lower, ymax = upper),linetype = 0, linewidth = 0, fill = "#AA2045",
                            alpha = 0.1) +
       labs(x = "Date", y = paste("New",series.name), title = title,
-           subtitle = paste("MAPE: ",mape.sea,"%.",sep="")) +
+           subtitle = paste("MAPE: ",mape.sea,"%; SMAPE: ",smape,"%; MAE: ", mae,"; RMSE: ", rmse,".", sep="")) +
       theme_economist_white(gray_bg = FALSE, base_size = 14) +
       theme(legend.title = element_blank()) +
       theme(

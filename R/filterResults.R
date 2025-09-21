@@ -944,7 +944,6 @@ FilterResults <- setRefClass(
       
       d <- cbind(
         y.eval.diff[ids,],
-        # y.hat.diff.final[, 1],
         y.hat.diff.final.ci[, 1]
       )
       names(d) <- c('Actual', 'Forecast')
@@ -961,6 +960,9 @@ FilterResults <- setRefClass(
       
       mape.sea <- 100*(abs(d.eval$Actual - d.eval$Forecast)/d.eval$Actual) %>%
         mean %>% round(2)
+      smape<-mean(100*(abs(d.eval$Actual - d.eval$Forecast)/(d.eval$Actual+d.eval$Forecast))) %>% round(2)
+      mae<-abs(d.eval$Actual - d.eval$Forecast) %>% mean %>% signif(digits=3)
+      rmse<-sqrt(mean((d.eval$Actual - d.eval$Forecast)^2)) %>% signif(digits=3)
       
       date_col<-if(resolution=='daily'){
         as.Date(index(y.hat.diff.final.ci))} 
@@ -981,7 +983,7 @@ FilterResults <- setRefClass(
                              linetype = 0, linewidth = 0, fill = "#AA2045",
                              alpha = 0.1) +
         labs(x = "Date", y = paste("New",series.name), title = title,
-             subtitle = paste("MAPE: ",mape.sea,"%.",sep="")) +
+             subtitle = paste("MAPE: ",mape.sea,"%; SMAPE: ",smape,"%; MAE: ", mae,"; RMSE: ", rmse,".", sep="")) +
         theme_economist_white(gray_bg = FALSE, base_size = 14) +
         theme(legend.title = element_blank()) +
         theme(
