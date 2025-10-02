@@ -141,11 +141,6 @@ SSModelDynamicGompertz <- setRefClass(
     are defined in `fields` section. 
       \\subsection{Usage}{\\code{SSModelDynGompertzReinit$new(y, q = 0.005,
       reinit.date = as.Date(\"2021-05-12\"))}}"
-    if (any(na.omit(diff(Y))<=0)){
-      stop("Y must be a dataset strictly increasing in time. If your data 
-           represents cumulative values but has plateaus, please add a small 
-           increasing trend to flat sections.")
-    }
     if (!is.numeric(sea.period) || sea.period==1 || sea.period<0){
       stop("sea.period must be a non-negative integer that is not 1.")
     } 
@@ -173,6 +168,13 @@ SSModelDynamicGompertz <- setRefClass(
       containing the result output for the estimated dynamic Gompertz curve
       model.}
       "
+    if (any(na.omit(diff(Y))<=0)){
+      stop("Y must be a dataset strictly increasing in time. If the cumulative 
+           values exhibit plateaus it is necessary to add small increments to 
+           eliminate flat segments and allow model estimation. This can be done 
+           by ensuring the non-cumulated series is strictly positive.")
+    }
+    
     update = function(pars, model, q) {
       "Update method for Kalman filter to implement the dynamic Gompertz curve
        model.
