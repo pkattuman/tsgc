@@ -164,13 +164,16 @@ FilterResults <- setRefClass(
       freq <- unclass(periodicity(y.cum))$label
       endtime <- end(gety(model)) + c(0, n.ahead)
       filtered.out <- .self$predict_all(n.ahead, sea.on = sea.on,
-                                        return.all = FALSE)
+                                        return.all = FALSE, 
+                                        confidence.level = confidence.level)
 
       # # 1. Extract parameters.
       timespan <- n + 0:n.ahead
 
       # Calculate g.t as exponent of y.t
-      g.t <- exp(gety.hat(filtered.out))
+      g.t <- exp(gety.hat(filtered.out)[,1])
+      g.t.lwr <- exp(gety.hat(filtered.out)[,2])
+      g.t.upr <- exp(gety.hat(filtered.out)[,3])
 
       # Forecast dates
       v_dates_end <- if (resolution=='daily'){
@@ -188,13 +191,6 @@ FilterResults <- setRefClass(
                        as.numeric(last(index(gety.hat(filtered.out)))),
                        by=1/12))}
 
-      # Construct CI
-      Ptt <- filtered.out$P.t.t
-      i.level <- grep("level", colnames(model$T))
-      ci <- qnorm((1 - confidence.level) / 2) *
-        sqrt(Ptt[i.level, i.level, timespan]) %o% c(1, -1)
-      ci <- xts(exp(ci), order.by = v_dates_end)
-
       y.hat <- xts(matrix(NA, nrow = n.ahead + 1, ncol = 3),
                    order.by = v_dates_end)
       y.hat[v_dates_end[1],] <- y.cum[v_dates_end[1]]
@@ -208,8 +204,10 @@ FilterResults <- setRefClass(
           as.numeric(1 + g.t[date.forecast,])
 
         # Make prediction intervals
-        y.hat[date.forecast, 2:3] <- as.numeric(y.hat[date.lag, 1]) *
-          as.numeric(1 + g.t[date.forecast,] %*% ci[date.forecast,])
+        y.hat[date.forecast, 2] <- as.numeric(y.hat[date.lag, 1]) *
+          as.numeric(1 + g.t.lwr[date.forecast,])
+        y.hat[date.forecast, 3] <- as.numeric(y.hat[date.lag, 1]) *
+          as.numeric(1 + g.t.upr[date.forecast,])
       }
 
       # Difference output if requested
@@ -258,7 +256,7 @@ FilterResults <- setRefClass(
 
       return(out)
     },
-    predict_all = function(n.ahead, sea.on = TRUE, return.all = FALSE) {
+    predict_all = function(n.ahead, sea.on = TRUE, return.all = FALSE, confidence.level = 0.68) {
       "Returns forecasts of the incidence variable \\eqn{y}, the state variables
        and the conditional covariance matrix
       for the states.
@@ -271,6 +269,9 @@ FilterResults <- setRefClass(
         all filtered estimates and forecasts
         (\\code{TRUE}) or only the forecasts (\\code{FALSE}). Default is
         \\code{FALSE}.}
+        \\item{\\code{confidence.level} The confidence level for the log growth
+         rate that should be used to compute. Confidence intervals only reported
+         for the incidence variable \\eqn{y}.}
       }}
       \\subsection{Return Value}{\\code{xts} object containing the forecast
       (and filtered, where applicable) level
@@ -345,23 +346,22 @@ FilterResults <- setRefClass(
                                        Q = list(matrix(0), matrix(new.Q[2,2,1])))
                              +SSMregression(~xpred.new))
             }
-          
-            
-          if (sea.on == TRUE) {
-            y.hat.kfas <- predict(
-              output$model, interval = 'confidence',
-              newdata = newdata, level = 0.68, states = 'all')
-          } else {
-            y.hat.kfas <- predict(
-              output$model, interval = 'confidence',
-              newdata = newdata, level = 0.68, states = c("level","regression",
-                                                          "custom"))
           }
           
-          y.t.t<-numeric(oldn)
-          for (i in 1:oldn){
-            y.t.t[i] <- output$att[i,] %*% drop(matrixKFS(output,"Z"))[,i]
-            }
+          if (sea.on == TRUE) {
+            y.hat.kfas <- predict(
+              output$model, interval = 'confidence', level = confidence.level,
+              newdata = newdata, states = 'all')
+            y.t.t <- predict(output$model, interval = 'confidence', 
+                             level = confidence.level,
+                             states = 'all')
+          } else {
+            y.hat.kfas <- predict(
+              output$model, interval = 'confidence', level = confidence.level,
+              newdata = newdata, states = c("level","regression","custom"))
+            y.t.t <- predict(output$model, interval = 'confidence', 
+                             level = confidence.level,
+                             states = c("level","regression","custom"))
           }
         }
       } else {
@@ -369,26 +369,28 @@ FilterResults <- setRefClass(
         
         if (sea.on == TRUE) {
           y.hat.kfas <- predict(
-            output$model, interval = 'confidence',
-            n.ahead = n.ahead, level = 0.68, states = 'all')
+            output$model, interval = 'confidence', level = confidence.level,
+            n.ahead = n.ahead, states = 'all')
+          y.t.t <- predict(output$model, interval = 'confidence', 
+                           level = confidence.level,
+                           states = 'all')
         } else {
           y.hat.kfas <- predict(
-            output$model, interval = 'confidence',
-            n.ahead = n.ahead, level = 0.68, states = c("level","regression",
-                                                        "custom"))
+            output$model, interval = 'confidence', level = confidence.level,
+            n.ahead = n.ahead, states = c("level","regression","custom"))
+          y.t.t <- predict(output$model, interval = 'confidence', 
+                           level = confidence.level,
+                           states = c("level","regression","custom"))
         }
-        
-        # Assumes time invariant Z.t
-        y.t.t <- output$att %*% drop(matrixKFS(output,"Z"))
       } 
       
       dates <- seq_dates(from=index[1], length.out = (oldn + n.ahead), 
                          resolution=resolution)
 
       y.hat <- xts::xts(
-        c(y.t.t, y.hat.kfas[, 1] %>% as.matrix()),
+        rbind(y.t.t, y.hat.kfas),
         order.by = dates)
-      names(y.hat)<-c("y.hat")
+      names(y.hat)<-c("y.hat","y.hat.lwr","y.hat.upr")
       
       i.level <- grep("level", colnames(att(model_output)))
       level.t.t <- xts::xts(att(model_output)[, i.level], order.by = dates) %>%

@@ -35,8 +35,8 @@ test_that("predict_level computes predictions correctly - no seasonal", {
   forc_tsgc <- res$predict_level(n.ahead = nf)
   
   expect_equal(unname(as.vector(forc_tsgc$fit)), forc)
-  expect_equal(unname(as.vector(forc_tsgc$lower)), forc_lwr, tolerance = 1)
-  expect_equal(unname(as.vector(forc_tsgc$upper)), forc_upr, tolerance = 1)
+  expect_equal(unname(as.vector(forc_tsgc$lower)), forc_lwr, tolerance = 0.005)
+  expect_equal(unname(as.vector(forc_tsgc$upper)), forc_upr, tolerance = 0.005)
 })
 
 test_that("predict_level computes predictions of cumulated variable correctly - no seasonal", {
@@ -111,8 +111,8 @@ test_that("predict_level computes predictions correctly - seasonal, sea.on = TRU
   forc_tsgc <- res$predict_level(n.ahead = nf, sea.on = TRUE)
   
   expect_equal(unname(as.vector(forc_tsgc$fit)), forc)
-  expect_equal(unname(as.vector(forc_tsgc$lower)), forc_lwr, tolerance = 1)
-  expect_equal(unname(as.vector(forc_tsgc$upper)), forc_upr, tolerance = 1)
+  expect_equal(unname(as.vector(forc_tsgc$lower)), forc_lwr, tolerance = 0.005)
+  expect_equal(unname(as.vector(forc_tsgc$upper)), forc_upr, tolerance = 0.005)
 })
 
 test_that("predict_level computes predictions correctly - seasonal but sea.on = FALSE", {
@@ -151,8 +151,8 @@ test_that("predict_level computes predictions correctly - seasonal but sea.on = 
   forc_tsgc <- res$predict_level(n.ahead = nf, sea.on = FALSE)
   
   expect_equal(unname(as.vector(forc_tsgc$fit)), forc)
-  expect_equal(unname(as.vector(forc_tsgc$lower)), forc_lwr, tolerance = 1)
-  expect_equal(unname(as.vector(forc_tsgc$upper)), forc_upr, tolerance = 1)
+  expect_equal(unname(as.vector(forc_tsgc$lower)), forc_lwr, tolerance = 0.005)
+  expect_equal(unname(as.vector(forc_tsgc$upper)), forc_upr, tolerance = 0.005)
 })
 
 test_that("predict_level computes predictions correctly - seasonal + AR1, sea.on = TRUE", {
@@ -190,8 +190,8 @@ test_that("predict_level computes predictions correctly - seasonal + AR1, sea.on
   forc_tsgc <- res$predict_level(n.ahead = nf, sea.on = TRUE)
   
   expect_equal(unname(as.vector(forc_tsgc$fit)), forc)
-  expect_equal(unname(as.vector(forc_tsgc$lower)), forc_lwr, tolerance = 1)
-  expect_equal(unname(as.vector(forc_tsgc$upper)), forc_upr, tolerance = 1)
+  expect_equal(unname(as.vector(forc_tsgc$lower)), forc_lwr, tolerance = 0.005)
+  expect_equal(unname(as.vector(forc_tsgc$upper)), forc_upr, tolerance = 0.005)
 })
 
 test_that("predict_level computes predictions correctly - seasonal + AR1, sea.on = FALSE", {
@@ -230,11 +230,11 @@ test_that("predict_level computes predictions correctly - seasonal + AR1, sea.on
   forc_tsgc <- res$predict_level(n.ahead = nf, sea.on = FALSE)
   
   expect_equal(unname(as.vector(forc_tsgc$fit)), forc)
-  expect_equal(unname(as.vector(forc_tsgc$lower)), forc_lwr, tolerance = 1)
-  expect_equal(unname(as.vector(forc_tsgc$upper)), forc_upr, tolerance = 1)
+  expect_equal(unname(as.vector(forc_tsgc$lower)), forc_lwr, tolerance = 0.005)
+  expect_equal(unname(as.vector(forc_tsgc$upper)), forc_upr, tolerance = 0.005)
 })
 
-test_that("predict_level computes predictions correctly - seasonal + xpred + *NO* AR1, sea.on = TRUE", {
+test_that("predict_level computes predictions correctly - seasonal + xpred + AR1, sea.on = TRUE", {
   data(gauteng, package = "tsgc")
   data(gauteng_weather_2021, package = "tsgc")
   gauteng_weather <- gauteng_weather_2021[, c(1, 3)]
@@ -245,7 +245,7 @@ test_that("predict_level computes predictions correctly - seasonal + xpred + *NO
   
   model <- SSModelDynamicGompertz$new(
     Y = gauteng$cum_cases, xpred = gauteng_weather, sea.period = 7,
-    start.date = est.start, end.date = est.end
+    start.date = est.start, end.date = est.end, ar1 = TRUE
   )
   res <- estimate(model)
   
@@ -258,6 +258,7 @@ test_that("predict_level computes predictions correctly - seasonal + xpred + *NO
   
   Qt.slope <- res$output$model$Q[2,2,1]
   Qt.seas <- res$output$model$Q[3,3,1]
+  Qt.ar1 <- res$output$model$Q[9,9,1]
   Ht <- res$output$model$H[1,1,1]
   
   new_model <- SSModel(formula = matrix(rep(NA,nf), ncol = 1) ~ 
@@ -265,11 +266,13 @@ test_that("predict_level computes predictions correctly - seasonal + xpred + *NO
                                                        matrix(Qt.slope))) 
                        + SSMseasonal(period = 7, Q = Qt.seas,
                                      sea.type = "trigonometric") 
-                       + SSMregression(~new_weather), 
+                       + SSMregression(~new_weather)
+                       + SSMcustom(Z=1,T=1,R=1,Q=Qt.ar1,
+                                   state_names="ar1"), 
                        H = matrix(Ht))
   
   delta_pred <- predict(res$output$model, newdata = new_model, 
-                        interval = c("confidence"), level = 0.68)
+                        interval = c("confidence"), level = 0.68, states = c("all"))
   
   delta_fit <- as.vector(delta_pred[,"fit"])
   YT <- tail(model$Y,1)
@@ -290,11 +293,11 @@ test_that("predict_level computes predictions correctly - seasonal + xpred + *NO
   forc_tsgc <- res$predict_level(n.ahead = nf, sea.on = TRUE)
   
   expect_equal(unname(as.vector(forc_tsgc$fit)), forc)
-  expect_equal(unname(as.vector(forc_tsgc$lower)), forc_lwr, tolerance = 1)
-  expect_equal(unname(as.vector(forc_tsgc$upper)), forc_upr, tolerance = 1)
+  expect_equal(unname(as.vector(forc_tsgc$lower)), forc_lwr, tolerance = 0.005)
+  expect_equal(unname(as.vector(forc_tsgc$upper)), forc_upr, tolerance = 0.005)
 })
 
-test_that("predict_level computes predictions correctly - seasonal + xpred + *NO* AR1, sea.on = FALSE", {
+test_that("predict_level computes predictions correctly - seasonal + xpred + AR1, sea.on = FALSE", {
   data(gauteng, package = "tsgc")
   data(gauteng_weather_2021, package = "tsgc")
   gauteng_weather <- gauteng_weather_2021[, c(1, 3)]
@@ -305,7 +308,7 @@ test_that("predict_level computes predictions correctly - seasonal + xpred + *NO
   
   model <- SSModelDynamicGompertz$new(
     Y = gauteng$cum_cases, xpred = gauteng_weather, sea.period = 7,
-    start.date = est.start, end.date = est.end
+    start.date = est.start, end.date = est.end, ar1 = TRUE
   )
   res <- estimate(model)
   
@@ -325,7 +328,9 @@ test_that("predict_level computes predictions correctly - seasonal + xpred + *NO
                                                        matrix(Qt.slope))) 
                        + SSMseasonal(period = 7, Q = Qt.seas,
                                      sea.type = "trigonometric") 
-                       + SSMregression(~new_weather), 
+                       + SSMregression(~new_weather)
+                       + SSMcustom(Z=1,T=1,R=1,Q=Qt.ar1,
+                                   state_names="ar1"), 
                        H = matrix(Ht))
   
   delta_pred <- predict(res$output$model, newdata = new_model, 
@@ -351,8 +356,8 @@ test_that("predict_level computes predictions correctly - seasonal + xpred + *NO
   forc_tsgc <- res$predict_level(n.ahead = nf, sea.on = FALSE)
   
   expect_equal(unname(as.vector(forc_tsgc$fit)), forc)
-  expect_equal(unname(as.vector(forc_tsgc$lower)), forc_lwr, tolerance = 1)
-  expect_equal(unname(as.vector(forc_tsgc$upper)), forc_upr, tolerance = 1)
+  expect_equal(unname(as.vector(forc_tsgc$lower)), forc_lwr, tolerance = 0.005)
+  expect_equal(unname(as.vector(forc_tsgc$upper)), forc_upr, tolerance = 0.005)
 })
 
 test_that("Test predict_all() gives same results as KFAS", {
