@@ -139,7 +139,12 @@ variable) over a holdout sample. For more details, please refer to
 log cumulative growth rate out of the estimation sample. For more details,
 see \link{plot_log_forecast}.}
 
-\item{\code{predict_all(n.ahead, sea.on = TRUE, return.all = FALSE)}}{Returns forecasts of the incidence variable \eqn{y}, the state variables
+\item{\code{predict_all(
+  n.ahead,
+  sea.on = TRUE,
+  return.all = FALSE,
+  confidence.level = 0.68
+)}}{Returns forecasts of the incidence variable \eqn{y}, the state variables
  and the conditional covariance matrix
 for the states.
  \subsection{Parameters}{\itemize{
@@ -151,6 +156,9 @@ for the states.
   all filtered estimates and forecasts
   (\code{TRUE}) or only the forecasts (\code{FALSE}). Default is
   \code{FALSE}.}
+  \item{\code{confidence.level} The confidence level for the log growth
+   rate that should be used to compute. Confidence intervals only reported
+   for the incidence variable \eqn{y}.}
 }}
 \subsection{Return Value}{\code{xts} object containing the forecast
 (and filtered, where applicable) level

@@ -142,7 +142,7 @@ p <- tsgc::plot_log_forecast(
   plt.start.date = tail_date_minus(res_q$index, plt.length),
   title = "Forecast of log growth rate of cases (Gauteng)"
 )
-save_plot(p, "gauteng_cases_gomp_q005_loggr_fcst.png")
+#save_plot(p, "gauteng_cases_gomp_q005_loggr_fcst.png")
 
 # New cases forecast
 p <- tsgc::plot_forecast(
@@ -150,7 +150,7 @@ p <- tsgc::plot_forecast(
   plt.start.date = tail_date_minus(res_q$index, plt.length),
   title = "Forecast of new cases\n14-days (Gauteng)", series.name = "Cases"
 )
-save_plot(p, "gauteng_cases_gomp_q005_fcst.png")
+#save_plot(p, "gauteng_cases_gomp_q005_fcst.png")
 
 # Holdout evaluation
 p <- tsgc::plot_holdout(

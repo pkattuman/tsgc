@@ -266,7 +266,7 @@ FilterResults <- setRefClass(
         \\item{\\code{sea.on} Logical value indicating whether seasonal
         components should be included in the state-space model or not. Default is \\code{TRUE}.}
         \\item{\\code{return.all} Logical value indicating whether to return
-        all filtered estimates and forecasts
+        all filtered estimates and forecasts.
         (\\code{TRUE}) or only the forecasts (\\code{FALSE}). Default is
         \\code{FALSE}.}
         \\item{\\code{confidence.level} The confidence level for the log growth
@@ -390,7 +390,7 @@ FilterResults <- setRefClass(
       y.hat <- xts::xts(
         rbind(y.t.t, y.hat.kfas),
         order.by = dates)
-      names(y.hat)<-c("y.hat","y.hat.lwr","y.hat.upr")
+      names(y.hat)<-c("y.hat","y.hat.upr","y.hat.lwr")
       
       i.level <- grep("level", colnames(att(model_output)))
       level.t.t <- xts::xts(att(model_output)[, i.level], order.by = dates) %>%
@@ -670,7 +670,7 @@ FilterResults <- setRefClass(
       }
       
       y.hat.all <- .self$predict_all(n.ahead, return.all = TRUE)
-      y.pred <-  get_timeframe(y.hat.all$y.hat, firstpred)
+      y.pred <-  get_timeframe(y.hat.all$y.hat$y.hat, firstpred)
       filtered.level <- y.hat.all$level
       
       if (p == 1) {
