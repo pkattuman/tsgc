@@ -127,11 +127,6 @@ SSModelLeadingIndicator <- setRefClass(
       \\subsection{Return Value}{An object of class \\code{FilterResultsLI}
       containing the result output for the estimated Leading Indicator
       model.}"
-      if (any(na.omit(diff(Y))<=0)){
-        stop("Y must be a time series strictly increasing in time. If the cumulative 
-           values exhibit plateaus it is necessary to add small increments to 
-           eliminate flat segments and allow model estimation. This can be done 
-           by ensuring the non-cumulated series is strictly positive.")}
       
       # Compute LDL and lag data appropriately
       y<-add_daily_ldl(Y, LeadIndCol=LeadIndCol)
@@ -143,6 +138,12 @@ SSModelLeadingIndicator <- setRefClass(
       y[is.infinite(y)] <- NA
       
       y <- get_timeframe(na.omit(y),start.date)
+      if (any(na.omit(diff(y))<=0)){
+        stop("Y must be a time series strictly increasing in time within the selected timeframe 
+        after lagging the leading indicator. If the cumulative 
+           values exhibit plateaus it is necessary to add small increments to 
+           eliminate flat segments and allow model estimation. This can be done 
+           by ensuring the non-cumulated series is strictly positive.")}
       
       data_ldl <- get_timeframe(y, start.date, end.date)[,c("LDLlead","LDLtarg")]
 
