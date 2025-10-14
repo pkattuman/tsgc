@@ -321,6 +321,7 @@ test_that("predict_level computes predictions correctly - seasonal + xpred + AR1
   
   Qt.slope <- res$output$model$Q[2,2,1]
   Qt.seas <- res$output$model$Q[3,3,1]
+  Qt.ar1 <- res$output$model$Q[9,9,1]
   Ht <- res$output$model$H[1,1,1]
   
   new_model <- SSModel(formula = matrix(rep(NA,nf), ncol = 1) ~ 
@@ -447,7 +448,7 @@ test_that("get_growth_y works and toggles smoothed = TRUE, FALSE correctly", {
   expect_false(isTRUE(all.equal(smooth[[1]],filt)))
 })
 
-test_that("get_gy_ci", {
+test_that("get_gy_ci works and toggles smoothed = TRUE, FALSE correctly", {
   data(gauteng, package = "tsgc")
   
   est.start <- as.Date("2021-02-01")
@@ -466,3 +467,77 @@ test_that("get_gy_ci", {
   expect_equal(names(smooth),c("fit","lower","upper"))
   expect_false(isTRUE(all.equal(smooth,filt)))
 })
+
+
+test_that("print_estimation_results works",{
+  data(gauteng, package = "tsgc")
+  
+  est.start <- as.Date("2021-02-01")
+  est.end  <- as.Date("2021-04-19")
+  nf <- 7
+  
+  model <- SSModelDynamicGompertz$new(
+    Y= gauteng$cum_cases, q = 0.005, sea.period = 7,
+    start.date = est.start, end.date = est.end
+  )
+  res <- estimate(model)
+  
+  expect_no_error(res$print_estimation_results())
+})
+
+test_that("print and summary methods work",{
+  data(gauteng, package = "tsgc")
+  
+  est.start <- as.Date("2021-02-01")
+  est.end  <- as.Date("2021-04-19")
+  nf <- 7
+  
+  model <- SSModelDynamicGompertz$new(
+    Y= gauteng$cum_cases, q = 0.005, sea.period = 7,
+    start.date = est.start, end.date = est.end)
+  
+  res <- estimate(model)
+  
+  expect_no_error(print(res))
+  expect_no_error(summary(res))
+})
+
+test_that("print and summary methods work",{
+  data(gauteng, package = "tsgc")
+  
+  est.start <- as.Date("2021-02-01")
+  est.end  <- as.Date("2021-04-19")
+  nf <- 7
+  
+  model <- SSModelDynamicGompertz$new(
+    Y= gauteng$cum_cases, q = 0.005, sea.period = 7,
+    start.date = est.start, end.date = est.end)
+  
+  res <- estimate(model)
+  
+  expect_no_error(res$plot_forecast())
+  expect_no_error(res$plot_log_forecast(Y = gauteng$cum_cases))
+  expect_no_error(res$plot_log_forecast(Y = gauteng$cum_cases))
+  expect_no_error(res$plot_gy_ci())
+  expect_no_error(res$plot_gy_components())
+  expect_no_error(res$plot_holdout(Y = gauteng$cum_cases))
+})
+  
+test_that("mapes works",{
+  data(gauteng, package = "tsgc")
+  
+  est.start <- as.Date("2021-02-01")
+  est.end  <- as.Date("2021-04-19")
+  nf <- 7
+  
+  model <- SSModelDynamicGompertz$new(
+    Y= gauteng$cum_cases, q = 0.005, sea.period = 7,
+    start.date = est.start, end.date = est.end)
+  
+  res <- estimate(model)
+  
+  errs <- res$mapes(n.ahead = 7, Y = gauteng$cum_cases)
+  
+  expect_equal(length(errs),5)
+})
+
