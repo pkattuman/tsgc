@@ -481,8 +481,10 @@ FilterResults <- setRefClass(
 
       if (smoothed) {
         att <- alphahat(kfs_out)
+        var <- get_V(kfs_out)
       } else {
         att <- att(kfs_out)
+        var <- Ptt(kfs_out)
       }
 
       filtered_slope <- xts(att[, "slope"], order.by = idx)
@@ -492,7 +494,7 @@ FilterResults <- setRefClass(
 
       idx.slope <- grep("slope", colnames(att(kfs_out)))
       ci <- qnorm((1 - confidence.level) / 2) *
-        sqrt(kfs_out$Ptt[idx.slope, idx.slope,]) %o% c(1, -1)
+        sqrt(var[idx.slope, idx.slope,]) %o% c(1, -1)
       ci_bounds <- as.vector(gy.t) + ci
 
       pred <- xts(cbind(gy.t, ci_bounds), order.by = idx)
