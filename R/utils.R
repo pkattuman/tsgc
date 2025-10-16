@@ -378,7 +378,7 @@ mapes<-function(res,n.ahead,Y){
 #' index. If a Leading Indicator model is compared, Y should include columns for both the leading indicator and
 #' the target variable. The specific column for the leading indicator can be
 #' designated using the \code{LeadIndCol} parameter.
-#' @param model_list A list containing SSModelDynGompertz or SSModelLeadingIndicator 
+#' @param model_list A list containing \code{SSModelDynGompertz} or \code{SSModelLeadingIndicator} 
 #' objects, to be compared in a cross validation procedure.
 #' @param est.end.date The initial estimation end date for model fitting.
 #' Starting from this date, the function re-estimates the model and evaluates
@@ -405,7 +405,7 @@ mapes<-function(res,n.ahead,Y){
 #' @importFrom magrittr and
 #'
 #' @returns A table summarizing the chosen error metric for each model in
-#' model_list across the specified dates.
+#' \code{model_list} across the specified dates.
 #'
 #' @examples
 #' library(tsgc)
