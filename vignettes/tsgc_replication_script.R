@@ -311,8 +311,8 @@ if (SAVE_TABLES) {
 
 # The example data `gauteng_weather_2021` (included in the tsgc package)
 # contain daily weather variables for 2021. We will use:
-#   - column 1: Date
-#   - column 3: one weather variable (e.g. temperature)
+#   - column 1: Wind speed
+#   - column 3: Mean daily temperature
 # as regressors over the *same* estimation window as before.
 
 data(gauteng_weather_2021, package = "tsgc")
