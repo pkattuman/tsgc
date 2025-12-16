@@ -551,7 +551,7 @@ get_time_resolution <- function(dates) {
   # Ensure dates are sorted
   dates <- sort(unique(dates))
   date_diff<-diff(dates)  
-  if (!all.equal(min(date_diff),max(date_diff))){
+  if (!isTRUE(all.equal(min(date_diff),max(date_diff)))){
     stop("The dates are not separated by the same time resolution.")
   } else if (class(dates)=="yearqtr"){
     if (min(diff(dates))==1){
