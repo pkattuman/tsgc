@@ -20,7 +20,7 @@ test_that("get_timeframe works correctly", {
 
 test_that("reinitialise_dataframe works correctly", {
   data(england, package = 'tsgc')
-  reinit <- reinitialise_dataframe(england,'2022-03-14')
+  reinit <- reinitialise_dataframe(england$cum_cases,as.Date('2022-03-14'))
   x <- as.numeric(reinit[1,1])
   expect_equal(x,79242)
 })

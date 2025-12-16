@@ -1,8 +1,8 @@
-test_that("Test plot_new_cases() works", {
+test_that("Test plot_forecast() works", {
   data(gauteng, package = "tsgc")
   model <- tsgc::SSModelDynamicGompertz$new(Y = gauteng[1:50], q = 0.005)
   res <- model$estimate()
-  tsgc::plot_new_cases(res)
+  tsgc::plot_forecast(res)
   expect_equal(1,1)
 })
 

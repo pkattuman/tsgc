@@ -117,11 +117,13 @@ add_daily_ldl <- function(data, LeadIndCol=1){
 #' @title Reinitialise a data frame by subtracting the `reinit.date` row from
 #' all columns
 #'
-#' @param dt Cumulated data series, belonging to the xts class.
+#' @param dt Cumulated data series, belonging to the xts class. Must only contain 
+#' 1 data column in addition to a date index.
 #' @param reinit.date Reinitialisation date, belonging to Date, yearmon or yearqtr classes. E.g. \samp{as.Date('2021-05-12')}.
 #'
 #' @returns The reinitialised data frame
-#'
+#' @importFrom zoo index
+#' 
 #' @examples
 #' library(tsgc)
 #' data(gauteng,package="tsgc")
@@ -129,6 +131,9 @@ add_daily_ldl <- function(data, LeadIndCol=1){
 #'
 #' @export
 reinitialise_dataframe <- function(dt, reinit.date) {
+  if (dim(dt)[2]!=1){
+    stop("dt must only contain 1 data column in addition to a date column.")
+  }
   # Take cumulative dataframe and reinit from reinit.date as first date of data
   # 1. Get data frame including date before reinit.date
   first_ind<-which.max(index(dt) == reinit.date)
