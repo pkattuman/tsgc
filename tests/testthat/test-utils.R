@@ -255,3 +255,84 @@ test_that("cross_val reports the correct criterion (e.g., 'rmse')", {
   # Expect the cross_val result to be close to the manual result
   expect_equal(cv_result_rmse[cv_result_rmse$Model == "Vanilla_q", "2020-04-01"][[1]], expected_rmse)
 })
+
+test_that("mapes works", {
+  data(gauteng, package = "tsgc")
+  n.ahead <- 7
+  est.start <- as.Date("2021-04-30")
+  est.end <- as.Date("2021-07-24")
+  
+  # Estimate model
+  model_q <- SSModelDynamicGompertz$new(
+    Y = gauteng,
+    q = 0.005,
+    start.date = est.start,
+    end.date = est.end
+  )
+  res <- estimate(model_q)
+  
+  error_metrics <- mapes(res, n.ahead, gauteng)
+  
+  # Check object class
+  expect_type(error_metrics, "list")
+  
+  # Check element names
+  expected_names <- c("mape", "smape", "mae", "rmse", "coverage")
+  expect_equal(sort(names(error_metrics)), sort(expected_names))
+})
+
+test_that("add_daily_ldl correctly handles LeadIndCol logic", {
+  dates <- seq(as.Date("2023-01-01"), by = "day", length.out = 4)
+  # Use simple numbers to make math verification easy
+  # Column 1: 10, 20, 40, 70 (Increments: NA, 10, 20, 30)
+  # Column 2: 5, 15, 25, 35  (Increments: NA, 10, 10, 10)
+  dummy_xts <- xts(cbind(c(10, 20, 40, 70), c(5, 15, 25, 35)), order.by = dates)
+  colnames(dummy_xts) <- c("col_a", "col_b")
+  
+  # Case 1: LeadIndCol = 1 (Default)
+  res1 <- add_daily_ldl(dummy_xts, LeadIndCol = 1)
+  expect_equal(colnames(res1)[1:2], c("cLead", "cTarg"))
+  expect_equal(as.numeric(res1$cLead), c(10, 20, 40, 70))
+  
+  # Case 2: LeadIndCol = 2 (Should swap columns)
+  res2 <- add_daily_ldl(dummy_xts, LeadIndCol = 2)
+  expect_equal(colnames(res2)[1:2], c("cLead", "cTarg"))
+  # Column 2 from dummy should now be cLead
+  expect_equal(as.numeric(res2$cLead), c(5, 15, 25, 35)) 
+  expect_equal(as.numeric(res2$cTarg), c(10, 20, 40, 70))
+})
+
+test_that("add_daily_ldl computes increments correctly", {
+  dates <- seq(as.Date("2023-01-01"), by = "day", length.out = 4)
+  # Use simple numbers to make math verification easy
+  # Column 1: 10, 20, 40, 70 (Increments: NA, 10, 20, 30)
+  # Column 2: 5, 15, 25, 35  (Increments: NA, 10, 10, 10)
+  dummy_xts <- xts(cbind(c(10, 20, 40, 70), c(5, 15, 25, 35)), order.by = dates)
+  colnames(dummy_xts) <- c("col_a", "col_b")
+  
+  res <- add_daily_ldl(dummy_xts, LeadIndCol = 1)
+  
+  # Check newLead (Increments of col 1: 20-10=10, 40-20=20, 70-40=30)
+  expect_equal(as.numeric(res$newLead), c(NA, 10, 20, 30))
+  
+  # Check newTarg (Increments of col 2: 15-5=10, 25-15=10, 35-25=10)
+  expect_equal(as.numeric(res$newTarg), c(NA, 10, 10, 10))
+})
+
+test_that("add_daily_ldl output structure is correct", {
+  dates <- seq(as.Date("2023-01-01"), by = "day", length.out = 4)
+  # Use simple numbers to make math verification easy
+  # Column 1: 10, 20, 40, 70 (Increments: NA, 10, 20, 30)
+  # Column 2: 5, 15, 25, 35  (Increments: NA, 10, 10, 10)
+  dummy_xts <- xts(cbind(c(10, 20, 40, 70), c(5, 15, 25, 35)), order.by = dates)
+  colnames(dummy_xts) <- c("col_a", "col_b")
+  
+  res <- add_daily_ldl(dummy_xts)
+  
+  # Should have 6 columns: cLead, cTarg, newLead, newTarg, LDLlead, LDLtarg
+  expect_equal(ncol(res), 6)
+  expect_s3_class(res, "xts")
+  
+  # Check for expected column names
+  expect_true(all(c("LDLlead", "LDLtarg") %in% colnames(res)))
+})
