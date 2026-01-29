@@ -31,15 +31,18 @@ setOldClass("KFS")
 #'   signal-to-noise ratio will be imposed. Instead, it will be estimated.
 #'@field sea.period The period of seasonality. For a day-of-the-week
 #'   effect with daily data, this would be 7. Not required if
-#'   \code{sea.type = 'none'}.
+#'   \code{sea.type = 'none'}. Defaults to 7.
 #' @field n.lag Number of days/months/quarters/years to lag the leading indicator.
 #' @field xpred_lead An xts object containing the values of exogenous variables for 
 #' the leading indicator. Dataset must contain values for all dates in the 
-#' estimation time frame.
+#' estimation time frame. Defaults to NULL, indicating no exogenous variables are needed 
+#' for the leading indicator.
 #' @field xpred_targ An xts object containing the values of exogenous variables for 
 #' the target variable. Dataset must contain values for all dates in the 
-#' estimation time frame.
-#' @field LeadIndCol The column in \code{Y} that contains the leading indicator.
+#' estimation time frame. Defaults to NULL, indicating no exogenous variables are 
+#' needed for the target variable.
+#' @field LeadIndCol The column in \code{Y} that contains the leading indicator. 
+#' Defaults to 1.
 #' @field start.date Start date of the estimation period for estimating the target variable. 
 #' Must be one of the following types: \code{yearqtr}, \code{date} or \code{yearmon}. 
 #' @field end.date End date of the estimation period for estimating the target variable. 
