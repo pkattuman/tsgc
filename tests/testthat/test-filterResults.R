@@ -502,7 +502,7 @@ test_that("print and summary methods work",{
   expect_no_error(summary(res))
 })
 
-test_that("print and summary methods work",{
+test_that("plot methods work",{
   data(gauteng, package = "tsgc")
   
   est.start <- as.Date("2021-02-01")
