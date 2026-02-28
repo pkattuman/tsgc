@@ -24,6 +24,8 @@ setOldClass("KFS")
 #' the leading indicator over the prediction time frame.
 #' @field xpred_targ.new An xts object containing the values of exogenous variables for 
 #' the target variable over the prediction time frame.
+#' @field start.date
+#' @field end.date
 #' @field resolution A character object showing the time resolution of the data 
 #' in \code{data_xts}. Options are "daily", "monthly, "quarterly" and "yearly".
 #' Automatically estimated when \code{data_xts} is provided.
@@ -36,6 +38,7 @@ setOldClass("KFS")
 #' @importFrom xts periodicity last lag.xts
 #' @importFrom magrittr %>%
 #' @importFrom methods new
+#' @importFrom zoo as.Date.yearmon as.Date.yearqtr
 #' 
 #' @examples
 #' library(tsgc)
@@ -554,55 +557,27 @@ FilterResultsLI <- setRefClass(
       \\link{plot_forecast}."
         
         if (is.null(plt.start.date)){plt.start.date <- start.date}
-        # add forecasts to plotting dataframe
-        # fadmits<-.self$predict_level(n.ahead=n.ahead, 
-        #                              confidence.level=confidence.level, 
-        #                              sea.on=FALSE)
         sea<-.self$predict_level(n.ahead=n.ahead, 
                                  confidence.level=confidence.level, 
                                  sea.on=TRUE)
         
-        # Create smoothed admissions
-        # lcadmit = lag(data_xts$cAdmit) %>% na.omit()
-        #smldlh = predict(output$model,states='trend')$LDLhosp %>% exp %>% as.vector
-        #smadmit = smldlh*lcadmit
-        #smAdmit = smadmit %>% xts(index(data_xts[(n.lag+1):(length(lcadmit)),])+1)
-        
         #Plot forecast graph
         df_plot<-get_timeframe(data_xts, start.date, end.date)$newTarg
-        #df_plot$Smooth<-smAdmit
         df_plot$Forecast<-sea[,1]
-        #df_plot$ForecastTrend<-fadmits$forc
         df_plot<-get_timeframe(df_plot,plt.start.date)
-        dates<-if (resolution=='quarterly'){
-          qtr2date(as.yearqtr(index(df_plot)))
-        } else if (resolution=='monthly' || resolution=="yearly"){
-          qtr2date(as.yearmon(index(df_plot)))
-        } else {
-          as.Date(index(df_plot))
-        }
+        dates<-zoo::as.Date(index(df_plot))
         
         df_plot<-as.data.frame(df_plot)
         df_plot$Date <- dates
         
         ci_plot<-sea
-        dates2<-if (resolution=='quarterly'){
-          qtr2date(as.yearqtr(index(ci_plot)))
-        } else if (resolution=='monthly' || resolution=="yearly"){
-          qtr2date(as.yearmon(index(ci_plot)))
-        } else {
-          as.Date(index(ci_plot))
-        }
+        dates2<-zoo::as.Date(index(ci_plot))
         ci_plot<-as.data.frame(ci_plot)
         ci_plot$Date <- dates2
         
         p2<-ggplot2::ggplot(data = df_plot, aes(x = Date)) +
           ggplot2::geom_line(aes(y = newTarg, color = "Data"), lwd = 0.85) +
-          #ggplot2::geom_line(aes(y = Smooth, color = "Smoothed\ndata"),lwd=0.85)+
           ggplot2::geom_line(aes(y = Forecast, color = "Forecast"), lwd = 0.85) +
-          # ggplot2::geom_line(
-          #   aes(y = ForecastTrend, color = "Forecast\nTrend"), lwd = 0.85
-          # ) +
           ggplot2::scale_color_manual(values = c("black", "#AA2045")) +
           ggplot2::geom_ribbon(data = ci_plot, aes(x = Date, ymin = lwr, ymax = upr),
                                linetype = 0, linewidth = 0, fill = "#AA2045", alpha = 0.1) +
@@ -737,7 +712,7 @@ FilterResultsLI <- setRefClass(
     }
     
     df_long <- df_plot %>%
-      dplyr::filter(Date >= plt.start.date) %>%
+      dplyr::filter(Date >= zoo::as.Date(plt.start.date)) %>%
       pivot_longer(cols = c(gy.t, g.t, gamma.t), names_to = "Variable",
                    values_to = "Value")
     
@@ -784,7 +759,7 @@ FilterResultsLI <- setRefClass(
       as.Date(rownames(df_plot))
     }
     
-    p1 <- ggplot2::ggplot(df_plot[df_plot$Date>=plt.start.date,], aes(x=Date)) +
+    p1 <- ggplot2::ggplot(df_plot[df_plot$Date>=zoo::as.Date(plt.start.date),], aes(x=Date)) +
       ggplot2::geom_line(aes(y = fit), lwd = 0.85) +
       ggplot2::geom_hline(yintercept=0, linetype="solid",
                           color = "green", linewidth=1)+
@@ -827,9 +802,6 @@ FilterResultsLI <- setRefClass(
                         title= NULL, caption = NULL){
     "Plots the forecast of the target variable over a holdout sample. 
     For more details, please refer to \\link{plot_holdout}."
-    # fadmits<-.self$predict_level(n.ahead=n.ahead, 
-    #                              confidence.level=confidence.level, 
-    #                              sea.on=FALSE)
     sea<-.self$predict_level(n.ahead=n.ahead, 
                              confidence.level=confidence.level, 
                              sea.on=TRUE)
@@ -852,8 +824,6 @@ FilterResultsLI <- setRefClass(
       warning("Validation data contains zeros. MAPE is not a reliable measure.")
     }
     
-    # mape.trend <- 100*(abs(compare$Actual - compare$ForecastTrend)/
-    #                      compare$Actual) %>% mean %>% round(4)
     mape.sea <- mean(100*(abs(compare$Actual - compare$Forecast)/compare$Actual)) %>% round(2)
     smape<-mean(100*(abs(compare$Actual - compare$Forecast)/(compare$Actual+compare$Forecast))) %>% round(2)
     mae<-abs(compare$Actual - compare$Forecast) %>% mean %>% signif(digits=3)
@@ -884,8 +854,6 @@ FilterResultsLI <- setRefClass(
     p1<-ggplot2::ggplot(data = df_plot, aes(x = Date)) +
       ggplot2::geom_line(aes(y = Actual, color = "Actual"),lwd = 0.85) +
       ggplot2::geom_line(aes(y = Forecast, color = "Forecast"),lwd = 0.85) +
-      # ggplot2::geom_line(
-      #   aes(y = ForecastTrend, color = "Forecast\nTrend"),lwd = 0.85) +
       ggplot2::scale_color_manual(values = c("black", "#AA2045")) +
       ggplot2::geom_ribbon(data = ci_plot, aes(x = Date, ymin = lower, ymax = upper),linetype = 0, linewidth = 0, fill = "#AA2045",
                            alpha = 0.1) +
