@@ -29,9 +29,11 @@ setOldClass("KFS")
 #' @field q The signal-to-noise ratio (ratio of slope error variance to target variable observation error variance). 
 #' Defaults to \code{'NULL'}, in which case no
 #'   signal-to-noise ratio will be imposed. Instead, it will be estimated.
-#'@field sea.period The period of seasonality. For a day-of-the-week
-#'   effect with daily data, this would be 7. Not required if
-#'   \code{sea.type = 'none'}. Defaults to 7.
+#'@field sea.period A positive integer specifying the period of seasonality used in the
+#'   trigonometric seasonal component of the model. For example, use \code{7} for daily 
+#'   data to model day-of-the-week effects. A value of \code{0} disables the seasonal 
+#'   component entirely. The default is \code{7}, which is suitable for capturing 
+#'   weekly seasonality in daily time series.
 #' @field n.lag Number of days/months/quarters/years to lag the leading indicator.
 #' @field xpred_lead An xts object containing the values of exogenous variables for 
 #' the leading indicator. Dataset must contain values for all dates in the 

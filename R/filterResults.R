@@ -21,6 +21,9 @@ setOldClass("KFS")
 #' @field xpred.new An xts object containing exogenous predictors to be used in 
 #' prediction. Defaults to \code{NULL}, and should be provided if xpred is 
 #' used for model estimation.
+#' @field sea.period The period of seasonality, inherited from the estimated 
+#' \code{SSModelDynGompertz} model. For a day-of-the-week
+#'   effect with daily data, this would be 7. 
 #' @field resolution A character object showing the time resolution of the data 
 #' in \code{data_xts}. Options are "daily", "monthly, "quarterly" and "yearly".
 #' Automatically estimated when \code{data_xts} is provided.

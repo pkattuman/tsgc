@@ -866,7 +866,7 @@ cv_models[["Vanilla_ar1"]] <- tsgc::SSModelDynamicGompertz(
 )
 
 # Model 3–6: Leading Indicator with different lags: 7, 10, 14, 18
-for (i in c(7, 10, 14, 18)) {
+for (i in 1:21) {
   cv_models[[paste0("Lag", i)]] <- tsgc::SSModelLeadingIndicator(
     Y = tsgc::ukitaly, start.date = est.start, 
     end.date = est.end, n.lag = i
@@ -878,7 +878,8 @@ tsgc::cross_val(
   Y           = tsgc::ukitaly, 
   model_list  = cv_models, 
   est.end.date = est.end,
-  criterion    = "mape",
+  criterion    = "smape",
+  n.ahead      = 14,
   n.estimate   = 5, 
   gap          = 2
 )

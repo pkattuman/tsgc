@@ -39,6 +39,12 @@ the leading indicator over the prediction time frame.}
 \item{\code{xpred_targ.new}}{An xts object containing the values of exogenous variables for
 the target variable over the prediction time frame.}
 
+\item{\code{start.date}}{Start date of the estimation period for estimating the target variable.
+Must be one of the following types: \code{yearqtr}, \code{date} or \code{yearmon}.}
+
+\item{\code{end.date}}{End date of the estimation period for estimating the target variable.
+Must be one of the following types: \code{yearqtr}, \code{date} or \code{yearmon}.}
+
 \item{\code{resolution}}{A character object showing the time resolution of the data
 in \code{data_xts}. Options are "daily", "monthly, "quarterly" and "yearly".
 Automatically estimated when \code{data_xts} is provided.}
