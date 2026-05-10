@@ -802,6 +802,11 @@ FilterResultsLI <- setRefClass(
   plot_holdout=function(Y,n.ahead=14, confidence.level = 0.68,
                         series.name = "target variable",
                         title= NULL, caption = NULL){
+    
+    if (tail(index(Y),1)<=end.date){
+      stop("The time series 'Y' must extend beyond the estimation end date to 
+             provide a holdout sample analysis.")
+    }
     "Plots the forecast of the target variable over a holdout sample. 
     For more details, please refer to \\link{plot_holdout}."
     sea<-.self$predict_level(n.ahead=n.ahead, 

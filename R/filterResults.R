@@ -915,6 +915,12 @@ FilterResults <- setRefClass(
         } 
       }
       
+      estimation.date.end <- tail(index, 1)
+      if (tail(index(Y),1)<=estimation.date.end){
+        stop("The time series 'Y' must extend beyond the estimation end date to 
+             provide a holdout sample analysis.")
+      }
+      
       if (!is.null(reinit.date)){
         Y.est<-reinitialise_dataframe(data_xts, reinit.date)
       } else {
@@ -924,7 +930,8 @@ FilterResults <- setRefClass(
       model <- modelKFS(output)
       
       y.level.est <- Y.est[index]
-      estimation.date.end <- tail(index, 1)
+      
+      
       
       p <- attr(model, 'p')
       if(p!=1) { stop('NotImplementedError') }

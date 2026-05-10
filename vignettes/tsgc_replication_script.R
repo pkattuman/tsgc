@@ -81,7 +81,8 @@ ndays   <- 7
 
 # Default estimation window used in Section 2
 est.start.1 <- as.Date("2021-02-01")
-est.end.1   <- as.Date("2021-04-19")
+est.end.1   <- as.Date("2021-05-03")
+
 
 # ---- 1.2 Libraries (quiet require) ----
 safe_library <- function(pkg) {
@@ -658,7 +659,7 @@ tsgc::plot_compare_forecast(
 eng <- tsgc::england[, 1:2]
 
 # Quick plot
-mod2 <- tsgc::SSModelLeadingIndicator(eng, n.lag = 5)
+mod2 <- tsgc::SSModelLeadingIndicator(eng, n.lag = 4)
 p <- plot(
   mod2, title = "Daily COVID cases and Hospitalisations\n(England)",
   series.name.lead = "Cases", series.name.target = "Hospitalisations", 
