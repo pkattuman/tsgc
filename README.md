@@ -16,7 +16,7 @@ To install the latest version of the `tsgc` package from GitHub, use the followi
 # Install from GitHub
   install.packages("devtools")
   library(devtools)
-  devtools::install_github("Craig-PT/tsgc")
+  devtools::install_github("edwintang903/tsgc")
 ```
 
 or install from the locally downloaded package as:

@@ -20,7 +20,7 @@ Description: The 'tsgc' package provides comprehensive tools for the analysis an
     Harvey and Kattuman (2020) <doi:10.1162/99608f92.828f40de>, Harvey and Kattuman (2021)
     <doi:10.1098/rsif.2021.0179>, and Ashby, Harvey, Kattuman, and Thamotheram (2024)
     <https://www.jbs.cam.ac.uk/wp-content/uploads/2024/03/cchle-tsgc-paper-2024.pdf>.
-URL: https://github.com/Craig-PT/tsgc
+URL: https://github.com/edwintang903/tsgc
 License: GPL (>= 3)
 Encoding: UTF-8
 VignetteBuilder: knitr
@@ -51,7 +51,7 @@ Imports:
     methods,
     abind,
     purrr
-BugReports: https://github.com/Craig-PT/tsgc/issues
+BugReports: https://github.com/edwintang903/tsgc/issues
 Depends:
     R (>= 3.5.0)
 LazyData: true
