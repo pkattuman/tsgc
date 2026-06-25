@@ -33,16 +33,16 @@
 #'
 #' @export
 df2ldl <- function(dt) {
-  # if (!is.xts(dt)){
-  #   stop("Dataset dt is not from the xts class.")
-  # }
-  # if (NCOL(dt) != 1){
-  #   stop("dt must only contain 1 data column in addition to a date column.")
-  # }
-  if (any(stats::lag(dt) <= 0, na.rm = TRUE)){
-    stop("Dataset dt contains 0 or negative values.")
+  if (!is.xts(dt)){
+    stop("Dataset dt is not from the xts class.")
+  }
+  if (NCOL(dt) != 1){
+    stop("dt must only contain 1 data column in addition to a date column.")
+  }
+  if (any(stats::lag(dt) < 0, na.rm = TRUE)){
+    stop("Dataset dt contains negative values.")
   } 
-  else if (any(diff(dt)<=0, na.rm = TRUE)){
+  if (any(diff(dt)<0, na.rm = TRUE)){
     stop("Dataset dt has nonpositive increments.")
   }
   dt.ldl <- log(diff(dt) / stats::lag(dt))
@@ -114,9 +114,9 @@ get_timeframe<-function(df, start.date, end.date=NULL){
 #'
 #' @export
 add_daily_ldl <- function(data, LeadIndCol=1){
-  # if (!is.xts(data)){
-  #   stop("data is not an xts object.")
-  # }
+  if (!is.xts(data)){
+    stop("data is not an xts object.")
+  }
   if (NCOL(data) != 2){
     stop("Dataset dt must contain exactly two series.")
   }
@@ -128,7 +128,7 @@ add_daily_ldl <- function(data, LeadIndCol=1){
   } else {
     stop("LeadIndCol must be an integer, either 1 or 2.")
   }
-  ldl <- df2ldl(data)
+  ldl <- do.call(merge, lapply(data, df2ldl))
   
   data$newLead = diff(data$cLead)
   data$newTarg = diff(data$cTarg)

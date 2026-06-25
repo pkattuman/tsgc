@@ -13,7 +13,7 @@ test_that("df2ldl returns xts object", {
 
 test_that("get_timeframe works correctly", {
   data(england, package = 'tsgc')
-  x <- get_timeframe(england, '2020-03-20', '2020-03-29')
+  x <- get_timeframe(england, as.Date('2020-03-20'), as.Date('2020-03-29'))
   y <- head(england,10)
   expect_equal(x,y)
 })

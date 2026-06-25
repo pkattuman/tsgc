@@ -275,7 +275,7 @@ FilterResultsLI <- setRefClass(
       # Provide observed leading indicator data
       na_vals<-matrix(NA, ncol = ncol(gety(new.model)), nrow = n.ahead)
       
-      new_index<-which.max(index(data_xts)==end.date)
+      new_index<-match(end.date, index(data_xts))
       remaining_data<-dim(data_xts)[1]-new_index
       future_rows<-min(n.ahead, n.lag, remaining_data)
       last_index<-new_index+future_rows
