@@ -66,7 +66,7 @@
 SAVE_PLOTS   <- TRUE
 SAVE_TABLES  <- TRUE
 FIG_WIDTH    <- 10
-FIG_HEIGHT   <- 6
+FIG_HEIGHT   <- 7
 FIG_DPI      <- 300
 CONF_LEVEL   <- 0.68
 
@@ -138,6 +138,159 @@ save_plot <- function(p, fname = NULL) {
   invisible(p)
 }
 
+# ---- 1.6 CSV Export Helpers ----
+format_csv_date <- function(index_vec) {
+  if (inherits(index_vec, "Date")) {
+    format(index_vec, "%Y-%m-%d")
+  } else {
+    as.character(index_vec)
+  }
+}
+
+confidence_suffix <- function(confidence.level) {
+  as.character(round(confidence.level * 100))
+}
+
+write_xts_csv <- function(x, file, columns) {
+  out <- data.frame(
+    Date = format_csv_date(zoo::index(x)),
+    zoo::coredata(x),
+    check.names = FALSE
+  )
+  names(out) <- c("Date", columns)
+  write.csv(out, file = file, row.names = FALSE)
+  message("Saved table: ", normalizePath(file, winslash = "/", mustWork = FALSE))
+  invisible(out)
+}
+
+write_results_clear <- function(res, res.dir, n.ahead, model_slug, target_slug,
+                                confidence.level = CONF_LEVEL) {
+  ensure_dir(res.dir)
+  
+  ci <- confidence_suffix(confidence.level)
+  forecast_col <- paste0("forecast_", target_slug)
+  forecast_lower_col <- paste0("forecast_lower_", ci)
+  forecast_upper_col <- paste0("forecast_upper_", ci)
+  growth_lower_col <- paste0("growth_rate_lower_", ci)
+  growth_upper_col <- paste0("growth_rate_upper_", ci)
+  
+  y.hat.diff <- res$predict_level(
+    n.ahead = n.ahead,
+    confidence.level = confidence.level,
+    sea.on = TRUE
+  )
+  write_xts_csv(
+    y.hat.diff[, 1:3],
+    file.path(res.dir, paste0(model_slug, "_", target_slug, "_forecast.csv")),
+    c(forecast_col, forecast_lower_col, forecast_upper_col)
+  )
+  
+  y.hat.all <- res$predict_all(n.ahead, return.all = TRUE)
+  filtered.level <- y.hat.all$level.t.t
+  filtered.slope <- y.hat.all$slope.t.t
+  a.t.t <- y.hat.all$a.t.t
+  P.t.t <- y.hat.all$P.t.t
+  
+  idx.level <- grep("level", colnames(a.t.t))[1]
+  idx.slope <- grep("slope", colnames(a.t.t))[1]
+  delta.std.err <- sqrt(P.t.t[idx.level, idx.level, ])
+  gamma.std.err <- sqrt(P.t.t[idx.slope, idx.slope, ])
+  
+  delta <- xts::xts(
+    cbind(
+      delta_log_growth_level = as.numeric(filtered.level),
+      delta_std_error = as.numeric(delta.std.err)
+    ),
+    order.by = zoo::index(filtered.level)
+  )
+  write_xts_csv(
+    delta,
+    file.path(res.dir, paste0(model_slug, "_delta_filtered.csv")),
+    c("delta_log_growth_level", "delta_std_error")
+  )
+  
+  gamma <- xts::xts(
+    cbind(
+      gamma_trend_slope = as.numeric(filtered.slope),
+      gamma_std_error = as.numeric(gamma.std.err)
+    ),
+    order.by = zoo::index(filtered.slope)
+  )
+  write_xts_csv(
+    gamma,
+    file.path(res.dir, paste0(model_slug, "_gamma_filtered.csv")),
+    c("gamma_trend_slope", "gamma_std_error")
+  )
+  
+  fitted.growth <- exp(filtered.level) + filtered.slope
+  ci.offset <- stats::qnorm((1 - confidence.level) / 2) *
+    as.numeric(gamma.std.err) %o% c(1, -1)
+  growth.ci <- xts::xts(
+    cbind(
+      fitted_incidence_growth_rate = as.numeric(fitted.growth),
+      lower = as.numeric(as.numeric(fitted.growth) + ci.offset[, 1]),
+      upper = as.numeric(as.numeric(fitted.growth) + ci.offset[, 2])
+    ),
+    order.by = zoo::index(filtered.level)
+  )
+  write_xts_csv(
+    growth.ci,
+    file.path(res.dir, paste0(model_slug, "_", target_slug, "_growth_rate.csv")),
+    c("fitted_incidence_growth_rate", growth_lower_col, growth_upper_col)
+  )
+  
+  invisible(TRUE)
+}
+
+write_csv_manifest <- function(res.dir) {
+  ci <- confidence_suffix(CONF_LEVEL)
+  manifest <- data.frame(
+    file = c(
+      "gauteng_gompertz_q005_new_cases_forecast.csv",
+      "gauteng_gompertz_q005_new_cases_growth_rate.csv",
+      "gauteng_gompertz_q005_delta_filtered.csv",
+      "gauteng_gompertz_q005_gamma_filtered.csv",
+      "gauteng_gompertz_q005_rt.csv",
+      "england_leading_indicator_hospital_admissions_forecast.csv",
+      "england_leading_indicator_hospital_admissions_growth_rate.csv",
+      "england_leading_indicator_delta_filtered.csv",
+      "england_leading_indicator_gamma_filtered.csv"
+    ),
+    description = c(
+      "Gauteng 14-day forecast of daily new cases, with prediction interval bounds.",
+      "Gauteng fitted incidence growth rate, with confidence interval bounds.",
+      "Gauteng filtered delta state: log-growth level and standard error.",
+      "Gauteng filtered gamma state: trend slope and standard error.",
+      "Gauteng effective reproduction number estimate, with confidence interval bounds.",
+      "England 14-day forecast of hospital admissions, with prediction interval bounds.",
+      "England fitted hospital-admission growth rate, with confidence interval bounds.",
+      "England filtered delta state: log-growth level and standard error.",
+      "England filtered gamma state: trend slope and standard error."
+    ),
+    columns = c(
+      paste0("Date, forecast_new_cases, forecast_lower_", ci,
+             ", forecast_upper_", ci),
+      paste0("Date, fitted_incidence_growth_rate, growth_rate_lower_", ci,
+             ", growth_rate_upper_", ci),
+      "Date, delta_log_growth_level, delta_std_error",
+      "Date, gamma_trend_slope, gamma_std_error",
+      paste0("Date, Rt, Rt_lower_", ci, ", Rt_upper_", ci),
+      paste0("Date, forecast_hospital_admissions, forecast_lower_", ci,
+             ", forecast_upper_", ci),
+      paste0("Date, fitted_incidence_growth_rate, growth_rate_lower_", ci,
+             ", growth_rate_upper_", ci),
+      "Date, delta_log_growth_level, delta_std_error",
+      "Date, gamma_trend_slope, gamma_std_error"
+    ),
+    stringsAsFactors = FALSE
+  )
+  write.csv(manifest, file.path(res.dir, "csv_manifest.csv"), row.names = FALSE)
+  message("Saved table: ",
+          normalizePath(file.path(res.dir, "csv_manifest.csv"),
+                        winslash = "/", mustWork = FALSE))
+  invisible(manifest)
+}
+
 # Convenience for date windows used in plots
 tail_date_minus <- function(index_vec, k)
   if (length(index_vec)) tail(index_vec, 1) - k else NA
@@ -145,7 +298,7 @@ tail_date_minus <- function(index_vec, k)
 # Takes the last date and goes back k days; 
 # if the vector is empty, returns NA.
 
-# ---- 1.6 knitr Defaults ----
+# ---- 1.7 knitr Defaults ----
 knitr::opts_chunk$set(
   echo       = TRUE,
   message    = TRUE,
@@ -185,7 +338,7 @@ cumulative_cases <- gauteng[, 1]
 mod1 <- tsgc::SSModelDynamicGompertz(Y = cumulative_cases)
 p <- plot(mod1, title = "Gauteng daily cases", series.name = "Cases")
 print(p)
-# save_plot(p, "gauteng_cases_MA.png")
+save_plot(p, "gauteng_cases_MA.png")
 
 #' 
 #' ## 2.3 Estimation: Gompertz Model Variants
@@ -268,14 +421,15 @@ p <- tsgc::plot_holdout(
 ); print(p)
 
 if (SAVE_TABLES) {
-  tsgc::write_results(
-    res               = res_q,
-    res.dir           = tables_dir, 
-    n.ahead           = n.forecasts,
-    confidence.level  = CONF_LEVEL,
-    prefix            = "gauteng_gomp_q005_"
+  write_results_clear(
+    res = res_q,
+    res.dir = tables_dir,
+    n.ahead = n.forecasts,
+    model_slug = "gauteng_gompertz_q005",
+    target_slug = "new_cases",
+    confidence.level = CONF_LEVEL
   )
-  message("Saved results for: gauteng_gomp_q005")
+  message("Saved clear CSV results for: gauteng_gompertz_q005")
 }
 
 #' 
@@ -465,7 +619,7 @@ print(p)
 
 # We can also compare different estimates with the actual trajectory
 p <- tsgc::plot_compare_forecast(
-  list(res_q, res_ar1, res_weather),
+  list(res_free, res_q, res_ar1, res_weather),
   actual = cumulative_cases
 )
 print(p)
@@ -487,9 +641,14 @@ print(p)
 ## ---- 4.1 Transform Gompertz estimates to R_t ----
 r.t <- tsgc::estimate_r0(res_q, gen_int, ndays)
 if (SAVE_TABLES) {
+  names(r.t) <- c(
+    "Date", "Rt",
+    paste0("Rt_lower_", confidence_suffix(CONF_LEVEL)),
+    paste0("Rt_upper_", confidence_suffix(CONF_LEVEL))
+  )
   write.csv(r.t, row.names = FALSE, 
-            file = file.path(tables_dir, "gauteng_rt_gomp_q005.csv"))
-  message("Saved gauteng_rt_gomp_q005.csv")
+            file = file.path(tables_dir, "gauteng_gompertz_q005_rt.csv"))
+  message("Saved gauteng_gompertz_q005_rt.csv")
 }
 
 p <- tsgc::estimate_r0(
@@ -497,7 +656,7 @@ p <- tsgc::estimate_r0(
   title = "Gauteng Reproduction numbers"
 )
 print(p)
-# save_plot(p, "gauteng_rt_gomp_q005_plot.png")
+save_plot(p, "gauteng_rt_gomp_q005_plot.png")
 
 # ========================================
 # 5. Reinitialisation for Subsequent Waves
@@ -530,10 +689,10 @@ model_rei_base <- tsgc::SSModelDynamicGompertz(
 res_rei_base <- tsgc::estimate(model_rei_base)
 summary(res_rei_base)
 
-# KFS pieces via package accessors
-kfs      <- tsgc::output(res_rei_base)
-alphaHat <- tsgc::alphahat(kfs)   
-Ptt_arr  <- tsgc::Ptt(kfs)        
+# KFS pieces from the fitted results object
+kfs      <- res_rei_base$output
+alphaHat <- kfs$alphahat
+Ptt_arr  <- kfs$Ptt
 idx      <- res_rei_base$index
 
 # Smoothed slope
@@ -569,47 +728,53 @@ reinit_zero.df <- d2.df %>%
 p_trigger <-
   ggplot2::ggplot(data = d2.df[d2.df$Date > as.Date("2021-02-11"), ], 
                   ggplot2::aes(x = Date)) +
-  ggplot2::geom_line(ggplot2::aes(y = smthd.slpe, color = "smthd.slpe"), 
+  ggplot2::geom_line(ggplot2::aes(y = smthd.slpe, color = "Smoothed slope"), 
                      linewidth = 0.5) +
   ggplot2::geom_line(ggplot2::aes(y = plus.sd.smthd.slpe,
-                                  color = "plus.sd.smthd.slpe"), 
+                                  color = "1 SE band"), 
                      linewidth = 0.25) +
   ggplot2::geom_line(ggplot2::aes(y = plus.sd.smthd.slpe.1.5, 
-                                  color = "plus.sd.smthd.slpe.1.5"), 
+                                  color = "1.5 SE band"), 
                      linewidth = 0.25) +
   ggplot2::geom_line(ggplot2::aes(y = plus.sd.smthd.slpe.2, 
-                                  color = "plus.sd.smthd.slpe.2"), 
+                                  color = "2 SE band"), 
                      linewidth = 0.5) +
   ggplot2::scale_y_continuous(n.breaks = 10) +
   ggplot2::geom_hline(yintercept = 0, linetype = "solid", 
                       color = "black", linewidth = 1) +
   ggplot2::geom_vline(data = trigger.df, 
                       ggplot2::aes(xintercept = Date), 
-                      linewidth = 0.5, color = "black") +
+                      linewidth = 0.5, color = "black", linetype = "dashed") +
   ggplot2::geom_vline(data = reinit_zero.df, 
                       ggplot2::aes(xintercept = Date), 
                       linewidth = 1, color = "black") +
-  ggplot2::xlab("Day") + ggplot2::ylab("Slope") +
+  ggplot2::labs(
+    title = "Reinitialisation trigger diagnostic for Gauteng",
+    subtitle = "Smoothed slope with 1, 1.5, and 2 standard-error bands",
+    x = "Date",
+    y = "Smoothed slope",
+    caption = "Thick vertical line: reset date. Dashed vertical line: 2-SE trigger date."
+  ) +
   ggplot2::scale_x_date(date_breaks = "10 days") +
   ggplot2::scale_color_manual(
-    name   = "", 
+    name   = "Series", 
     values = c(
-      "smthd.slpe"             = "red",
-      "plus.sd.smthd.slpe"     = "blue",
-      "plus.sd.smthd.slpe.1.5" = "green",
-      "plus.sd.smthd.slpe.2"   = "black"
+      "Smoothed slope" = "red",
+      "1 SE band"      = "blue",
+      "1.5 SE band"    = "green",
+      "2 SE band"      = "black"
     )
   ) +
-  ggplot2::theme_light(base_size = 11) +
+  ggplot2::theme_light(base_size = 12) +
   ggplot2::theme(
-    legend.title = ggplot2::element_text(size = 2),
-    legend.text  = ggplot2::element_text(size = 6),
+    legend.title = ggplot2::element_text(size = 9),
+    legend.text  = ggplot2::element_text(size = 9),
     axis.text.x  = ggplot2::element_text(angle = 45, 
                                          hjust = 1, size = 8),
     plot.title   = ggplot2::element_text(face = "bold")
   )
 print(p_trigger)
-# save_plot(p_trigger, "gauteng_cases_gomp_q005_reinit_trigger.png")
+save_plot(p_trigger, "gauteng_cases_gomp_q005_reinit_trigger.png")
 
 #' 
 #' ## 5.2 Forecasts & Accuracy (post-reinitialisation)
@@ -655,7 +820,8 @@ p <- tsgc::plot_holdout(
 tsgc::plot_holdout(
   res_rei_base, Y = cumulative_cases, n.ahead = n.forecasts,
   confidence.level = CONF_LEVEL, 
-  title = "Forecast without reinitialisation (baseline window)"
+  title = "Accuracy: Forecast of new cases\nwithout reinitialisation",
+  series.name = "Cases"
 )
 tsgc::plot_compare_forecast(
   list(res_rei_base, res_reinit), 
@@ -689,7 +855,7 @@ p <- plot(
   take.log = TRUE
 )
 print(p)
-# save_plot(p, "eng_hosp_lead_cases.png")
+save_plot(p, "eng_hosp_lead_cases.png")
 
 # Estimation window
 est.start.eng <- as.Date("2021-04-30")
@@ -710,28 +876,33 @@ summary(res_eng)
 p <- tsgc::plot_log_forecast(
   res_eng, Y = eng, n.ahead = n.forecasts, 
   plt.start.date = est.end.eng - plt.len.eng,
-  title = "Forecast of log growth rate of hospitalisation\n(England)"
+  title = "Forecast of log growth rate of hospital admissions\n(England)"
 ); print(p)
 
 p <- tsgc::plot_forecast(
   res_eng, n.ahead = n.forecasts, 
   plt.start.date = est.end.eng - plt.len.eng,
-  series.name = "Hospitalisations", 
-  title = "Forecast of hospitalisation\n(England)"
+  series.name = "Hospital admissions", 
+  title = "Forecast of hospital admissions\n(England)"
 ); print(p)
 
 p <- tsgc::plot_holdout(
   res_eng, Y = eng, n.ahead = n.forecasts,
-  series.name = "Hospitalisations", 
-  title = "Accuracy: Forecast of hospitalisation\n(England)"
+  series.name = "Hospital admissions", 
+  title = "Accuracy: Forecast of hospital admissions\n(England)"
 ); print(p)
 
 if (SAVE_TABLES) {
-  tsgc::write_results(
-    res = res_eng, res.dir = tables_dir, n.ahead = n.forecasts,
-    confidence.level = CONF_LEVEL, prefix = "england_hosp_lead_"
+  write_results_clear(
+    res = res_eng,
+    res.dir = tables_dir,
+    n.ahead = n.forecasts,
+    model_slug = "england_leading_indicator",
+    target_slug = "hospital_admissions",
+    confidence.level = CONF_LEVEL
   )
-  message("Saved results for: england_hosp_lead")
+  write_csv_manifest(tables_dir)
+  message("Saved clear CSV results for: england_leading_indicator")
 }
 
 #' 
@@ -758,20 +929,20 @@ tsgc::supply_xpred.new(res_eng_x,
 p <- tsgc::plot_log_forecast(
   res_eng_x, Y = eng, n.ahead = n.forecasts, 
   plt.start.date = est.end.eng - plt.len.eng,
-  title = "Forecast of log growth rate of hospitalisation\nwith regressors, England"
+  title = "Forecast of log growth rate of hospital admissions\nwith regressors, England"
 ); print(p)
 
 p <- tsgc::plot_forecast(
   res_eng_x, n.ahead = n.forecasts, 
   plt.start.date = est.end.eng - plt.len.eng,
-  title = "Forecast of hospitalisation\nwith regressors, England", 
-  series.name = "Hospitalisations"
+  title = "Forecast of hospital admissions\nwith regressors, England", 
+  series.name = "Hospital admissions"
 ); print(p)
 
 p <- tsgc::plot_holdout(
   res_eng_x, Y = eng, n.ahead = n.forecasts,
-  title = "Accuracy: Forecast of hospitalisation\nwith regressors, England", 
-  series.name = "Hospitalisations"
+  title = "Accuracy: Forecast of hospital admissions\nwith regressors, England", 
+  series.name = "Hospital admissions"
 ); print(p)
 
 # ===================================================
@@ -802,7 +973,7 @@ p <- plot(
   take.log = FALSE
 )
 print(p)
-# save_plot(p, "ukit_cases_lead_cases.png")
+save_plot(p, "ukit_cases_lead_cases.png")
 
 # 7.1 Case 1: First peak window
 n.forecasts <- 14
@@ -991,8 +1162,6 @@ tsgc::plot_compare_forecast(
 data(nintendo_sales, package = "tsgc")
 wii <- nintendo_sales[, 1]
 
-plot(wii)
-
 # Note: The tsgc function requires the input cumulative series to be strictly 
 # increasing in time. If the cumulative values exhibit plateaus—as in 
 # the case of the Wii series—it is necessary to add small increments 
@@ -1014,31 +1183,34 @@ summary(res_wii)
 
 # Cases with MA overlay
 p <- plot(
-  mod_wii, title = "Wii sales by quarter", 
-  series.name = "Sales (Million)", MA_period = 4
+  mod_wii, title = "Quarterly Wii console sales", 
+  series.name = "Sales (million units)", MA_period = 4
 )
 print(p)
-# save_plot(p, "wii_sales_gomp_cases.png")
+save_plot(p, "wii_sales_gomp_cases.png")
 
 p <- tsgc::plot_log_forecast(
   res_wii, Y = wii, n.ahead = n.forecasts, 
-  title = "Log forecasts of Wii sales"
+  title = "Forecast of log growth rate of Wii sales"
 )
 print(p)
-# save_plot(p, "wii_sales_gomp_loggr_fcst.png")
+save_plot(p, "wii_sales_gomp_loggr_fcst.png")
 
 p <- tsgc::plot_forecast(
-  res_wii, n.ahead = n.forecasts, title = "Wii sales", series.name = "Sales"
+  res_wii, n.ahead = n.forecasts,
+  title = "Forecast of new Wii sales",
+  series.name = "Sales (million units)"
 )
 print(p)
-# save_plot(p, "wii_sales_gomp_fcst.png")
+save_plot(p, "wii_sales_gomp_fcst.png")
 
 p <- tsgc::plot_holdout(
   res_wii, Y = wii, n.ahead = n.forecasts, 
-  title = "Accuracy: Forecast of new Wii sales", series.name = "Sales"
+  title = "Accuracy: Forecast of new Wii sales",
+  series.name = "Sales (million units)"
 )
 print(p)
-# save_plot(p, "wii_sales_gomp_holdout.png")
+save_plot(p, "wii_sales_gomp_holdout.png")
 
 #' ## 8.2 Leading Indicator Model with Quarterly Data: Wii to Switch
 #' 
@@ -1064,24 +1236,26 @@ summary(res_switch)
 
 p <- tsgc::plot_log_forecast(
   res_switch, Y = y_q, n.ahead = n.forecasts, 
-  title = "Log forecasts of Switch sales"
+  title = "Forecast of log growth rate of Switch sales"
 )
 print(p)
-# save_plot(p, "switch_sales_lead_loggr_fcst.png")
+save_plot(p, "switch_sales_lead_loggr_fcst.png")
 
 p <- tsgc::plot_forecast(
   res_switch, n.ahead = n.forecasts, 
-  title = "Switch sales", series.name = "Sales"
+  title = "Forecast of new Switch sales",
+  series.name = "Sales (million units)"
 )
 print(p)
-# save_plot(p, "switch_sales_lead_fcst.png")
+save_plot(p, "switch_sales_lead_fcst.png")
 
 p <- tsgc::plot_holdout(
   res_switch, Y = y_q, n.ahead = n.forecasts, 
-  title = "Switch sales", series.name = "Sales"
+  title = "Accuracy: Forecast of new Switch sales",
+  series.name = "Sales (million units)"
 )
 print(p)
-# save_plot(p, "switch_sales_lead_holdout.png")
+save_plot(p, "switch_sales_lead_holdout.png")
 
 #' 
 #' ## 8.3 Monthly: Plus500
@@ -1111,28 +1285,30 @@ p <- plot(
   series.name = "Monthly downloads", MA_period = 4
 )
 print(p)
-# save_plot(p, "plus500_downloads_gomp_cases.png")
+save_plot(p, "plus500_downloads_gomp_cases.png")
 
 p <- tsgc::plot_log_forecast(
   res_500, Y = Plus500, n.ahead = n.forecasts, 
-  title = "Log forecasts of Plus500 monthly downloads"
+  title = "Forecast of log growth rate of Plus500 downloads"
 )
 print(p)
-# save_plot(p, "plus500_downloads_gomp_loggr_fcst.png")
+save_plot(p, "plus500_downloads_gomp_loggr_fcst.png")
 
 p <- tsgc::plot_forecast(
   res_500, n.ahead = n.forecasts, 
-  title = "Plus500 monthly downloads"
+  title = "Forecast of new Plus500 downloads",
+  series.name = "Downloads"
 )
 print(p)
-# save_plot(p, "plus500_downloads_gomp_fcst.png")
+save_plot(p, "plus500_downloads_gomp_fcst.png")
 
 p <- tsgc::plot_holdout(
   res_500, Y = Plus500, n.ahead = n.forecasts, 
-  title = "Plus500 monthly downloads"
+  title = "Accuracy: Forecast of new Plus500 downloads",
+  series.name = "Downloads"
 )
 print(p)
-# save_plot(p, "plus500_downloads_gomp_holdout.png")
+save_plot(p, "plus500_downloads_gomp_holdout.png")
 
 #' 
 #' ## 8.4 Leading Indicator Model with Monthly Data: DEGIRO to AvaTrade
@@ -1161,26 +1337,26 @@ summary(res_500_lead)
 
 p <- tsgc::plot_log_forecast(
   res_500_lead, Y = y_m, n.ahead = n.forecasts, 
-  title = "Log forecasts of AvaTrade monthly downloads"
+  title = "Forecast of log growth rate of AvaTrade downloads"
 )
 print(p)
-# save_plot(p, "avatrade_downloads_lead_loggr_fcst.png")
+save_plot(p, "avatrade_downloads_lead_loggr_fcst.png")
 
 p <- tsgc::plot_forecast(
   res_500_lead, n.ahead = n.forecasts, 
-  title = "AvaTrade monthly downloads", 
+  title = "Forecast of new AvaTrade downloads", 
   series.name = "Downloads"
 )
 print(p)
-# save_plot(p, "avatrade_downloads_lead_fcst.png")
+save_plot(p, "avatrade_downloads_lead_fcst.png")
 
 p <- tsgc::plot_holdout(
   res_500_lead, Y = y_m, n.ahead = n.forecasts, 
-  title = "AvaTrade monthly downloads", 
+  title = "Accuracy: Forecast of new AvaTrade downloads", 
   series.name = "Downloads"
 )
 print(p)
-# save_plot(p, "avatrade_downloads_lead_holdout.png")
+save_plot(p, "avatrade_downloads_lead_holdout.png")
 
 #' 
 #' ## 8.5 Annual: 3DS
@@ -1219,24 +1395,26 @@ summary(res_3ds)
 
 p <- tsgc::plot_log_forecast(
   res_3ds, Y = threeds_xts, n.ahead = n.forecasts,
-  title = "Log forecasts of annual 3DS sales"
+  title = "Forecast of log growth rate of annual 3DS sales"
 )
 print(p)
-# save_plot(p, "3ds_sales_gomp_loggr_fcst.png")
+save_plot(p, "3ds_sales_gomp_loggr_fcst.png")
 
 p <- tsgc::plot_forecast(
   res_3ds, n.ahead = n.forecasts, 
-  title = "Forecasts of annual 3DS sales"
+  title = "Forecast of new annual 3DS sales",
+  series.name = "Sales (million units)"
 )
 print(p)
-# save_plot(p, "3ds_sales_gomp_fcst.png")
+save_plot(p, "3ds_sales_gomp_fcst.png")
 
 p <- tsgc::plot_holdout(
   res_3ds, Y = threeds_xts, n.ahead = n.forecasts,
-  title = "Accuracy of annual 3DS sales forecasts"
+  title = "Accuracy: Forecast of new annual 3DS sales",
+  series.name = "Sales (million units)"
 )
 print(p)
-# save_plot(p, "3ds_sales_gomp_holdout.png")
+save_plot(p, "3ds_sales_gomp_holdout.png")
 
 #' 
 #' ## 8.6 Leading Indicator Model with Annual Data: Wii to 3DS (Lead)
@@ -1260,26 +1438,26 @@ summary(res_lead_y)
 
 p <- tsgc::plot_log_forecast(
   res_lead_y, Y = yearly_nintendo_xts, n.ahead = n.forecasts, 
-  title = "Log forecasts of 3DS annual sales"
+  title = "Forecast of log growth rate of annual 3DS sales"
 )
 print(p)
-# save_plot(p, "3ds_sales_lead_loggr_fcst.png")
+save_plot(p, "3ds_sales_lead_loggr_fcst.png")
 
 p <- tsgc::plot_forecast(
   res_lead_y, n.ahead = n.forecasts, 
-  title = "Annual global 3DS sales", 
-  series.name = "Sales (in Million)"
+  title = "Forecast of new annual 3DS sales", 
+  series.name = "Sales (million units)"
 )
 print(p)
-# save_plot(p, "3ds_sales_lead_fcst.png")
+save_plot(p, "3ds_sales_lead_fcst.png")
 
 p <- tsgc::plot_holdout(
   res_lead_y, Y = yearly_nintendo_xts, n.ahead = n.forecasts, 
-  title = "Annual global 3DS sales", 
-  series.name = "Sales (in Million)"
+  title = "Accuracy: Forecast of new annual 3DS sales", 
+  series.name = "Sales (million units)"
 )
 print(p)
-# save_plot(p, "3ds_sales_lead_holdout.png")
+save_plot(p, "3ds_sales_lead_holdout.png")
 
 #' 
 #' # Wrap-up
