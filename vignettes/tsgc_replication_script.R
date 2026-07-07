@@ -465,7 +465,7 @@ print(p)
 
 # We can also compare different estimates with the actual trajectory
 p <- tsgc::plot_compare_forecast(
-  list(res_q, res_ar1, res_weather),
+  list(res_free, res_q, res_ar1, res_weather),
   actual = cumulative_cases
 )
 print(p)
