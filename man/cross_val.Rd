@@ -77,33 +77,45 @@ Yuk <- tsgc::ukitaly[, "UK"]
 
 # Example 1: ukitaly dataset 
 # Create a list to store different models
-cv_models<-list()
+cv_models <- list()
 
 # Model 1: Vanilla Gompertz
-cv_models[["Vanilla_q"]]<-SSModelDynamicGompertz(Y=Yuk, q=0.005, start.date = est.start, end.date = est.end)
+cv_models[["Vanilla_q"]] <- SSModelDynamicGompertz(
+  Y = Yuk, q = 0.005, start.date = est.start, end.date = est.end
+)
 
 # Model 2: Vanilla Gompertz with AR1
-cv_models[["Vanilla_ar1"]]<-SSModelDynamicGompertz(Y=Yuk, start.date = est.start, end.date = est.end, ar1=TRUE)
+cv_models[["Vanilla_ar1"]] <- SSModelDynamicGompertz(
+  Y = Yuk, start.date = est.start, end.date = est.end, ar1 = TRUE
+)
 
 # Model 3-6: Leading Indicator with different lags from 7, 10, 14 or 18
-for (i in c(7,10,14,18)){
-  cv_models[[paste0("Lag", i)]]<-SSModelLeadingIndicator(Y=ukitaly, start.date = est.start, end.date = est.end, n.lag=i)}
+for (i in c(7, 10, 14, 18)) {
+  cv_models[[paste0("Lag", i)]] <- SSModelLeadingIndicator(
+    Y = ukitaly, start.date = est.start, end.date = est.end, n.lag = i
+  )
+}
 
 # Display cross-validation analysis
-cross_val(Y=ukitaly, model_list=cv_models, est.end.date = est.end, n.estimate=5, gap=2)
+cross_val(Y = ukitaly, model_list = cv_models, est.end.date = est.end, n.estimate = 5, gap = 2)
 
 # Example 2: England hospitalizations (with xpred)
 eng <- tsgc::england[, 1:2]
 est.start.eng <- as.Date("2021-04-30")
 est.end.eng   <- as.Date("2021-07-24")
 
-#Cross-validation example 
-cv_models=list()
+# Cross-validation example 
+cv_models <- list()
 # Model 1: Vanilla Gompertz
-cv_models[["Vanilla_q"]]<-SSModelDynamicGompertz(Y=eng[,-1], q=0.005, start.date = est.start, end.date = est.end)
+cv_models[["Vanilla_q"]] <- SSModelDynamicGompertz(
+  Y = eng[, -1], q = 0.005, start.date = est.start, end.date = est.end
+)
 
 # Model 2: Vanilla Gompertz with xpred
-cv_models[["Vanilla_xpred"]]<-SSModelDynamicGompertz(Y=eng[,-1], start.date = est.start.eng, end.date = est.end.eng, xpred=england_weather_2021)
+cv_models[["Vanilla_xpred"]] <- SSModelDynamicGompertz(
+  Y = eng[, -1], start.date = est.start.eng, end.date = est.end.eng, 
+  xpred = england_weather_2021
+)
 
 # Model 3-6: Leading Indicator with different lags or with xpred
 for (i in c(3,4)){

@@ -5,7 +5,9 @@
 \title{Calling plot method for SSModelDynamicGompertz class}
 \usage{
 \method{plot}{SSModelDynamicGompertz}(
-  model,
+  x,
+  y,
+  ...,
   title = NULL,
   series.name = "target variable",
   date_break = NULL,
@@ -13,7 +15,19 @@
 )
 }
 \arguments{
-\item{model}{A \code{SSModelDynamicGompertz} object}
+\item{x}{A \code{SSModelDynamicGompertz} object.}
+
+\item{y}{Unused. Required to match generic signature.}
+
+\item{...}{Additional arguments.}
+
+\item{title}{Title for forecast plot.}
+
+\item{series.name}{The name of the series the growth rate is being computed for.}
+
+\item{date_break}{A character string specifying the interval between date labels.}
+
+\item{MA_period}{Number of days used in centered moving average.}
 }
 \description{
 Accessor method to call the plot method of an object of

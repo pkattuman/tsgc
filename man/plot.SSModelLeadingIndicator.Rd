@@ -5,7 +5,9 @@
 \title{Calling plot method for \code{SSModelLeadingIndicator} class}
 \usage{
 \method{plot}{SSModelLeadingIndicator}(
-  model,
+  x,
+  y,
+  ...,
   title = NULL,
   series.name.lead = "Leading Indicator",
   series.name.target = "Target Variable",
@@ -14,7 +16,21 @@
 )
 }
 \arguments{
-\item{model}{A \code{SSModelLeadingIndicator} object}
+\item{x}{A \code{SSModelLeadingIndicator} object.}
+
+\item{y}{Unused. Required to match generic signature.}
+
+\item{...}{Additional arguments.}
+
+\item{title}{Title for forecast plot.}
+
+\item{series.name.lead}{The name of the leading indicator series.}
+
+\item{series.name.target}{The name of the target variable series.}
+
+\item{date_break}{A character string specifying the interval between date labels.}
+
+\item{take.log}{A logical value indicating whether to take the log of the lagged differences.}
 }
 \description{
 Accessor method to call the plot method of an object of

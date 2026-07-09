@@ -4,10 +4,12 @@
 \alias{summary.SSModelLeadingIndicator}
 \title{Calling summary method for classes in tsgc}
 \usage{
-\method{summary}{SSModelLeadingIndicator}(model)
+\method{summary}{SSModelLeadingIndicator}(object, ...)
 }
 \arguments{
-\item{model}{A \code{SSModelLeadingIndicator} object}
+\item{object}{A \code{SSModelLeadingIndicator} object}
+
+\item{...}{Additional arguments.}
 }
 \description{
 Accessor method to show a summary for the objects of

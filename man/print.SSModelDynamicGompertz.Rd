@@ -4,10 +4,12 @@
 \alias{print.SSModelDynamicGompertz}
 \title{Calling print method for SSModelDynamicGompertz class}
 \usage{
-\method{print}{SSModelDynamicGompertz}(model)
+\method{print}{SSModelDynamicGompertz}(x, ...)
 }
 \arguments{
-\item{model}{A \code{SSModelDynamicGompertz} object}
+\item{x}{A \code{SSModelDynamicGompertz} object}
+
+\item{...}{Additional arguments.}
 }
 \description{
 Accessor method to print a short description for the objects of

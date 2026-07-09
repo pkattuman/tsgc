@@ -4,10 +4,12 @@
 \alias{print.SSModelLeadingIndicator}
 \title{Calling print method for classes in tsgc}
 \usage{
-\method{print}{SSModelLeadingIndicator}(model)
+\method{print}{SSModelLeadingIndicator}(x, ...)
 }
 \arguments{
-\item{model}{A \code{SSModelLeadingIndicator} object}
+\item{x}{A \code{SSModelLeadingIndicator} object}
+
+\item{...}{Additional arguments.}
 }
 \description{
 Accessor method to print a short description for the objects of

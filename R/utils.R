@@ -14,6 +14,8 @@
 #  A copy of the GNU General Public License is available at
 #  http://www.r-project.org/Licenses/
 
+utils::globalVariables(c("Date", "Rt", "lower", "upper", "forecast", "model"))
+
 #' @title Compute log growth rate of cumulated dataset
 #
 #' @description Helper method to compute the log growth rates of cumulated
@@ -238,7 +240,7 @@ argmax <- function(x, decreasing=TRUE) {
 #'
 #' @export
 write_results <- function(res, res.dir, n.ahead, prefix="", confidence.level=0.68) {
-  if (class(res)!="FilterResults" && class(res)!="FilterResultsLI"){
+  if (!inherits(res, "FilterResults") && !inherits(res, "FilterResultsLI")){
     stop("res must be a FilterResults or FilterResultsLI object.")
   }
   # 1. New Cases - Delta Y
@@ -392,7 +394,9 @@ estimate_r0<-function(res, gen_int, ndays=7, show_plot=FALSE,
 #' library(tsgc)
 #' 
 #' #Estimate the model
-#' model_q <- SSModelDynamicGompertz$new(Y = gauteng, start.date=as.Date("2021-04-30"), end.date=as.Date("2021-07-24"))
+#' model_q <- SSModelDynamicGompertz$new(
+#'   Y = gauteng, start.date = as.Date("2021-04-30"), end.date = as.Date("2021-07-24")
+#' )
 #' res <- estimate(model_q)
 #' 
 #' #Return MAPE of forecast
@@ -459,33 +463,45 @@ mapes<-function(res,n.ahead,Y){
 #' 
 #' # Example 1: ukitaly dataset 
 #' # Create a list to store different models
-#' cv_models<-list()
+#' cv_models <- list()
 #' 
 #' # Model 1: Vanilla Gompertz
-#' cv_models[["Vanilla_q"]]<-SSModelDynamicGompertz(Y=Yuk, q=0.005, start.date = est.start, end.date = est.end)
+#' cv_models[["Vanilla_q"]] <- SSModelDynamicGompertz(
+#'   Y = Yuk, q = 0.005, start.date = est.start, end.date = est.end
+#' )
 #' 
 #' # Model 2: Vanilla Gompertz with AR1
-#' cv_models[["Vanilla_ar1"]]<-SSModelDynamicGompertz(Y=Yuk, start.date = est.start, end.date = est.end, ar1=TRUE)
+#' cv_models[["Vanilla_ar1"]] <- SSModelDynamicGompertz(
+#'   Y = Yuk, start.date = est.start, end.date = est.end, ar1 = TRUE
+#' )
 #' 
 #' # Model 3-6: Leading Indicator with different lags from 7, 10, 14 or 18
-#' for (i in c(7,10,14,18)){
-#'   cv_models[[paste0("Lag", i)]]<-SSModelLeadingIndicator(Y=ukitaly, start.date = est.start, end.date = est.end, n.lag=i)}
+#' for (i in c(7, 10, 14, 18)) {
+#'   cv_models[[paste0("Lag", i)]] <- SSModelLeadingIndicator(
+#'     Y = ukitaly, start.date = est.start, end.date = est.end, n.lag = i
+#'   )
+#' }
 #' 
 #' # Display cross-validation analysis
-#' cross_val(Y=ukitaly, model_list=cv_models, est.end.date = est.end, n.estimate=5, gap=2)
+#' cross_val(Y = ukitaly, model_list = cv_models, est.end.date = est.end, n.estimate = 5, gap = 2)
 #'
 #' # Example 2: England hospitalizations (with xpred)
 #' eng <- tsgc::england[, 1:2]
 #' est.start.eng <- as.Date("2021-04-30")
 #' est.end.eng   <- as.Date("2021-07-24")
 #' 
-#' #Cross-validation example 
-#' cv_models=list()
+#' # Cross-validation example 
+#' cv_models <- list()
 #' # Model 1: Vanilla Gompertz
-#' cv_models[["Vanilla_q"]]<-SSModelDynamicGompertz(Y=eng[,-1], q=0.005, start.date = est.start, end.date = est.end)
+#' cv_models[["Vanilla_q"]] <- SSModelDynamicGompertz(
+#'   Y = eng[, -1], q = 0.005, start.date = est.start, end.date = est.end
+#' )
 #' 
 #' # Model 2: Vanilla Gompertz with xpred
-#' cv_models[["Vanilla_xpred"]]<-SSModelDynamicGompertz(Y=eng[,-1], start.date = est.start.eng, end.date = est.end.eng, xpred=england_weather_2021)
+#' cv_models[["Vanilla_xpred"]] <- SSModelDynamicGompertz(
+#'   Y = eng[, -1], start.date = est.start.eng, end.date = est.end.eng, 
+#'   xpred = england_weather_2021
+#' )
 #' 
 #' # Model 3-6: Leading Indicator with different lags or with xpred
 #' for (i in c(3,4)){
@@ -527,7 +543,7 @@ cross_val<-function(Y, model_list, est.end.date, n.ahead=7, n.estimate=1, gap=1,
     for (model in model_list){
 #      model <- model_orig$copy()
       model$end.date<-est.end.date+(k-1)*gap
-      if (class(model)=="SSModelDynamicGompertz"){
+      if (inherits(model, "SSModelDynamicGompertz")){
         model$Y<-get_timeframe(Y1, model$start.date, model$end.date)
         if (!is.null(model$xpred)){
           model$xpred<-get_timeframe(xpred_targ.full,model$start.date,model$end.date)
@@ -537,7 +553,7 @@ cross_val<-function(Y, model_list, est.end.date, n.ahead=7, n.estimate=1, gap=1,
           res$xpred.new<-xpred_targ.full
         }
         results[index_num, k+1]=round(mapes(res,n.ahead,Y1)[[criterion]],2)
-      } else if (class(model)=="SSModelLeadingIndicator") {
+      } else if (inherits(model, "SSModelLeadingIndicator")) {
         if (!is.null(model$xpred_lead)){
           model$xpred_lead=xpred_lead.full
         }

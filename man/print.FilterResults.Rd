@@ -4,10 +4,12 @@
 \alias{print.FilterResults}
 \title{Calling print method for FilterResults class}
 \usage{
-\method{print}{FilterResults}(model)
+\method{print}{FilterResults}(x, ...)
 }
 \arguments{
-\item{model}{A \code{FilterResults} object}
+\item{x}{A \code{FilterResults} object}
+
+\item{...}{Additional arguments.}
 }
 \description{
 Accessor method to print a short description for the objects of

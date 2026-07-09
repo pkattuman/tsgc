@@ -35,7 +35,9 @@ providing a measure of forecast accuracy.
 library(tsgc)
 
 #Estimate the model
-model_q <- SSModelDynamicGompertz$new(Y = gauteng, start.date=as.Date("2021-04-30"), end.date=as.Date("2021-07-24"))
+model_q <- SSModelDynamicGompertz$new(
+  Y = gauteng, start.date = as.Date("2021-04-30"), end.date = as.Date("2021-07-24")
+)
 res <- estimate(model_q)
 
 #Return MAPE of forecast

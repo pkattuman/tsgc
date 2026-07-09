@@ -146,7 +146,7 @@ SSModelDynamicGompertz <- setRefClass(
         sea.period==1 || sea.period<0){
       stop("sea.period must be a non-negative integer that is not 1.")
     } 
-    if (!is.null(original.results) && class(original.results)!="FilterResults"){
+    if (!is.null(original.results) && !inherits(original.results, "FilterResults")){
       stop("original.results must be NULL or an object of class FilterResults.")
     }
     if (!is.null(xpred) && !is.xts(xpred)){

@@ -4,10 +4,12 @@
 \alias{print.FilterResultsLI}
 \title{Calling print method for FilterResultsLI class}
 \usage{
-\method{print}{FilterResultsLI}(model)
+\method{print}{FilterResultsLI}(x, ...)
 }
 \arguments{
-\item{model}{A \code{FilterResultsLI} object}
+\item{x}{A \code{FilterResultsLI} object}
+
+\item{...}{Additional arguments.}
 }
 \description{
 Accessor method to print a short description for the objects of

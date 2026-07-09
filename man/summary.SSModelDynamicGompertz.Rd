@@ -4,10 +4,12 @@
 \alias{summary.SSModelDynamicGompertz}
 \title{Calling summary method for SSModelDynamicGompertz class}
 \usage{
-\method{summary}{SSModelDynamicGompertz}(model)
+\method{summary}{SSModelDynamicGompertz}(object, ...)
 }
 \arguments{
-\item{model}{A \code{SSModelDynamicGompertz} object}
+\item{object}{A \code{SSModelDynamicGompertz} object}
+
+\item{...}{Additional arguments.}
 }
 \description{
 Accessor method to show a summary for the objects of

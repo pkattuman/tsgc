@@ -4,10 +4,12 @@
 \alias{summary.FilterResultsLI}
 \title{Calling summary method for FilterResultsLI}
 \usage{
-\method{summary}{FilterResultsLI}(model)
+\method{summary}{FilterResultsLI}(object, ...)
 }
 \arguments{
-\item{model}{A \code{FilterResultsLI} object}
+\item{object}{A \code{FilterResultsLI} object}
+
+\item{...}{Additional arguments.}
 }
 \description{
 Accessor method to show a summary for the objects of

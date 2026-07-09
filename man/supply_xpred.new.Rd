@@ -39,11 +39,12 @@ supply_xpred.new(res_weather,gauteng_weather)
 res_weather$xpred.new
 
 #FilterResultsLI example
-xpred_lead<-xpred_targ<-england_weather_2021[,1:4]
-mod<-SSModelLeadingIndicator$new(england[,1:2], n.lag=4, xpred_lead=xpred_lead, xpred_targ=xpred_targ, 
-                                start.date = as.Date("2021-04-30"), 
-                                end.date = as.Date("2021-07-24"))
-res_lead.x<-estimate(mod)
+xpred_lead <- xpred_targ <- england_weather_2021[, 1:4]
+mod <- SSModelLeadingIndicator$new(
+  england[, 1:2], n.lag = 4, xpred_lead = xpred_lead, xpred_targ = xpred_targ, 
+  start.date = as.Date("2021-04-30"), end.date = as.Date("2021-07-24")
+)
+res_lead.x <- estimate(mod)
 
 supply_xpred.new(res_lead.x,england_weather_2021[,1:4],idx='lead')
 supply_xpred.new(res_lead.x,england_weather_2021[,1:4],idx='targ')

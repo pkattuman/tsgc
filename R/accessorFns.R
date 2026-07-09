@@ -46,11 +46,12 @@
 #' res_weather$xpred.new
 #' 
 #' #FilterResultsLI example
-#' xpred_lead<-xpred_targ<-england_weather_2021[,1:4]
-#' mod<-SSModelLeadingIndicator$new(england[,1:2], n.lag=4, xpred_lead=xpred_lead, xpred_targ=xpred_targ, 
-#'                                 start.date = as.Date("2021-04-30"), 
-#'                                 end.date = as.Date("2021-07-24"))
-#' res_lead.x<-estimate(mod)
+#' xpred_lead <- xpred_targ <- england_weather_2021[, 1:4]
+#' mod <- SSModelLeadingIndicator$new(
+#'   england[, 1:2], n.lag = 4, xpred_lead = xpred_lead, xpred_targ = xpred_targ, 
+#'   start.date = as.Date("2021-04-30"), end.date = as.Date("2021-07-24")
+#' )
+#' res_lead.x <- estimate(mod)
 #'
 #' supply_xpred.new(res_lead.x,england_weather_2021[,1:4],idx='lead')
 #' supply_xpred.new(res_lead.x,england_weather_2021[,1:4],idx='targ')
@@ -61,7 +62,7 @@ supply_xpred.new<-function(object, new.xts, idx=NULL){
   if (!is.xts(new.xts)){
     stop("new.xts is not an xts object.")
   }
-  if (class(object)=="FilterResultsLI"){
+  if (inherits(object,"FilterResultsLI")){
     if (idx=="lead"){
       object$xpred_lead.new<-new.xts
       message("xpred_lead.new registered.")
@@ -71,7 +72,7 @@ supply_xpred.new<-function(object, new.xts, idx=NULL){
     } else {
       stop("Please specify idx, which is either 'lead' or 'targ'.")
     }
-  } else if (class(object)=="FilterResults"){
+  } else if (inherits(object, "FilterResults")){
     object$xpred.new<-new.xts
     message("xpred.new registered.")
   } else {
@@ -341,7 +342,7 @@ alphahat<-function(object){
 #' 
 #' @export
 estimate<-function(model){
-  if (class(model)!="SSModelDynamicGompertz" && class(model)!="SSModelLeadingIndicator"){
+  if (!inherits(model, "SSModelDynamicGompertz") && !inherits(model, "SSModelLeadingIndicator")){
     stop("model must be a SSModelDynamicGompertz or SSModelLeadingIndicator object.")
   }
    model$estimate()
@@ -352,7 +353,8 @@ estimate<-function(model){
 #' @description Accessor method to print a short description for the objects of
 #' `SSModelLeadingIndicator` class
 #'
-#' @param model A `SSModelLeadingIndicator` object
+#' @param x A `SSModelLeadingIndicator` object
+#' @param ... Additional arguments.
 #' 
 #' @method print SSModelLeadingIndicator
 #' 
@@ -369,10 +371,10 @@ estimate<-function(model){
 #' 
 #' 
 #' @export
-print.SSModelLeadingIndicator <- function(model) {
+print.SSModelLeadingIndicator <- function(x, ...) {
   # Call the object's print() method if it exists
-  if (!is.null(model$print) && is.function(model$print)) {
-    return(model$print())
+  if (!is.null(x$print) && is.function(x$print)) {
+    return(x$print())
   } else {
     stop("The object does not have a valid 'print' method.")
   }
@@ -383,7 +385,14 @@ print.SSModelLeadingIndicator <- function(model) {
 #' @description Accessor method to call the plot method of an object of 
 #' `SSModelLeadingIndicator` class
 #'
-#' @param model A `SSModelLeadingIndicator` object
+#' @param x A `SSModelLeadingIndicator` object.
+#' @param y Unused. Required to match generic signature.
+#' @param title Title for forecast plot. 
+#' @param series.name.lead The name of the leading indicator series.
+#' @param series.name.target The name of the target variable series.
+#' @param date_break A character string specifying the interval between date labels.
+#' @param take.log A logical value indicating whether to take the log of the lagged differences.
+#' @param ... Additional arguments.
 #' @method plot SSModelLeadingIndicator
 #' 
 #' @examples
@@ -397,12 +406,12 @@ print.SSModelLeadingIndicator <- function(model) {
 #' plot(out_eng)
 #' 
 #' @export
-plot.SSModelLeadingIndicator <- function(model,title=NULL, series.name.lead="Leading Indicator", 
+plot.SSModelLeadingIndicator <- function(x, y, ..., title=NULL, series.name.lead="Leading Indicator", 
                                          series.name.target="Target Variable",
                                          date_break=NULL, take.log=TRUE) {
   # Call the object's plot() method if it exists
-  if (!is.null(model$plot) && is.function(model$plot)) {
-    return(model$plot(title, series.name.lead, 
+  if (!is.null(x$plot) && is.function(x$plot)) {
+    return(x$plot(title, series.name.lead, 
                series.name.target,date_break,take.log))
   } else {
     stop("The object does not have a valid 'plot' method.")
@@ -415,7 +424,8 @@ plot.SSModelLeadingIndicator <- function(model,title=NULL, series.name.lead="Lea
 #' @description Accessor method to show a summary for the objects of
 #' `SSModelLeadingIndicator` class
 #'
-#' @param model A `SSModelLeadingIndicator` object
+#' @param object A `SSModelLeadingIndicator` object
+#' @param ... Additional arguments.
 #' @method summary SSModelLeadingIndicator
 #' 
 #' @examples
@@ -429,10 +439,10 @@ plot.SSModelLeadingIndicator <- function(model,title=NULL, series.name.lead="Lea
 #' summary(out_eng)
 #' 
 #' @export
-summary.SSModelLeadingIndicator <- function(model) {
+summary.SSModelLeadingIndicator <- function(object, ...) {
   # Call the object's summary() method if it exists
-  if (!is.null(model$summary) && is.function(model$summary)) {
-    return(model$summary())
+  if (!is.null(object$summary) && is.function(object$summary)) {
+    return(object$summary())
   } else {
     stop("The object does not have a valid 'summary' method.")
   }
@@ -443,7 +453,8 @@ summary.SSModelLeadingIndicator <- function(model) {
 #' @description Accessor method to print a short description for the objects of
 #' `SSModelDynamicGompertz` class
 #'
-#' @param model A `SSModelDynamicGompertz` object
+#' @param x A `SSModelDynamicGompertz` object
+#' @param ... Additional arguments.
 #' @method print SSModelDynamicGompertz
 #' 
 #' @examples
@@ -458,10 +469,10 @@ summary.SSModelLeadingIndicator <- function(model) {
 #' print(model)
 #' 
 #' @export
-print.SSModelDynamicGompertz <- function(model) {
+print.SSModelDynamicGompertz <- function(x, ...) {
   # Call the object's print() method if it exists
-  if (!is.null(model$print) && is.function(model$print)) {
-    return(model$print())
+  if (!is.null(x$print) && is.function(x$print)) {
+    return(x$print())
   } else {
     stop("The object does not have a valid 'print' method.")
   }
@@ -472,7 +483,8 @@ print.SSModelDynamicGompertz <- function(model) {
 #' @description Accessor method to show a summary for the objects of
 #' `SSModelDynamicGompertz` class
 #'
-#' @param model A `SSModelDynamicGompertz` object
+#' @param object A `SSModelDynamicGompertz` object
+#' @param ... Additional arguments.
 #' @method summary SSModelDynamicGompertz
 #' @examples
 #' library(tsgc)
@@ -486,10 +498,10 @@ print.SSModelDynamicGompertz <- function(model) {
 #' summary(model)
 #' 
 #' @export
-summary.SSModelDynamicGompertz <- function(model) {
+summary.SSModelDynamicGompertz <- function(object, ...) {
   # Call the object's summary() method if it exists
-  if (!is.null(model$summary) && is.function(model$summary)) {
-    return(model$summary())
+  if (!is.null(object$summary) && is.function(object$summary)) {
+    return(object$summary())
   } else {
     stop("The object does not have a valid 'summary' method.")
   }
@@ -502,7 +514,13 @@ summary.SSModelDynamicGompertz <- function(model) {
 #' @description Accessor method to call the plot method of an object of 
 #' `SSModelDynamicGompertz` class
 #'
-#' @param model A `SSModelDynamicGompertz` object
+#' @param x A `SSModelDynamicGompertz` object.
+#' @param y Unused. Required to match generic signature.
+#' @param title Title for forecast plot. 
+#' @param series.name The name of the series the growth rate is being computed for.
+#' @param date_break A character string specifying the interval between date labels.
+#' @param MA_period Number of days used in centered moving average.
+#' @param ... Additional arguments.
 #' @method plot SSModelDynamicGompertz
 #' 
 #' @examples
@@ -517,12 +535,12 @@ summary.SSModelDynamicGompertz <- function(model) {
 #' plot(model)
 #' 
 #' @export
-plot.SSModelDynamicGompertz <- function(model,title=NULL, 
+plot.SSModelDynamicGompertz <- function(x, y, ..., title=NULL, 
                                         series.name="target variable", 
                                         date_break=NULL, MA_period=7) {
   # Call the object's plot() method if it exists
-  if (!is.null(model$plot) && is.function(model$plot)) {
-    return(model$plot(title, series.name, date_break, MA_period))
+  if (!is.null(x$plot) && is.function(x$plot)) {
+    return(x$plot(title, series.name, date_break, MA_period))
   } else {
     stop("The object does not have a valid 'plot' method.")
   }
@@ -533,7 +551,8 @@ plot.SSModelDynamicGompertz <- function(model,title=NULL,
 #' @description Accessor method to show a summary for the objects of
 #' `FilterResults` class
 #'
-#' @param model A `FilterResults` object
+#' @param object A `FilterResults` object
+#' @param ... Additional arguments.
 #' @method summary FilterResults
 #' 
 #' @examples
@@ -548,10 +567,10 @@ plot.SSModelDynamicGompertz <- function(model,title=NULL,
 #' summary(res)
 #' 
 #' @export
-summary.FilterResults <- function(model) {
+summary.FilterResults <- function(object, ...) {
   # Call the object's summary() method if it exists
-  if (!is.null(model$summary) && is.function(model$summary)) {
-    return(model$summary())
+  if (!is.null(object$summary) && is.function(object$summary)) {
+    return(object$summary())
   } else {
     stop("The object does not have a valid 'summary' method.")
   }
@@ -562,7 +581,8 @@ summary.FilterResults <- function(model) {
 #' @description Accessor method to print a short description for the objects of
 #' `FilterResults` class
 #'
-#' @param model A `FilterResults` object
+#' @param x A `FilterResults` object
+#' @param ... Additional arguments.
 #' @method print FilterResults
 #' 
 #' @examples
@@ -577,10 +597,10 @@ summary.FilterResults <- function(model) {
 #' print(res)
 #' 
 #' @export
-print.FilterResults <- function(model) {
+print.FilterResults <- function(x, ...) {
   # Call the object's print() method if it exists
-  if (!is.null(model$print) && is.function(model$print)) {
-    return(model$print())
+  if (!is.null(x$print) && is.function(x$print)) {
+    return(x$print())
   } else {
     stop("The object does not have a valid 'print' method.")
   }
@@ -591,7 +611,8 @@ print.FilterResults <- function(model) {
 #' @description Accessor method to show a summary for the objects of
 #' `FilterResultsLI` class
 #'
-#' @param model A `FilterResultsLI` object
+#' @param object A `FilterResultsLI` object
+#' @param ... Additional arguments.
 #' @method summary FilterResultsLI
 #' 
 #' @examples
@@ -605,10 +626,10 @@ print.FilterResults <- function(model) {
 #' summary(res_eng)
 #' 
 #' @export
-summary.FilterResultsLI <- function(model) {
+summary.FilterResultsLI <- function(object, ...) {
   # Call the object's summary() method if it exists
-  if (!is.null(model$summary) && is.function(model$summary)) {
-    return(model$summary())
+  if (!is.null(object$summary) && is.function(object$summary)) {
+    return(object$summary())
   } else {
     stop("The object does not have a valid 'summary' method.")
   }
@@ -619,7 +640,8 @@ summary.FilterResultsLI <- function(model) {
 #' @description Accessor method to print a short description for the objects of
 #' `FilterResultsLI` class
 #'
-#' @param model A `FilterResultsLI` object
+#' @param x A `FilterResultsLI` object
+#' @param ... Additional arguments.
 #' @method print FilterResultsLI
 #' 
 #' @examples
@@ -633,10 +655,10 @@ summary.FilterResultsLI <- function(model) {
 #' print(res_eng) 
 #' 
 #' @export
-print.FilterResultsLI <- function(model) {
+print.FilterResultsLI <- function(x, ...) {
   # Call the object's print() method if it exists
-  if (!is.null(model$print) && is.function(model$print)) {
-    return(model$print())
+  if (!is.null(x$print) && is.function(x$print)) {
+    return(x$print())
   } else {
     stop("The object does not have a valid 'print' method.")
   }
