@@ -666,7 +666,7 @@ qtr2date<-function(dates){
 #' 
 #' #Quarterly frequency
 #' seq_dates(zoo::yearqtr(2020), "quarterly", length.out=12)
-#' seq_dates(zoo::yearqtr(2020), "quarterly", to=yearqtr(2022))
+#' seq_dates(zoo::yearqtr(2020), "quarterly", to=zoo::yearqtr(2022))
 #' 
 #' #Monthly frequency
 #' seq_dates(zoo::yearmon(2020), "monthly", length.out=12)
