@@ -42,6 +42,7 @@ setOldClass("KFS")
 #' @importFrom methods new setRefClass setOldClass
 #' @importFrom zoo as.Date.yearmon as.Date.yearqtr
 #' @importFrom stats lag predict
+#' @importFrom scales date_format
 #' 
 #' @examples
 #' library(tsgc)

@@ -443,6 +443,7 @@ mapes<-function(res,n.ahead,Y){
 #' 
 #' @importFrom zoo index
 #' @importFrom magrittr and
+#' @importFrom timetk is_date_class
 #'
 #' @returns A table summarizing the chosen error metric for each model in
 #' \code{model_list} across the specified dates.
