@@ -29,7 +29,6 @@ library(zoo)
 library(ggfortify)
 library(latex2exp)
 library(xts)
-library(gridExtra)
 library(here)
 library(timetk)
 theme_set(theme_economist_white(gray_bg = FALSE, base_size = 16))
@@ -570,6 +569,24 @@ Gompertz model, lag selection by rolling cross-validation, and
 extensions to other data frequencies, are given in the Illustration
 section below.
 
+# Forecast accuracy and rolling-origin validation
+
+Forecast accuracy can be evaluated with a variety of scale-dependent
+and scale-free measures. In the notation of the package, the mean
+absolute percentage error is
+$$\mathrm{MAPE}=\frac{100}{n}\sum_{t=1}^n \left|\frac{y_t-\hat y_t}{y_t}\right|,$$
+while the symmetric MAPE is defined as
+$$\mathrm{sMAPE}=\frac{100}{n}\sum_{t=1}^n \frac{2|y_t-\hat y_t|}{|y_t|+|\hat y_t|},$$
+and the mean absolute error and root mean squared error are given by
+$$\mathrm{MAE}=\frac{1}{n}\sum_{t=1}^n |y_t-\hat y_t|, \qquad \mathrm{RMSE}=\sqrt{\frac{1}{n}\sum_{t=1}^n (y_t-\hat y_t)^2}.$$
+sMAPE is reported as the primary percentage-based comparison measure
+in the empirical illustrations above, since MAPE can become unstable
+when observed values are close to zero. The rolling-origin procedure
+used by `cross_val()` re-estimates the model at successive evaluation
+dates, holds back a fixed forecast horizon, and computes the chosen
+loss metric over that out-of-sample window, so that forecast accuracy
+is assessed under a design that matches the practical forecasting
+problem.
 
 # Illustration of the `tsgc` package
 
@@ -762,11 +779,11 @@ tsgc::plot_log_forecast(
 )
 ```
 
-```{r fig-2, echo=F, fig.cap="Figure 2: Fourteen-day forecast of ln(g_t) from 20  April 2021, for Gauteng province in South Africa."}
+```{r fig-2, echo=F, fig.cap="Figure 2: Fourteen-day forecast of $ln(g_t)$ from 4 May 2021, for Gauteng province in South Africa."}
 # Set options
 date.format <- "%Y-%m-%d"
 estimation.date.start <- as.Date("2021-02-01")
-estimation.date.end <- as.Date("2021-04-19")
+estimation.date.end <- as.Date("2021-05-03")
 n.forecasts <- 14
 q <- 0.005
 confidence.level <- 0.68
@@ -804,7 +821,7 @@ p1
 From these results we can recover the forecasts of new cases from 20
 April 2021, with their prediction intervals.
 
-```{r fig-3, fig.cap = "Figure 3: Fourteen-day forecast of new cases from 20 April 2021 for Gauteng province in South Africa"}
+```{r fig-3, fig.cap = "Figure 3: Fourteen-day forecast of new cases from 4 May 2021 for Gauteng province in South Africa. The shaded region is a state-implied forecast band obtained by propagating uncertainty in the latent log growth rate."}
 tsgc::plot_forecast(
   res = res,
   n.ahead = n.forecasts,
@@ -821,6 +838,27 @@ first differences of `Y.eval`, the cumulative series for the forecast
 window.
 
 ```{r fig-4, fig.cap = "Figure 4: Accuracy of the fourteen-day forecast of new cases from 20 April 2021 for Gauteng province in South Africa."}
+# Update estimation date
+estimation.date.end <- as.Date("2021-04-19")
+
+# Re-estimate model
+idx.est <-
+  (zoo::index(Y) >= estimation.date.start) &
+  (zoo::index(Y) <= estimation.date.end)
+y <- Y[idx.est]
+
+# Cumulative Y over the estimation window is small y
+# May not be ideal as in the paper we use small y for diff(Y)
+
+model <- SSModelDynamicGompertz$new(Y = y, q = q)
+res <- model$estimate()
+
+# Specify evaluation dataset
+y.eval <- Y %>%
+  subset(zoo::index(.) > tail(res$index,1)) %>%
+  tsgc::df2ldl()
+
+
 tsgc::plot_holdout(
   res = res,
   Y = Y,
@@ -854,7 +892,6 @@ gen_int <- 4
 r.t <- tail(exp(res$get_gy_ci()*gen_int),7) %>% tk_tbl
 r.t$name <- "Gauteng"
 names(r.t)<-c("Date", "Rt", "lower", "upper", "name")
-r.t
 
 # Create the plot
 res.rt <- ggplot(r.t, aes(x = Date)) +
@@ -1060,11 +1097,11 @@ tsgc::plot_log_forecast(
     Y = Y,
     n.ahead = n.forecasts,
     plt.start.date =  tail(res.reinit$index, 1) - plt.length,
-    title='Forecast of $\\ln(g_t)$  after reinitialization.'
+    title='Forecast of $\ln(g_t)$  after reinitialization.'
 )
 ```
 
-```{r fig-7, echo=F, fig.cap = "Figure 7: Forecast of ln(g_t) after reinitialization."}
+```{r fig-7, echo=F, fig.cap = "Figure 7: Forecast of $ln(g_t)$ after reinitialization."}
 # Set reinitialization date
 reinit.dates = "2021-04-21"
 
@@ -1138,6 +1175,7 @@ tsgc::plot_holdout(
 Just as for the standard (non-reinitialized) model, the returned
 estimation results contained in `res.reinit` are a `FilterResults`
 object, and can be written to CSV using the `write_results` method.
+
 ## Leading indicator model: England cases and hospitalisations
 
 We now illustrate the leading-indicator model described above. We load
@@ -1186,7 +1224,6 @@ mod.eng <- SSModelLeadingIndicator$new(
   end.date = est.end.eng
 )
 res.eng <- mod.eng$estimate()
-summary(res.eng)
 ```
 
 The fitted object `res.eng` can be used to generate the same forecast
@@ -1382,31 +1419,11 @@ For each candidate model, `cross_val()` evaluates forecasting
 performance over a rolling-origin scheme, re-estimating the model at
 each origin and recording the chosen accuracy criterion over the
 forecast horizon. The two `Vanilla` rows are UK-only dynamic Gompertz
-benchmarks (fixed $q_\zeta$ and the AR(1) extension respectively); the
+benchmarks (fixed $q_\zeta = 0.005$ and the AR(1) extension respectively); the
 remaining rows are Italy-to-UK leading-indicator models at different
 lags. The best-performing lags in this window are typically found in
 the mid-teens, consistent with a lead of roughly two to two-and-a-half
 weeks from Italy to the UK over this period.
-
-## Forecast accuracy and rolling-origin validation
-
-Forecast accuracy can be evaluated with a variety of scale-dependent
-and scale-free measures. In the notation of the package, the mean
-absolute percentage error is
-$$\mathrm{MAPE}=\frac{100}{n}\sum_{t=1}^n \left|\frac{y_t-\hat y_t}{y_t}\right|,$$
-while the symmetric MAPE is defined as
-$$\mathrm{sMAPE}=\frac{100}{n}\sum_{t=1}^n \frac{2|y_t-\hat y_t|}{|y_t|+|\hat y_t|},$$
-and the mean absolute error and root mean squared error are given by
-$$\mathrm{MAE}=\frac{1}{n}\sum_{t=1}^n |y_t-\hat y_t|, \qquad \mathrm{RMSE}=\sqrt{\frac{1}{n}\sum_{t=1}^n (y_t-\hat y_t)^2}.$$
-sMAPE is reported as the primary percentage-based comparison measure
-in the empirical illustrations above, since MAPE can become unstable
-when observed values are close to zero. The rolling-origin procedure
-used by `cross_val()` re-estimates the model at successive evaluation
-dates, holds back a fixed forecast horizon, and computes the chosen
-loss metric over that out-of-sample window, so that forecast accuracy
-is assessed under a design that matches the practical forecasting
-problem.
-
 ## Other data frequencies
 
 The package is not restricted to daily epidemic data. The same
@@ -1436,7 +1453,6 @@ mod.q <- SSModelLeadingIndicator$new(
   end.date = zoo::as.yearqtr("2019 Q4")
 )
 res.q <- mod.q$estimate()
-summary(res.q)
 ```
 
 ```{r fig-freq-q, fig.cap = "Figure 19: Log forecasts of quarterly Switch sales, using Wii sales as a leading indicator."}
@@ -1463,7 +1479,6 @@ mod.m <- SSModelLeadingIndicator$new(
   end.date = zoo::as.yearmon(2021 + 1 / 12)
 )
 res.m <- mod.m$estimate()
-summary(res.m)
 ```
 
 ```{r fig-freq-m, fig.cap = "Figure 20: Forecasts of monthly AvaTrade downloads, using DEGIRO downloads as a leading indicator."}
